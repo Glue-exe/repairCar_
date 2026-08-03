@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'dart:convert'; // รับ-ส่งข้อมูลกับเซิร์ฟเวอร์ Decode, Encode
 import 'package:crypto/crypto.dart'; // การเข้ารหัสข้อมูล  Hashing สับข้อมูลให้เป็นรหัสลับ
 import 'package:http/http.dart' as http;
-import 'package:my_app/screens/owner_home_screen.dart';
-import 'package:my_app/screens/technician_home_screen.dart';
-import 'package:my_app/screens/accountant_home_screen.dart';
+import 'package:my_app/screens/owner/owner_main_screen.dart';
+import 'package:my_app/screens/technican/technician_home_screen.dart';
+import 'package:my_app/screens/accountant/accountant_home_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:my_app/config/app_config.dart';
@@ -27,6 +27,15 @@ class _LoginScreenState extends State<LoginScreen> {
   final _usernameValueController =
       TextEditingController(); // ควบคุมและจัดการข้อมูล .text .clear() .text = "admin"
   final _passwordValueController = TextEditingController();
+  bool _obscurePassword = true;
+
+  IconData _getEyeIcon() {
+    if (_obscurePassword == true) {
+      return Icons.visibility_off;
+    } else {
+      return Icons.visibility;
+    }
+  }
 
   Future<(bool, String, String)> _authenRequest() async {
     // <Records> (มีErrorไหม, ข้อมูลที่ได้, ข้อความแจ้งError)
@@ -143,7 +152,7 @@ class _LoginScreenState extends State<LoginScreen> {
         if (roleId == 1 || userRole == 'เจ้าของร้าน' || userRole == 'Owner') {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const OwnerHomeScreen()),
+            MaterialPageRoute(builder: (context) => const OwnerMainScreen()),
           );
         } else if (roleId == 2 ||
             userRole == 'ช่าง' ||
@@ -189,79 +198,117 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        height: double.infinity,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage("assets/bg1.jpeg"),
-            fit: BoxFit.fill,
-          ),
-        ),
-        alignment: Alignment.center,
-        child: Container(
-          height: 400,
-          width: double.infinity,
-          margin: const EdgeInsets.symmetric(horizontal: 30),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.white),
-            borderRadius: BorderRadius.circular(15),
-            color: Colors.black.withValues(alpha: 0.1),
-          ),
-          alignment: Alignment.center,
-          padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                Container(
-                  margin: EdgeInsets.only(top: 50),
-                  child: Text("Username"),
+      backgroundColor: Colors.teal.shade50,
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.build_circle_rounded,
+                      size: 64,
+                      color: Colors.teal.shade700,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "เทคนิคยนต์",
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.teal.shade900,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    TextFormField(
+                      controller: _usernameValueController,
+                      decoration: InputDecoration(
+                        labelText: "Username",
+                        hintText: "กรอกชื่อผู้ใช้",
+                        prefixIcon: const Icon(Icons.person),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "กรุณากรอก username";
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      obscureText: _obscurePassword,
+                      controller: _passwordValueController,
+                      decoration: InputDecoration(
+                        labelText: "Password",
+                        hintText: "กรอกรหัสผ่าน",
+                        prefixIcon: const Icon(Icons.lock),
+                        suffixIcon: Padding(
+                          padding: const EdgeInsets.only(right: 4.0),
+                          child: IconButton(
+                            icon: Icon(_getEyeIcon()),
+                            onPressed: () {
+                              setState(() {
+                                if (_obscurePassword == true) {
+                                  _obscurePassword = false;
+                                } else {
+                                  _obscurePassword = true;
+                                }
+                              });
+                            },
+                          ),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "กรุณากรอก Password";
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.teal.shade700,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () {
+                          if (_formKey.currentState!.validate()) {
+                            _doLogin(context);
+                          }
+                        },
+                        child: const Text(
+                          "เข้าสู่ระบบ",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 30),
-                  child: TextFormField(
-                    controller: _usernameValueController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "กรุณากรอก username";
-                      }
-
-                      return null;
-                    },
-                  ),
-                ),
-                Container(
-                  margin: EdgeInsets.only(top: 50),
-                  child: Text("Password"),
-                ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 30),
-                  child: TextFormField(
-                    obscureText: true,
-                    controller: _passwordValueController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "กรุณากรอก Password";
-                      }
-
-                      return null;
-                    },
-                  ),
-                ),
-                Container(
-                  margin: EdgeInsets.only(top: 40),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // ถ้าโค้ดบรรทัดเดียวใช้ => แต่ถ้ามีหลายบรรทัดใช้ {}
-                      if (_formKey.currentState!.validate()) {
-                        _doLogin(context);
-                      }
-                    },
-                    child: Text("Login"),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -269,3 +316,5 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+
+
