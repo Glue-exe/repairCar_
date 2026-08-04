@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_app/screens/owner/owner_home_screen.dart';
 import 'package:my_app/widgets/common/custom_bottom_navbar.dart';
+import 'package:my_app/screens/owner/owner_profile_screen.dart';
 
 class OwnerMainScreen extends StatefulWidget {
   const OwnerMainScreen({super.key});
@@ -13,31 +14,26 @@ class _OwnerMainScreenState extends State<OwnerMainScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _pages = [
-    const OwnerHomeScreen(),
-    const Center(
+    const OwnerHomeScreen(), // Index 0
+    const Center( // Index 1
       child: Text(
         'หน้างานรวม',
         style: TextStyle(fontSize: 18),
       ),
     ),
-    const Center(
+    const Center( // Index 2
       child: Text(
         'หน้ารับรถ',
         style: TextStyle(fontSize: 18),
       ),
     ),
-    const Center(
+    const Center( // Index 3
       child: Text(
         'หน้าอะไหล่',
         style: TextStyle(fontSize: 18),
       ),
     ),
-    const Center(
-      child: Text(
-        'หน้าโปรไฟล์',
-        style: TextStyle(fontSize: 18),
-      ),
-    ),
+    const OwnerProfileScreen(), // Index 4
   ];
 
   @override

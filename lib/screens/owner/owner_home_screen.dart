@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:my_app/models/dashboard_summary_model.dart';
 import 'package:my_app/models/monthly_income_model.dart';
 import 'package:my_app/utils/app_api.dart';
-import 'package:my_app/widgets/owner/income_summary_card.dart';
-import 'package:my_app/widgets/owner/vehicles_summary_card.dart';
-import 'package:my_app/widgets/owner/active_jobs_card.dart';
-import 'package:my_app/widgets/owner/pending_approvals_card.dart';
-import 'package:my_app/widgets/owner/income_chart_widget.dart';
+import 'package:my_app/widgets/owner/home/income_summary_card.dart';
+import 'package:my_app/widgets/owner/home/vehicles_summary_card.dart';
+import 'package:my_app/widgets/owner/home/active_jobs_card.dart';
+import 'package:my_app/widgets/owner/home/pending_approvals_card.dart';
+import 'package:my_app/widgets/owner/home/income_chart_widget.dart';
 
 class OwnerHomeScreen extends StatefulWidget {
   const OwnerHomeScreen({super.key});
@@ -55,7 +55,12 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Dashboard')),
+      backgroundColor: Colors.teal.shade50,
+      appBar: AppBar(
+        title: const Text('Dashboard'),
+        backgroundColor: Colors.teal.shade50,
+        centerTitle: true,
+      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(8.0),
@@ -79,9 +84,7 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
               Row(
                 children: <Widget>[
                   Expanded(
-                    child: ActiveJobsCard(
-                      summaryData: dashboardSummaryStore,
-                    ),
+                    child: ActiveJobsCard(summaryData: dashboardSummaryStore),
                   ),
                   Expanded(
                     child: PendingApprovalsCard(
@@ -91,9 +94,7 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-              IncomeChartWidget(
-                incomeList: monthlyIncomeHistoryStore,
-              ),
+              IncomeChartWidget(incomeList: monthlyIncomeHistoryStore),
             ],
           ),
         ),

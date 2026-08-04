@@ -24,7 +24,8 @@ class _LoginScreenState extends State<LoginScreen> {
         FormState
       >(); // เก็บสถานะของฟอร์ม <> บอก Type || GlobalKey ดึง form นั้นออกไปใช้ภายนอกได้
 
-  final _usernameValueController = TextEditingController(); // ควบคุมและจัดการข้อมูล .text .clear() .text = "admin"
+  final _usernameValueController =
+      TextEditingController(); // ควบคุมและจัดการข้อมูล .text .clear() .text = "admin"
   final _passwordValueController = TextEditingController();
   bool _obscurePassword = true;
 
@@ -36,7 +37,8 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<(bool, String, String)> _authenRequest() async { // <Records> (มีErrorไหม, ข้อมูลที่ได้, ข้อความแจ้งError)
+  Future<(bool, String, String)> _authenRequest() async {
+    // <Records> (มีErrorไหม, ข้อมูลที่ได้, ข้อความแจ้งError)
     String username = _usernameValueController.text;
     DateTime now = DateTime.now();
     String formattedDateString = DateUtil.getFormattedDate(now);
@@ -79,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Future<({bool isError, String data, String errorMessage, String roleName})>
+  Future<({bool isError, String data, String errorMessage, String roleName, String fullName})>
   _accessRequest(String authenToken) async {
     String username = _usernameValueController.text;
     String password = _passwordValueController.text;
@@ -113,15 +115,15 @@ class _LoginScreenState extends State<LoginScreen> {
       await prefs.setString("username", _usernameValueController.text);
       await prefs.setString("user_role", json["data"]["role_name"]);
       await prefs.setInt("user_role_id", json["data"]["role_id"]);
+      await prefs.setString("full_name", json["data"]["full_name"]);
     }
 
     return (
       isError: json["isError"] as bool,
-      data: json["isError"] ? "" : (json["data"]["access_token"] as String),
+      data: json["data"]?["access_token"] as String? ?? "",
       errorMessage: json["errorMessage"] as String,
-      roleName: json["isError"]
-          ? ""
-          : (json["data"]["role_name"] as String? ?? ""),
+      roleName: json["data"]?["role_name"] as String? ?? "",
+      fullName: json["data"]?["full_name"] as String? ?? "",
     );
   }
 
@@ -201,6 +203,7 @@ class _LoginScreenState extends State<LoginScreen> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Card(
+            color: Colors.white,
             elevation: 4,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
@@ -314,5 +317,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-
-
