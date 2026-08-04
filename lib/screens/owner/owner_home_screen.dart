@@ -1,9 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:my_app/models/dashboard_summary_model.dart';
 import 'package:my_app/models/monthly_income_model.dart';
-import 'package:my_app/screens/owner/income_detail_screen.dart';
 import 'package:my_app/utils/app_api.dart';
 import 'package:my_app/widgets/owner/income_summary_card.dart';
+import 'package:my_app/widgets/owner/vehicles_summary_card.dart';
+import 'package:my_app/widgets/owner/active_jobs_card.dart';
+import 'package:my_app/widgets/owner/pending_approvals_card.dart';
+import 'package:my_app/widgets/owner/income_chart_widget.dart';
 
 class OwnerHomeScreen extends StatefulWidget {
   const OwnerHomeScreen({super.key});
@@ -13,15 +17,32 @@ class OwnerHomeScreen extends StatefulWidget {
 }
 
 class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
-  List<MonthlyIncomeModel> monthlyIncomeModelStore = [];
+  DashboardSummaryModel dashboardSummaryStore = DashboardSummaryModel(
+    monthlyIncome: 0.0,
+    vehiclesThisMonth: 0,
+    activeJobsCount: 0,
+    pendingApprovalsCount: 0,
+  );
+
+  List<MonthlyIncomeModel> monthlyIncomeHistoryStore = [];
 
   void _fetchData() async {
-    var response = await AppAPI.get("/income/monthly");
-    Map<String, dynamic> json = jsonDecode(response.body);
-    IncomeResponse incomeResponse = IncomeResponse.fromJson(json);
+    var response = await Future.wait([
+      AppAPI.get("/dashboard/summary"),
+      AppAPI.get("/income/monthly_history"),
+    ]);
+
+    Map<String, dynamic> summaryJson = jsonDecode(response[0].body);
+    DashboardSummaryResponse dashboardSummaryResponse =
+        DashboardSummaryResponse.fromJson(summaryJson);
+
+    Map<String, dynamic> historyJson = jsonDecode(response[1].body);
+    MonthlyIncomeResponse monthlyIncomeResponse =
+        MonthlyIncomeResponse.fromJson(historyJson);
 
     setState(() {
-      monthlyIncomeModelStore = incomeResponse.data;
+      dashboardSummaryStore = dashboardSummaryResponse.data;
+      monthlyIncomeHistoryStore = monthlyIncomeResponse.data;
     });
   }
 
@@ -34,86 +55,49 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Owner Dashboard (เจ้าของร้าน)'),
-        backgroundColor: Colors.blueAccent,
-        foregroundColor: Colors.white,
-      ),
+      appBar: AppBar(title: const Text('Dashboard')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // แถวการ์ดสรุปบนสุด (แบ่งฝั่งซ้าย-ขวา)
-            Row(
-              children: [
-                // 1. การ์ดยอดรวมรายได้ (บนซ้าย)
-                Expanded(
-                  child: IncomeSummaryCard(
-                    incomeList: monthlyIncomeModelStore,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => IncomeDetailScreen(
-                            incomeList: monthlyIncomeModelStore,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-
-                // 2. การ์ดสรุปอื่นๆ (บนขวา)
-                Expanded(
-                  child: Card(
-                    elevation: 3,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    color: Colors.blue.shade700,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: const [
-                              Text(
-                                "งานกำลังซ่อม",
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              Icon(
-                                Icons.build,
-                                color: Colors.white70,
-                                size: 16,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          const Text(
-                            "0 งาน",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            children: [
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: IncomeSummaryCard(
+                      summaryData: dashboardSummaryStore,
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                  Expanded(
+                    child: VehiclesSummaryCard(
+                      summaryData: dashboardSummaryStore,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: ActiveJobsCard(
+                      summaryData: dashboardSummaryStore,
+                    ),
+                  ),
+                  Expanded(
+                    child: PendingApprovalsCard(
+                      summaryData: dashboardSummaryStore,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              IncomeChartWidget(
+                incomeList: monthlyIncomeHistoryStore,
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
-

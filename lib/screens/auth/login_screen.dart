@@ -24,8 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
         FormState
       >(); // เก็บสถานะของฟอร์ม <> บอก Type || GlobalKey ดึง form นั้นออกไปใช้ภายนอกได้
 
-  final _usernameValueController =
-      TextEditingController(); // ควบคุมและจัดการข้อมูล .text .clear() .text = "admin"
+  final _usernameValueController = TextEditingController(); // ควบคุมและจัดการข้อมูล .text .clear() .text = "admin"
   final _passwordValueController = TextEditingController();
   bool _obscurePassword = true;
 
@@ -37,8 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<(bool, String, String)> _authenRequest() async {
-    // <Records> (มีErrorไหม, ข้อมูลที่ได้, ข้อความแจ้งError)
+  Future<(bool, String, String)> _authenRequest() async { // <Records> (มีErrorไหม, ข้อมูลที่ได้, ข้อความแจ้งError)
     String username = _usernameValueController.text;
     DateTime now = DateTime.now();
     String formattedDateString = DateUtil.getFormattedDate(now);
