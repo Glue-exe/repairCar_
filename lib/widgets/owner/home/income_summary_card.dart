@@ -23,7 +23,7 @@ class IncomeSummaryCard extends StatelessWidget {
                 const Text('รายได้รวมเดือนนี้'),
                 const SizedBox(height: 8),
                 Text(
-                  '฿${summaryData.monthlyIncome.toStringAsFixed(2)}',
+                  '฿${summaryData.monthlyIncome}',
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,

@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:my_app/models/monthly_income_model.dart';
 
@@ -9,16 +8,17 @@ class IncomeChartWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // หาค่ายอดขายสูงสุดเพื่อนำมาคำนวณความสูงของแท่งกราฟ (ถ้าไม่มีข้อมูลให้เป็น 1.0 เพื่อกันหารด้วยศูนย์)
     double maxIncome = 1.0;
-    for (MonthlyIncomeModel item in incomeList) {
+    for (var item in incomeList) {
       if (item.totalAmount > maxIncome) {
         maxIncome = item.totalAmount;
       }
     }
 
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -26,59 +26,64 @@ class IncomeChartWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'แนวโน้มรายได้รายเดือน (ย้อนหลัง 6-12 เดือน)',
+              'แนวโน้มรายได้รายเดือน',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 16),
+
+            // กรณีไม่มีข้อมูล
             if (incomeList.isEmpty)
               const SizedBox(
                 height: 150,
-                child: Center(
-                  child: Text('ไม่มีข้อมูลรายได้ย้อนหลัง'),
-                ),
+                child: Center(child: Text('ไม่มีข้อมูลรายได้')),
               )
             else
+              // เลื่อนซ้าย-ขวาได้หากมีหลายเดือน
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: SizedBox(
-                  height: 180,
+                  height: 160,
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: incomeList.map((item) {
-                      final double ratio = max(0.05, item.totalAmount / maxIncome);
-                      final double barHeight = ratio * 110;
+                      // 2. คำนวณความสูงแท่งกราฟ (ความสูงสูงสุด 100 px)
+                      double barHeight = (item.totalAmount / maxIncome) * 100;
+                      
+                      // กำหนดความสูงขั้นต่ำอย่างน้อย 6 px เพื่อให้มองเห็นแท่งแม้ว่ายอดจะเป็น 0
+                      if (barHeight < 6) barHeight = 6;
 
                       return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             Text(
-                              '฿${item.totalAmount.toStringAsFixed(0)}',
+                              '฿${item.totalAmount}',
                               style: const TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.green,
+                                color: Colors.teal,
                               ),
                             ),
                             const SizedBox(height: 4),
+
                             Container(
-                              width: 24,
+                              width: 22,
                               height: barHeight,
                               decoration: BoxDecoration(
-                                color: Colors.blueAccent,
-                                borderRadius: BorderRadius.circular(4),
+                                color: Colors.teal.shade400,
+                                borderRadius: BorderRadius.circular(6),
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 6),
+
                             Text(
                               item.monthYear,
                               style: const TextStyle(
-                                fontSize: 10,
+                                fontSize: 11,
                                 color: Colors.black87,
                               ),
                             ),
@@ -95,3 +100,4 @@ class IncomeChartWidget extends StatelessWidget {
     );
   }
 }
+
