@@ -27,6 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _usernameValueController =
       TextEditingController(); // ควบคุมและจัดการข้อมูล .text .clear() .text = "admin"
   final _passwordValueController = TextEditingController();
+
   bool _obscurePassword = true;
 
   IconData _getEyeIcon() {
@@ -44,19 +45,20 @@ class _LoginScreenState extends State<LoginScreen> {
     String formattedDateString = DateUtil.getFormattedDate(now);
 
     String combinedString = "$username&$formattedDateString";
-    print('user+date: $combinedString');
+    print('combinedString authenRequest: $combinedString');
 
     String authenRequestString =
         sha256 // เข้ารหัสทางคณิต ไม่สามารถแปลงกลับได้
             .convert(utf8.encode(combinedString)) // แปลงให้เป็นเลขไบต์
             .toString(); // แปลงเป็น String ยาว 64 ตัว
 
-    print('sha256 convert: $authenRequestString');
+    print('authenRequestString: $authenRequestString');
 
     final response = await http.post(
       Uri.parse(
+        // .parse แกะ string || Uri แบบฟอร์ม ส่งต่อให้ post
         "${AppConfig.apiBaseUri}/authen/authen_request",
-      ), // .parse แกะ string || Uri แบบฟอร์ม ส่งต่อให้ post
+      ),
       headers: <String, String>{
         // เขียนเป็นคู่แบบ หัวข้อ String, รายละเอียด String
         'Content-Type':
@@ -71,7 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
       response.body,
     ); // dart เรียกว่า Map, แปลงกับมาเป็น Map
 
-    print('response.body by server: $json');
+    print('response jwt token: $json');
 
     return (
       // การดึงข้อมูลออกจาก JSON (Map) || as กำหนดชนิดข้อมูลที่ส่งกลับ
@@ -81,7 +83,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Future<({bool isError, String data, String errorMessage, String roleName, String fullName})>
+  Future<({bool isError, String data, String errorMessage, String roleName})>
   _accessRequest(String authenToken) async {
     String username = _usernameValueController.text;
     String password = _passwordValueController.text;
@@ -91,8 +93,8 @@ class _LoginScreenState extends State<LoginScreen> {
         .convert(utf8.encode(combinedString))
         .toString();
 
-    print(combinedString);
-    print(authenSignature);
+    print("combinedString accessRequest: $combinedString");
+    print("authenSignature $authenSignature");
 
     final response = await http.post(
       Uri.parse("${AppConfig.apiBaseUri}/authen/access_request"),
@@ -107,23 +109,23 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final json = jsonDecode(response.body);
 
-    print(json);
+    print("response checkAccessRequest: $json");
 
     if (!json["isError"]) {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString("access_token", json["data"]["access_token"]);
+      // print('access_token');
+      // print(json["data"]["access_token"]);
       await prefs.setString("username", _usernameValueController.text);
       await prefs.setString("user_role", json["data"]["role_name"]);
-      await prefs.setInt("user_role_id", json["data"]["role_id"]);
       await prefs.setString("full_name", json["data"]["full_name"]);
     }
 
     return (
       isError: json["isError"] as bool,
-      data: json["data"]?["access_token"] as String? ?? "",
+      data: json["data"]["access_token"] as String,
       errorMessage: json["errorMessage"] as String,
-      roleName: json["data"]?["role_name"] as String? ?? "",
-      fullName: json["data"]?["full_name"] as String? ?? "",
+      roleName: json["data"]["role_name"] as String,
     );
   }
 
@@ -131,41 +133,34 @@ class _LoginScreenState extends State<LoginScreen> {
     var (isError, authenToken, errorMessage) = await _authenRequest();
 
     if (isError) {
-      showDialog(
-        // Popup
+      showDialog(// Popup
         context: context, // วาดทับหน้า Login
-        builder: (context) {
-          // วาดกล่องหน้าตาแบบไหน
+        builder: (context) { // วาดกล่องหน้าตาแบบไหน
           return AlertDialog(content: Text(errorMessage));
         },
       );
     } else {
       var result = await _accessRequest(authenToken);
 
-      print(result);
+      print('result accessRequest login: $result');
 
       if (!result.isError) {
         SharedPreferences prefs = await SharedPreferences.getInstance();
-        int? roleId = prefs.getInt("user_role_id");
         String? userRole = prefs.getString("user_role");
 
-        if (roleId == 1 || userRole == 'เจ้าของร้าน' || userRole == 'Owner') {
+        if (userRole == 'เจ้าของร้าน' || userRole == 'Owner') {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const OwnerMainScreen()),
           );
-        } else if (roleId == 2 ||
-            userRole == 'ช่าง' ||
-            userRole == 'Technician') {
+        } else if (userRole == 'ช่าง' || userRole == 'Technician') {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
               builder: (context) => const TechnicianHomeScreen(),
             ),
           );
-        } else if (roleId == 3 ||
-            userRole == 'พนักงานบัญชี' ||
-            userRole == 'Accountant') {
+        } else if (userRole == 'พนักงานบัญชี' || userRole == 'Accountant') {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
