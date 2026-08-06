@@ -123,9 +123,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return (
       isError: json["isError"] as bool,
-      data:json["isError"]? "" : json["data"]["access_token"] as String,
+      data: json["data"]["access_token"] as String,
       errorMessage: json["errorMessage"] as String,
-      roleName: json["isError"] ? "" : json["data"]["role_name"] as String,
+      roleName: json["data"]["role_name"] as String,
     );
   }
 
