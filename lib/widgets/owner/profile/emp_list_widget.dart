@@ -1,5 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:my_app/models/employee_model.dart';
+import 'package:my_app/widgets/owner/profile/emp_edit_widget.dart';
+import 'package:my_app/utils/app_api.dart';
+import 'package:my_app/screens/owner/owner_view_screen.dart';
 
 class EmpListWidget extends StatelessWidget {
   const EmpListWidget({super.key, required this.employeeModelStore});
@@ -9,10 +13,14 @@ class EmpListWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(8),
+      height: 500,
       child: ListView.builder(
-        itemCount: employeeModelStore.length,
+        itemCount:
+            employeeModelStore.length, // ลูปตามจำนวนสมาชิก employeeModelStore
         itemBuilder: (context, index) {
-          EmployeeModel item = employeeModelStore[index];
+          // index รันตาม itemCount
+          EmployeeModel item =
+              employeeModelStore[index]; // index จะไปเอาข้อมูล obj พนักมาใส่ใน item
 
           return Container(
             margin: const EdgeInsets.symmetric(vertical: 4),
@@ -28,25 +36,89 @@ class EmpListWidget extends StatelessWidget {
               ],
             ),
             child: ListTile(
-              leading: const CircleAvatar(
-                backgroundColor: Colors.teal,
-                child: Icon(Icons.person, color: Colors.white),
+              // tileColor: Colors.white,
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.teal.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(Icons.person),
               ),
               title: Text(
-                '${item.empFirstname} ${item.empLastname}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                ),
+                '${item.titleName}${item.empFirstname} ${item.empLastname}',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
               ),
-              subtitle: Text('เบอร์โทร: ${item.empPhone}'),
-              trailing: IconButton(
-                icon: const Icon(Icons.edit),
-                color: Colors.teal,
-                splashColor: Colors.teal.withValues(alpha: 0.1),
-                onPressed: () {
-                  print('Edit employee: ${item.empId}');
-                },
+              subtitle: Text(
+                'ตำแหน่ง: ${item.userRoleName} | เบอร์: ${item.empPhone} | สถานะ: ${item.empActive}',
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit),
+                    color: Colors.blueAccent,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EmpEditWidget(employee: item),
+                        ),
+                      );
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete),
+                    color: Colors.redAccent,
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('ลบข้อมูล'),
+                          content: Text('ยืนยันที่จะลบหรือไม่?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('ยกเลิก'),
+                            ),
+                            ElevatedButton(
+                              onPressed: () async {
+                                Navigator.pop(context);
+
+                                var response = await AppAPI.delete('/employee', {'emp_id': item.empId});
+                                var responseBody = jsonDecode(response.body);
+
+                                if (responseBody['isError'] == false) {
+                                  if (context.mounted) {
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const OwnerViewUser()),
+                                    );
+                                  }
+                                } else {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text('เกิดข้อผิดพลาด'),
+                                      content: Text(responseBody['errorMessage']),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(context),
+                                          child: const Text('ตกลง'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }
+                              },
+                              child: const Text('ตกลง'),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           );

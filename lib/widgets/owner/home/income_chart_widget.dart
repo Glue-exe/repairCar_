@@ -41,7 +41,6 @@ class IncomeChartWidget extends StatelessWidget {
                 child: Center(child: Text('ไม่มีข้อมูลรายได้')),
               )
             else
-              // เลื่อนซ้าย-ขวาได้หากมีหลายเดือน
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: SizedBox(
@@ -49,7 +48,7 @@ class IncomeChartWidget extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: incomeList.map((item) {
-                      // 2. คำนวณความสูงแท่งกราฟ (ความสูงสูงสุด 100 px)
+                      // คำนวณความสูงแท่งกราฟ (ความสูงสูงสุด 100 px)
                       double barHeight = (item.totalAmount / maxIncome) * 100;
                       
                       // กำหนดความสูงขั้นต่ำอย่างน้อย 6 px เพื่อให้มองเห็นแท่งแม้ว่ายอดจะเป็น 0
@@ -69,7 +68,6 @@ class IncomeChartWidget extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 4),
-
                             Container(
                               width: 22,
                               height: barHeight,
@@ -79,7 +77,6 @@ class IncomeChartWidget extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 6),
-
                             Text(
                               item.monthYear,
                               style: const TextStyle(

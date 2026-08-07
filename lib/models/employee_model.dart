@@ -1,19 +1,23 @@
 class EmployeeModel {
   int empId = 0;
   int titleId = 0;
+  String titleName = "";
   String empFirstname = "";
   String empLastname = "";
   String empPhone = "";
   int userRoleId = 0;
-  bool? empActive;
+  String userRoleName = "";
+  String empActive = "";
 
   EmployeeModel({
     required this.empId,
     required this.titleId,
+    required this.titleName,
     required this.empFirstname,
     required this.empLastname,
     required this.empPhone,
     required this.userRoleId,
+    required this.userRoleName,
     required this.empActive,
   });
 
@@ -21,11 +25,13 @@ class EmployeeModel {
     return EmployeeModel(
       empId: json['emp_id'] as int,
       titleId: json['title_id'] as int,
+      titleName: json['title_name'] as String,
       empFirstname: json['emp_firstname'] as String,
       empLastname: json['emp_lastname'] as String,
       empPhone: json['emp_phone'] as String,
       userRoleId: json['user_role_id'] as int,
-      empActive: json['emp_active'] as bool?,
+      userRoleName: json['user_role_name'] as String,
+      empActive: json['emp_active'] as String,
     );
   }
 }
