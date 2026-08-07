@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_app/config/app_config.dart';
+import 'dart:convert';
 
 class AppAPI {
   static Future get(String uri) async {

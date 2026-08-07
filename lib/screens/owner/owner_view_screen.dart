@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:my_app/models/employee_model.dart';
 import 'package:my_app/utils/app_api.dart';
 import 'package:my_app/widgets/owner/profile/emp_list_widget.dart';
+import 'package:my_app/screens/owner/emp_add_screen.dart';
 
 class OwnerViewUser extends StatefulWidget {
   const OwnerViewUser({super.key});
@@ -33,14 +34,40 @@ class _OwnerViewUserState extends State<OwnerViewUser> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.teal.shade50,
+      // backgroundColor: Colors.lightGreen,
       appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('ข้อมูลพนักงาน'),
-        backgroundColor: Colors.teal.shade50,
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const EmpAddScreen()),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _fetchData,
+          ),
+        ],
       ),
-      body: EmpListWidget(
-        employeeModelStore: employeeModelStore,
+      body: Container(
+        height: double.infinity,
+        width: double.infinity,
+        decoration: const BoxDecoration(),
+        child: SafeArea(
+          child: Column(
+            children: [
+              EmpListWidget(
+                employeeModelStore: employeeModelStore,
+              )
+            ],
+          ),
+        ),
       ),
     );
   }
