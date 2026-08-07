@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:my_app/models/vehiclelicenseplate_search.dart';
+import 'package:my_app/screens/owner/owner_add_customer_screen.dart';
+import 'package:my_app/screens/owner/owner_add_orders_screen.dart';
 import 'package:my_app/utils/app_api.dart';
 
 class OwnerIntakecarScreen extends StatefulWidget {
@@ -11,7 +13,7 @@ class OwnerIntakecarScreen extends StatefulWidget {
 }
 
 class _OwnerIntakecarScreen extends State<OwnerIntakecarScreen> {
-  TextEditingController _inputController = TextEditingController();
+  final TextEditingController _inputController = TextEditingController();
   List<VehicleLicenseplateSearch> _searchResults = [];
   List<OrderSearchModel> _repairHistory = [];
   bool _isLoading = false;
@@ -29,8 +31,7 @@ class _OwnerIntakecarScreen extends State<OwnerIntakecarScreen> {
     });
 
     try {
-      // เรียกใช้ API ค้นหา เช่น /vehicle?searchTerm=xxx
-      var response = await AppAPI.get('/vehicle?searchTerm=$query');
+      var response = await AppAPI.get('/vehicle?searchVehicalOrCustomer=$query');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> json = jsonDecode(response.body);
@@ -80,18 +81,22 @@ class _OwnerIntakecarScreen extends State<OwnerIntakecarScreen> {
             ),
             const SizedBox(height: 20),
 
-            ElevatedButton(
-              onPressed: _isLoading ? null : _searchVehicle,
-              child: _isLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Text('ค้นหาข้อมูลในระบบ'),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _searchVehicle,
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text('ค้นหาข้อมูลในระบบ'),
+              ),
             ),
             const SizedBox(height: 20),
 
@@ -154,13 +159,56 @@ class _OwnerIntakecarScreen extends State<OwnerIntakecarScreen> {
               ),
             ],
 
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                print('เพิ่มข้อมูลลูกค้าใหม่');
-              },
-              child: const Text('เพิ่มข้อมูลลูกค้าใหม่'),
-            ),
+            if (_searchResults.isEmpty) ...[
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const OwnerAddCustomerScreen(),
+                      ),
+                    );
+
+                    if (result != null && result is String) {
+                      _inputController.text = result;
+                      _searchVehicle();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('เพิ่มข้อมูลลูกค้าใหม่สำเร็จ'),
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text('เพิ่มข้อมูลลูกค้าใหม่'),
+                ),
+              ),
+            ],
+            if (_searchResults.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const OwnerAddOrdersScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text('เปิดงานซ่อมใหม่'),
+                ),
+              ),
+            ],
           ],
         ),
       ),
