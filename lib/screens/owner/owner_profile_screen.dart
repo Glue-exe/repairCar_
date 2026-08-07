@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:my_app/screens/owner/owner_view_user.dart';
+import 'package:my_app/screens/owner/owner_view_screen.dart';
 
 class OwnerProfileScreen extends StatefulWidget {
   const OwnerProfileScreen({super.key});
