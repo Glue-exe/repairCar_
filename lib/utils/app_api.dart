@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_app/config/app_config.dart';
@@ -22,11 +21,8 @@ class AppAPI {
     return response;
   }
 
-  static Future post(String uri, Map<String, dynamic> body) async {
+  static Future post(String uri, dynamic body) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    print("${AppConfig.apiBaseUri}$uri");
-
     final response = await http.post(
       Uri.parse("${AppConfig.apiBaseUri}$uri"),
       headers: <String, String>{
@@ -36,7 +32,34 @@ class AppAPI {
       },
       body: jsonEncode(body),
     );
+    return response;
+  }
 
+  static Future put(String uri, dynamic body) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final response = await http.put(
+      Uri.parse("${AppConfig.apiBaseUri}$uri"),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer ${prefs.getString("access_token")}',
+      },
+      body: jsonEncode(body),
+    );
+    return response;
+  }
+
+  static Future delete(String uri, dynamic body) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final response = await http.delete(
+      Uri.parse("${AppConfig.apiBaseUri}$uri"),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer ${prefs.getString("access_token")}',
+      },
+      body: jsonEncode(body),
+    );
     return response;
   }
 }
