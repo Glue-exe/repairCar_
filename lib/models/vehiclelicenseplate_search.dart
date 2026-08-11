@@ -124,7 +124,7 @@ class OrderSearchModel {
       statusId: json['status_id'] as int,
       ordersPriorityId: json['orders_priority_id'] as int,
       laborCost: json['labor_cost'] != null ? double.parse(json['labor_cost'].toString()) : null,
-      repairTime: json['repair_time'] as String?,
+      repairTime: json['repair_time']?.toString(),
       createdAt: json['created_at'] as String? ?? '',
     );
   }
