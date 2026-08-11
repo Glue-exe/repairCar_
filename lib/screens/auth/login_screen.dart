@@ -148,19 +148,19 @@ class _LoginScreenState extends State<LoginScreen> {
         SharedPreferences prefs = await SharedPreferences.getInstance();
         String? userRole = prefs.getString("user_role");
 
-        if (userRole == 'Owner') {
+        if (userRole == 'Owner' || userRole == 'เจ้าของร้าน') {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const NavbarOwner()),
           );
-        } else if (userRole == 'Mechanic') {
+        } else if (userRole == 'Mechanic' || userRole == 'ช่าง') {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
               builder: (context) => const TechnicianHomeScreen(),
             ),
           );
-        } else if (userRole == 'Accountant') {
+        } else if (userRole == 'Accountant' || userRole == 'พนักงานบัญชี') {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
