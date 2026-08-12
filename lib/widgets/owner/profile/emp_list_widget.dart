@@ -13,7 +13,6 @@ class EmpListWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(8),
-      height: 500,
       child: ListView.builder(
         itemCount:
             employeeModelStore.length, // ลูปตามจำนวนสมาชิก employeeModelStore

@@ -62,9 +62,11 @@ class _OwnerViewUserState extends State<OwnerViewUser> {
         child: SafeArea(
           child: Column(
             children: [
-              EmpListWidget(
-                employeeModelStore: employeeModelStore,
-              )
+              Expanded(
+                child: EmpListWidget(
+                  employeeModelStore: employeeModelStore,
+                ),
+              ),
             ],
           ),
         ),
