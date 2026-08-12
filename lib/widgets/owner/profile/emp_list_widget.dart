@@ -70,52 +70,101 @@ class EmpListWidget extends StatelessWidget {
                   IconButton(
                     icon: const Icon(Icons.delete),
                     color: Colors.redAccent,
-                    onPressed: () {
-                      showDialog(
+                    onPressed: () async {
+                      bool? confirm = await showDialog<bool>(
                         context: context,
-                        builder: (context) => AlertDialog(
+                        builder: (dialogContext) => AlertDialog(
                           title: const Text('ลบข้อมูล'),
-                          content: Text('ยืนยันที่จะลบหรือไม่?'),
+                          content: const Text('ยืนยันที่จะลบหรือไม่?'),
                           actions: [
                             TextButton(
-                              onPressed: () => Navigator.pop(context),
+                              onPressed: () => Navigator.pop(dialogContext, false),
                               child: const Text('ยกเลิก'),
                             ),
                             ElevatedButton(
-                              onPressed: () async {
-                                Navigator.pop(context);
-
-                                var response = await AppAPI.delete('/employee', {'emp_id': item.empId});
-                                var responseBody = jsonDecode(response.body);
-
-                                if (responseBody['isError'] == false) {
-                                  if (context.mounted) {
-                                    Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(builder: (context) => const OwnerViewUser()),
-                                    );
-                                  }
-                                } else {
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: const Text('เกิดข้อผิดพลาด'),
-                                      content: Text(responseBody['errorMessage']),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () => Navigator.pop(context),
-                                          child: const Text('ตกลง'),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }
-                              },
+                              onPressed: () => Navigator.pop(dialogContext, true),
                               child: const Text('ตกลง'),
                             ),
                           ],
                         ),
                       );
+
+                      if (confirm == true) {
+                        var response = await AppAPI.delete(
+                          '/employee',
+                          {'emp_id': item.empId},
+                        );
+
+                        if (response.statusCode == 200) {
+                          var responseBody = jsonDecode(response.body);
+
+                          if (responseBody['isError'] == false) {
+                            if (context.mounted) {
+                              await showDialog(
+                                context: context,
+                                builder: (dialogContext) => AlertDialog(
+                                  title: const Text('สำเร็จ'),
+                                  content: Text(
+                                    responseBody['data'] ?? 'ลบข้อมูลสำเร็จ',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(dialogContext),
+                                      child: const Text('ตกลง'),
+                                    ),
+                                  ],
+                                ),
+                              );
+
+                              if (context.mounted) {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const OwnerViewUser(),
+                                  ),
+                                );
+                              }
+                            }
+                          } else {
+                            if (context.mounted) {
+                              showDialog(
+                                context: context,
+                                builder: (dialogContext) => AlertDialog(
+                                  title: const Text('เกิดข้อผิดพลาด'),
+                                  content: Text(
+                                    responseBody['errorMessage'] ?? 'เกิดข้อผิดพลาดในการลบ',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(dialogContext),
+                                      child: const Text('ตกลง'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+                          }
+                        } else {
+                          if (context.mounted) {
+                            showDialog(
+                              context: context,
+                              builder: (dialogContext) => AlertDialog(
+                                title: const Text('เกิดข้อผิดพลาด'),
+                                content: Text('เกิดข้อผิดพลาดจากเซิร์ฟเวอร์ (Status: ${response.statusCode})'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(dialogContext),
+                                    child: const Text('ตกลง'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+                        }
+                      }
                     },
                   ),
                 ],

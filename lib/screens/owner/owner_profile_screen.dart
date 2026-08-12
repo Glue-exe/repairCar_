@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_app/screens/owner/owner_part_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_app/screens/owner/owner_view_screen.dart';
 
@@ -70,9 +71,15 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
                     const SizedBox(width: 16),
                     ElevatedButton(
                       onPressed: () {
-                        print('test2');
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const OwnerPartScreen(),
+                          ),
+                        );
                       },
-                      child: const Text('test2'),
+                      
+                      child: const Text('ข้อมูลอะไหล่'),
                     ),
                   ],
                 ),
