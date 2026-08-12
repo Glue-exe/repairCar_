@@ -3,6 +3,7 @@ import 'package:my_app/screens/owner/owner_part_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_app/screens/owner/owner_view_screen.dart';
 import 'package:my_app/screens/auth/login_screen.dart';
+import 'package:my_app/screens/owner/owner_vehicle_meta_screen.dart';
 
 class OwnerProfileScreen extends StatefulWidget {
   const OwnerProfileScreen({super.key});
@@ -114,6 +115,17 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
                         );
                       },
                       child: const Text('ข้อมูลอะไหล่'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const OwnerVehicleMetaScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text('ข้อมูลรถยนต์'),
                     ),
                   ],
                 ),

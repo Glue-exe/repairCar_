@@ -17,20 +17,44 @@ class _OwnerAddCustomerScreenState extends State<OwnerAddCustomerScreen> {
   final _phoneController = TextEditingController();
 
   final _licensePlateController = TextEditingController();
-  final _modelController = TextEditingController();
-  final _yearController = TextEditingController();
   final _colorController = TextEditingController();
 
   int? _selectedBrandId;
+  String? _selectedModel;
+  String? _selectedYear;
   bool _isSubmitting = false;
 
   final List<Map<String, dynamic>> _brands = [
     {"id": 1, "name": "Toyota"},
     {"id": 2, "name": "Honda"},
     {"id": 3, "name": "Isuzu"},
-    {"id": 4, "name": "Nissan"},
-    {"id": 5, "name": "Mazda"},
+    {"id": 4, "name": "Mazda"},
+    {"id": 5, "name": "Nissan"},
   ];
+
+  final Map<int, List<String>> _brandModels = {
+    1: ["Corolla Altis", "Yaris Cross", "Camry"],
+    2: ["Civic FC", "CR-V", "City Turbo"],
+    3: ["D-Max All New", "Mu-X", "D-Max Cab4"],
+    4: ["Mazda 2", "Mazda CX-30", "Mazda 3"],
+    5: ["Almera", "Kicks", "Navara NP300"],
+  };
+
+  final List<String> _years = [
+    "2018",
+    "2019",
+    "2020",
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025",
+  ];
+
+  List<String> get _filteredModels {
+    if (_selectedBrandId == null) return [];
+    return _brandModels[_selectedBrandId] ?? [];
+  }
 
   @override
   void dispose() {
@@ -38,8 +62,6 @@ class _OwnerAddCustomerScreenState extends State<OwnerAddCustomerScreen> {
     _lastNameController.dispose();
     _phoneController.dispose();
     _licensePlateController.dispose();
-    _modelController.dispose();
-    _yearController.dispose();
     _colorController.dispose();
     super.dispose();
   }
@@ -56,8 +78,8 @@ class _OwnerAddCustomerScreenState extends State<OwnerAddCustomerScreen> {
         "cus_phone": _phoneController.text.trim(),
         "veh_licenseplate": _licensePlateController.text.trim(),
         "brand_id": _selectedBrandId,
-        "veh_model": _modelController.text.trim(),
-        "veh_year": _yearController.text.trim(),
+        "veh_model": _selectedModel,
+        "veh_year": _selectedYear,
         "veh_color": _colorController.text.trim(),
       };
 
@@ -165,7 +187,7 @@ class _OwnerAddCustomerScreenState extends State<OwnerAddCustomerScreen> {
                   const Text('ยี่ห้อรถ', style: TextStyle(fontSize: 14)),
                   const SizedBox(height: 6),
                   DropdownButtonFormField<int>(
-                    value: _selectedBrandId,
+                    initialValue: _selectedBrandId,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -179,6 +201,7 @@ class _OwnerAddCustomerScreenState extends State<OwnerAddCustomerScreen> {
                     onChanged: (value) {
                       setState(() {
                         _selectedBrandId = value;
+                        _selectedModel = null; // รีเซ็ตรุ่นรถเมื่อเปลี่ยนยี่ห้อ
                       });
                     },
                     validator: (value) => value == null ? 'กรุณาเลือกยี่ห้อรถ' : null,
@@ -187,12 +210,68 @@ class _OwnerAddCustomerScreenState extends State<OwnerAddCustomerScreen> {
               ),
             ),
 
-            _buildInputField(controller: _modelController, label: 'รุ่น'),
-            _buildInputField(
-              controller: _yearController, 
-              label: 'ปีรถ', 
-              keyboardType: TextInputType.number,
+            // เปลี่ยนส่วนรุ่นเป็น Dropdown (กรองตาม brand_id)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('รุ่น', style: TextStyle(fontSize: 14)),
+                  const SizedBox(height: 6),
+                  DropdownButtonFormField<String>(
+                    initialValue: _selectedModel,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    ),
+                    items: _filteredModels.map((model) {
+                      return DropdownMenuItem<String>(
+                        value: model,
+                        child: Text(model),
+                      );
+                    }).toList(),
+                    onChanged: _selectedBrandId == null ? null : (value) {
+                      setState(() {
+                        _selectedModel = value;
+                      });
+                    },
+                    validator: (value) => value == null ? 'กรุณาเลือกรุ่น' : null,
+                  ),
+                ],
+              ),
             ),
+
+            // เปลี่ยนส่วนปีรถเป็น Dropdown
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('ปีรถ', style: TextStyle(fontSize: 14)),
+                  const SizedBox(height: 6),
+                  DropdownButtonFormField<String>(
+                    initialValue: _selectedYear,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    ),
+                    items: _years.map((year) {
+                      return DropdownMenuItem<String>(
+                        value: year,
+                        child: Text(year),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedYear = value;
+                      });
+                    },
+                    validator: (value) => value == null ? 'กรุณาเลือกปีรถ' : null,
+                  ),
+                ],
+              ),
+            ),
+
             _buildInputField(controller: _colorController, label: 'สีรถ'),
 
             const SizedBox(height: 20),
@@ -200,9 +279,24 @@ class _OwnerAddCustomerScreenState extends State<OwnerAddCustomerScreen> {
             // ปุ่มบันทึกข้อมูล
             _isSubmitting
                 ? const Center(child: CircularProgressIndicator())
-                : ElevatedButton(
-                    onPressed: _submitData,
-                    child: const Text('บันทึกข้อมูล'),
+                : SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: _submitData,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFEFF2EE),
+                        foregroundColor: const Color(0xFF588B5B),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                      ),
+                      child: const Text(
+                        'บันทึกข้อมูล',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ),
                   ),
           ],
         ),

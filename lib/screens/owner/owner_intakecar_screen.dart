@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:my_app/models/vehiclelicenseplate_search.dart';
+import 'package:my_app/screens/owner/navbar_owner.dart';
 import 'package:my_app/screens/owner/owner_add_customer_screen.dart';
 import 'package:my_app/screens/owner/owner_add_orders_screen.dart';
+import 'package:my_app/screens/owner/owner_addnewcar_screen.dart';
 import 'package:my_app/utils/app_api.dart';
 
 class OwnerIntakecarScreen extends StatefulWidget {
@@ -18,6 +20,7 @@ class _OwnerIntakecarScreen extends State<OwnerIntakecarScreen> {
   List<OrderSearchModel> _repairHistory = [];
   bool _isLoading = false;
   String _errorMessage = '';
+  int? _selectedVehicleId;
 
   void _searchVehicle() async {
     var query = _inputController.text.trim();
@@ -28,6 +31,7 @@ class _OwnerIntakecarScreen extends State<OwnerIntakecarScreen> {
       _errorMessage = '';
       _searchResults = [];
       _repairHistory = [];
+      _selectedVehicleId = null;
     });
 
     try {
@@ -100,10 +104,17 @@ class _OwnerIntakecarScreen extends State<OwnerIntakecarScreen> {
             ),
             const SizedBox(height: 20),
 
-            if (_errorMessage.isNotEmpty)
-              Text(_errorMessage, style: const TextStyle(color: Colors.red)),
+            if (_errorMessage.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              Text(
+                _errorMessage,
+                style: const TextStyle(color: Colors.red, fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+            ],
 
             if (_searchResults.isNotEmpty) ...[
+              const SizedBox(height: 20),
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -118,14 +129,28 @@ class _OwnerIntakecarScreen extends State<OwnerIntakecarScreen> {
                   itemCount: _searchResults.length,
                   itemBuilder: (context, index) {
                     final vehicle = _searchResults[index];
-                    return ListTile(
-                      title: Text(vehicle.vehicleSummary),
-                      subtitle: Text(
-                        'เจ้าของ: ${vehicle.customerFullName} | เบอร์โทร: ${vehicle.customerPhone}',
+                    final isSelected = _selectedVehicleId == vehicle.vehicleId;
+                    return Container(
+                      margin: const EdgeInsets.symmetric(vertical: 4.0),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: isSelected ? Colors.green : Colors.transparent,
+                          width: 2.0,
+                        ),
+                        borderRadius: BorderRadius.circular(8.0),
                       ),
-                      onTap: () {
-                        print('เลือกข้อมูลรถ: ${vehicle.vehicleLicenseplate}');
-                      },
+                      child: ListTile(
+                        title: Text(vehicle.vehicleSummary),
+                        subtitle: Text(
+                          'เจ้าของ: ${vehicle.customerFullName} | เบอร์โทร: ${vehicle.customerPhone}',
+                        ),
+                        onTap: () {
+                          setState(() {
+                            _selectedVehicleId = vehicle.vehicleId;
+                          });
+                          print('เลือกข้อมูลรถ: ${vehicle.vehicleLicenseplate}');
+                        },
+                      ),
                     );
                   },
                 ),
@@ -194,17 +219,69 @@ class _OwnerIntakecarScreen extends State<OwnerIntakecarScreen> {
                 height: 50,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromARGB(255, 208, 209, 208),
+                    foregroundColor: const Color.fromARGB(255, 17, 16, 16),
+                  ),
+                  
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => OwnerAddnewcarScreen(
+                          customerId: _searchResults[0].customerId,
+                        ),
+                      ),
+                    );
+
+                    if (result != null && result is String) {
+                      _inputController.text = _searchResults[0].customerPhone;
+                      _searchVehicle();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('เพิ่มข้อมูลรถใหม่สำเร็จ'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text('เพิ่มข้อมูลรถ'),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     foregroundColor: Colors.white,
                   ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const OwnerAddOrdersScreen(),
-                      ),
-                    );
-                  },
+                  
+                  onPressed: _selectedVehicleId == null
+                      ? null
+                      : () {
+                          final selectedVehicle = _searchResults.firstWhere(
+                            (v) => v.vehicleId == _selectedVehicleId,
+                          );
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => OwnerAddOrdersScreen(
+                                vehicle: selectedVehicle,
+                              ),
+                            ),
+                          ).then((success) {
+                            if (success == true) {
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const NavbarOwner(initialIndex: 1),
+                                ),
+                                (route) => false,
+                              );
+                            }
+                          });
+                        },
                   child: const Text('เปิดงานซ่อมใหม่'),
                 ),
               ),
