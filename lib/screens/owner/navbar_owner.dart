@@ -6,14 +6,21 @@ import 'package:my_app/screens/owner/owner_part_screen.dart';
 import 'package:my_app/screens/owner/owner_profile_screen.dart';
 
 class NavbarOwner extends StatefulWidget {
-  const NavbarOwner({super.key});
+  final int initialIndex;
+  const NavbarOwner({super.key, this.initialIndex = 0});
 
   @override
   State<NavbarOwner> createState() => _NavbarOwnerState();
 }
 
 class _NavbarOwnerState extends State<NavbarOwner> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex;
+  }
 
   void _navigateBottomBar(int index) {
     setState(() {

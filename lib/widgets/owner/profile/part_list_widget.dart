@@ -40,8 +40,8 @@ class PartListWidget extends StatelessWidget {
                 ),
                 child: Icon(Icons.build),
               ),
-              title: Text('${item.partName}'),
-              subtitle: Text('${item.partBrand}'),
+              title: Text(item.partName),
+              subtitle: Text(item.partBrand),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

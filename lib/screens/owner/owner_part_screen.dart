@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:my_app/models/part_model.dart';
 import 'package:my_app/screens/owner/part_add_screen.dart';
 import 'package:my_app/utils/app_api.dart';
-import 'package:my_app/widgets/owner/profile/emp_list_widget.dart';
 import 'package:my_app/widgets/owner/profile/part_list_widget.dart';
 
 

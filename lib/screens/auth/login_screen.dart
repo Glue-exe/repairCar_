@@ -130,63 +130,75 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _doLogin(BuildContext context) async {
-    var (isError, authenToken, errorMessage) = await _authenRequest();
+    try {
+      var (isError, authenToken, errorMessage) = await _authenRequest();
 
-    if (isError) {
-      showDialog(// Popup
-        context: context, // วาดทับหน้า Login
-        builder: (context) { // วาดกล่องหน้าตาแบบไหน
-          return AlertDialog(content: Text(errorMessage));
-        },
-      );
-    } else {
-      var result = await _accessRequest(authenToken);
+      if (isError) {
+        showDialog(// Popup
+          context: context, // วาดทับหน้า Login
+          builder: (context) { // วาดกล่องหน้าตาแบบไหน
+            return AlertDialog(content: Text(errorMessage));
+          },
+        );
+      } else {
+        var result = await _accessRequest(authenToken);
 
-      print('result accessRequest login: $result');
+        print('result accessRequest login: $result');
 
-      if (!result.isError) {
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        String? userRole = prefs.getString("user_role");
+        if (!result.isError) {
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          String? userRole = prefs.getString("user_role");
 
-        if (userRole == 'Owner' || userRole == 'เจ้าของร้าน') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const NavbarOwner()),
-          );
-        } else if (userRole == 'Mechanic' || userRole == 'ช่าง') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const TechnicianHomeScreen(),
-            ),
-          );
-        } else if (userRole == 'Accountant' || userRole == 'พนักงานบัญชี') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const AccountantHomeScreen(),
-            ),
-          );
+          if (userRole == 'Owner' || userRole == 'เจ้าของร้าน') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const NavbarOwner()),
+            );
+          } else if (userRole == 'Mechanic' || userRole == 'ช่าง') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const TechnicianHomeScreen(),
+              ),
+            );
+          } else if (userRole == 'Accountant' || userRole == 'พนักงานบัญชี') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AccountantHomeScreen(),
+              ),
+            );
+          } else {
+            showDialog(
+              context: context,
+              builder: (context) {
+                return const AlertDialog(
+                  content: Text(
+                    "ไม่พบบทบาทผู้ใช้ในระบบ หรือไม่มีสิทธิ์เข้าใช้งาน",
+                  ),
+                );
+              },
+            );
+          }
         } else {
           showDialog(
             context: context,
             builder: (context) {
-              return const AlertDialog(
-                content: Text(
-                  "ไม่พบบทบาทผู้ใช้ในระบบ หรือไม่มีสิทธิ์เข้าใช้งาน",
-                ),
-              );
+              return AlertDialog(content: Text(result.errorMessage));
             },
           );
         }
-      } else {
-        showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(content: Text(result.errorMessage));
-          },
-        );
       }
+    } catch (e) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('เกิดข้อผิดพลาดในการเชื่อมต่อ'),
+            content: Text('กรุณาตรวจสอบการรันเซิร์ฟเวอร์หรือ IP Address ของคุณ\n\nรายละเอียด: $e'),
+          );
+        },
+      );
     }
   }
 
