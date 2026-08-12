@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:my_app/screens/owner/owner_part_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_app/screens/owner/owner_view_screen.dart';
+import 'package:my_app/screens/auth/login_screen.dart';
 
 class OwnerProfileScreen extends StatefulWidget {
   const OwnerProfileScreen({super.key});
@@ -33,6 +34,39 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
     super.initState();
   }
 
+  void _logout() async {
+    bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('ออกจากระบบ'),
+        content: const Text('คุณต้องการออกจากระบบหรือไม่?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('ยกเลิก'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('ยืนยัน'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false,
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -53,9 +87,11 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
                 Text('ชื่อ-นามสกุล: $_fullName'),
                 const SizedBox(height: 8),
                 Text('ตำแหน่ง: $_roleName'),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
+                const SizedBox(height: 16),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  alignment: WrapAlignment.center,
                   children: [
                     ElevatedButton(
                       onPressed: () {
@@ -68,7 +104,6 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
                       },
                       child: const Text('ข้อมูลพนักงาน'),
                     ),
-                    const SizedBox(width: 16),
                     ElevatedButton(
                       onPressed: () {
                         Navigator.push(
@@ -78,10 +113,25 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
                           ),
                         );
                       },
-                      
                       child: const Text('ข้อมูลอะไหล่'),
                     ),
                   ],
+                ),
+                const SizedBox(height: 24),
+                const Divider(),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: _logout,
+                    icon: const Icon(Icons.logout),
+                    label: const Text('ออกจากระบบ'),
+                  ),
                 ),
               ],
             ),
