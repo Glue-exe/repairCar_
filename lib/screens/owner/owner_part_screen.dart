@@ -58,7 +58,10 @@ class _OwnerPartScreenState extends State<OwnerPartScreen> {
         decoration: const BoxDecoration(),
         child: SafeArea(child: Column(
           children: [
-            PartListWidget(partModelStore: partModelStore,
+            Expanded(
+              child: PartListWidget(
+                partModelStore: partModelStore,
+              ),
             ),
           ],
         )),
