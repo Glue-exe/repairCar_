@@ -41,53 +41,66 @@ class IncomeChartWidget extends StatelessWidget {
                 child: Center(child: Text('ไม่มีข้อมูลรายได้')),
               )
             else
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: SizedBox(
-                  height: 160,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: incomeList.map((item) {
-                      // คำนวณความสูงแท่งกราฟ (ความสูงสูงสุด 100 px)
-                      double barHeight = (item.totalAmount / maxIncome) * 100;
-                      
-                      // กำหนดความสูงขั้นต่ำอย่างน้อย 6 px เพื่อให้มองเห็นแท่งแม้ว่ายอดจะเป็น 0
-                      if (barHeight < 6) barHeight = 6;
+              SizedBox(
+                width: double.infinity,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(
+                    parent: AlwaysScrollableScrollPhysics(),
+                  ),
+                  child: SizedBox(
+                    height: 170,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: incomeList.map((item) {
+                        // คำนวณความสูงแท่งกราฟ (ความสูงสูงสุด 100 px)
+                        double barHeight = (item.totalAmount / maxIncome) * 100;
 
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              '฿${item.totalAmount}',
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.teal,
+                        // กำหนดความสูงขั้นต่ำอย่างน้อย 6 px เพื่อให้มองเห็นแท่งแม้ว่ายอดจะเป็น 0
+                        if (barHeight < 6) barHeight = 6;
+
+                        return Container(
+                          width: 64,
+                          margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  '฿${item.totalAmount}',
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.teal,
+                                  ),
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Container(
-                              width: 22,
-                              height: barHeight,
-                              decoration: BoxDecoration(
-                                color: Colors.teal.shade400,
-                                borderRadius: BorderRadius.circular(6),
+                              const SizedBox(height: 4),
+                              Container(
+                                width: 22,
+                                height: barHeight,
+                                decoration: BoxDecoration(
+                                  color: Colors.teal.shade400,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              item.monthYear,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: Colors.black87,
+                              const SizedBox(height: 6),
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  item.monthYear,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.black87,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
                   ),
                 ),
               ),
