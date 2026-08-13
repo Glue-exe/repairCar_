@@ -20,37 +20,94 @@ class _OwnerAddnewcarScreenState extends State<OwnerAddnewcarScreen> {
   String? _selectedModel;
   String? _selectedYear;
   bool _isSubmitting = false;
+  bool _isLoadingMetaData = true;
 
-  final List<Map<String, dynamic>> _brands = [
-    {"id": 1, "name": "Toyota"},
-    {"id": 2, "name": "Honda"},
-    {"id": 3, "name": "Isuzu"},
-    {"id": 4, "name": "Mazda"},
-    {"id": 5, "name": "Nissan"},
-  ];
-
-  final Map<int, List<String>> _brandModels = {
-    1: ["Corolla Altis", "Yaris Cross", "Camry"],
-    2: ["Civic FC", "CR-V", "City Turbo"],
-    3: ["D-Max All New", "Mu-X", "D-Max Cab4"],
-    4: ["Mazda 2", "Mazda CX-30", "Mazda 3"],
-    5: ["Almera", "Kicks", "Navara NP300"],
-  };
-
-  final List<String> _years = [
-    "2018",
-    "2019",
-    "2020",
-    "2021",
-    "2022",
-    "2023",
-    "2024",
-    "2025",
-  ];
+  List<Map<String, dynamic>> _brands = [];
+  Map<int, List<String>> _brandModels = {};
+  List<String> _years = [];
 
   List<String> get _filteredModels {
     if (_selectedBrandId == null) return [];
     return _brandModels[_selectedBrandId] ?? [];
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchVehicleMetaData();
+  }
+
+  Future<void> _fetchVehicleMetaData() async {
+    try {
+      final responses = await Future.wait([
+        AppAPI.get('/vehicle_brand'),
+        AppAPI.get('/vehicle_model'),
+        AppAPI.get('/vehicle_year'),
+      ]);
+
+      final brandData = jsonDecode(responses[0].body);
+      final modelData = jsonDecode(responses[1].body);
+      final yearData = jsonDecode(responses[2].body);
+
+      if (brandData['isError'] == false &&
+          modelData['isError'] == false &&
+          yearData['isError'] == false) {
+        
+        final List<dynamic> brandsList = brandData['data'] ?? [];
+        final List<dynamic> modelsList = modelData['data'] ?? [];
+        final List<dynamic> yearsList = yearData['data'] ?? [];
+
+        final List<Map<String, dynamic>> tempBrands = brandsList.map((item) {
+          return {
+            "id": item['brand_id'] ?? item['id'],
+            "name": item['brand_name'] ?? item['name'],
+          };
+        }).toList();
+
+        final Map<int, List<String>> tempBrandModels = {};
+        for (var item in modelsList) {
+          final int? brandId = item['brand_id'];
+          final String? modelName = item['model_name'];
+          if (brandId != null && modelName != null) {
+            if (!tempBrandModels.containsKey(brandId)) {
+              tempBrandModels[brandId] = [];
+            }
+            if (!tempBrandModels[brandId]!.contains(modelName)) {
+              tempBrandModels[brandId]!.add(modelName);
+            }
+          }
+        }
+
+        final List<String> tempYears = yearsList.map((item) {
+          return (item['year'] ?? '').toString();
+        }).where((y) => y.isNotEmpty).toList();
+
+        // Sort years descending
+        tempYears.sort((a, b) => b.compareTo(a));
+
+        if (mounted) {
+          setState(() {
+            _brands = tempBrands;
+            _brandModels = tempBrandModels;
+            _years = tempYears;
+            _isLoadingMetaData = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _isLoadingMetaData = false;
+          });
+        }
+      }
+    } catch (e) {
+      print("Error fetching vehicle meta data: $e");
+      if (mounted) {
+        setState(() {
+          _isLoadingMetaData = false;
+        });
+      }
+    }
   }
 
   @override
@@ -129,117 +186,119 @@ class _OwnerAddnewcarScreenState extends State<OwnerAddnewcarScreen> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // หัวข้อฟอร์ม
-              const Text(
-                'กรอกข้อมูลรถ',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textDark,
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // 1. ทะเบียนรถ
-              _buildLabel('ทะเบียนรถ'),
-              _buildTextField(
-                controller: _plateController, 
-                hintText: '',
-                validator: (value) => value!.trim().isEmpty ? 'กรุณากรอกทะเบียนรถ' : null,
-              ),
-
-              // 2. ยี่ห้อรถ (Dropdown)
-              _buildLabel('ยี่ห้อรถ'),
-              _buildDropdownField<int>(
-                value: _selectedBrandId,
-                items: _brands.map((b) => DropdownMenuItem<int>(
-                  value: b['id'] as int,
-                  child: Text(b['name'] as String),
-                )).toList(),
-                onChanged: (newValue) {
-                  setState(() {
-                    _selectedBrandId = newValue;
-                    _selectedModel = null; // รีเซ็ตรุ่นเมื่อเปลี่ยนยี่ห้อ
-                  });
-                },
-                validator: (value) => value == null ? 'กรุณาเลือกยี่ห้อรถ' : null,
-              ),
-
-              // 3. รุ่น (Dropdown ตามยี่ห้อ)
-              _buildLabel('รุ่น'),
-              _buildDropdownField<String>(
-                value: _selectedModel,
-                items: _filteredModels.map((m) => DropdownMenuItem<String>(
-                  value: m,
-                  child: Text(m),
-                )).toList(),
-                onChanged: _selectedBrandId == null ? null : (newValue) {
-                  setState(() {
-                    _selectedModel = newValue;
-                  });
-                },
-                validator: (value) => value == null ? 'กรุณาเลือกรุ่น' : null,
-              ),
-
-              // 4. ปีรถ (Dropdown)
-              _buildLabel('ปีรถ'),
-              _buildDropdownField<String>(
-                value: _selectedYear,
-                items: _years.map((y) => DropdownMenuItem<String>(
-                  value: y,
-                  child: Text(y),
-                )).toList(),
-                onChanged: (newValue) {
-                  setState(() {
-                    _selectedYear = newValue;
-                  });
-                },
-                validator: (value) => value == null ? 'กรุณาเลือกปีรถ' : null,
-              ),
-
-              // 5. สีรถ
-              _buildLabel('สีรถ'),
-              _buildTextField(
-                controller: _colorController, 
-                hintText: '',
-                validator: (value) => value!.trim().isEmpty ? 'กรุณากรอกสีรถ' : null,
-              ),
-              
-              const SizedBox(height: 32),
-              
-              // ปุ่มบันทึกข้อมูล
-              _isSubmitting
-                  ? const Center(child: CircularProgressIndicator())
-                  : SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: _submitData,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFEFF2EE),
-                          foregroundColor: const Color(0xFF588B5B),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                        ),
-                        child: const Text(
-                          'บันทึกข้อมูล',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
+      body: _isLoadingMetaData
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // หัวข้อฟอร์ม
+                    const Text(
+                      'กรอกข้อมูลรถ',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textDark,
                       ),
                     ),
-            ],
-          ),
-        ),
-      ),
+                    const SizedBox(height: 16),
+
+                    // 1. ทะเบียนรถ
+                    _buildLabel('ทะเบียนรถ'),
+                    _buildTextField(
+                      controller: _plateController, 
+                      hintText: '',
+                      validator: (value) => value!.trim().isEmpty ? 'กรุณากรอกทะเบียนรถ' : null,
+                    ),
+
+                    // 2. ยี่ห้อรถ (Dropdown)
+                    _buildLabel('ยี่ห้อรถ'),
+                    _buildDropdownField<int>(
+                      value: _selectedBrandId,
+                      items: _brands.map((b) => DropdownMenuItem<int>(
+                        value: b['id'] as int,
+                        child: Text(b['name'] as String),
+                      )).toList(),
+                      onChanged: (newValue) {
+                        setState(() {
+                          _selectedBrandId = newValue;
+                          _selectedModel = null; // รีเซ็ตรุ่นเมื่อเปลี่ยนยี่ห้อ
+                        });
+                      },
+                      validator: (value) => value == null ? 'กรุณาเลือกยี่ห้อรถ' : null,
+                    ),
+
+                    // 3. รุ่น (Dropdown ตามยี่ห้อ)
+                    _buildLabel('รุ่น'),
+                    _buildDropdownField<String>(
+                      value: _selectedModel,
+                      items: _filteredModels.map((m) => DropdownMenuItem<String>(
+                        value: m,
+                        child: Text(m),
+                      )).toList(),
+                      onChanged: _selectedBrandId == null ? null : (newValue) {
+                        setState(() {
+                          _selectedModel = newValue;
+                        });
+                      },
+                      validator: (value) => value == null ? 'กรุณาเลือกรุ่น' : null,
+                    ),
+
+                    // 4. ปีรถ (Dropdown)
+                    _buildLabel('ปีรถ'),
+                    _buildDropdownField<String>(
+                      value: _selectedYear,
+                      items: _years.map((y) => DropdownMenuItem<String>(
+                        value: y,
+                        child: Text(y),
+                      )).toList(),
+                      onChanged: (newValue) {
+                        setState(() {
+                          _selectedYear = newValue;
+                        });
+                      },
+                      validator: (value) => value == null ? 'กรุณาเลือกปีรถ' : null,
+                    ),
+
+                    // 5. สีรถ
+                    _buildLabel('สีรถ'),
+                    _buildTextField(
+                      controller: _colorController, 
+                      hintText: '',
+                      validator: (value) => value!.trim().isEmpty ? 'กรุณากรอกสีรถ' : null,
+                    ),
+                    
+                    const SizedBox(height: 32),
+                    
+                    // ปุ่มบันทึกข้อมูล
+                    _isSubmitting
+                        ? const Center(child: CircularProgressIndicator())
+                        : SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: ElevatedButton(
+                              onPressed: _submitData,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFEFF2EE),
+                                foregroundColor: const Color(0xFF588B5B),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(24),
+                                ),
+                              ),
+                              child: const Text(
+                                'บันทึกข้อมูล',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                  ],
+                ),
+              ),
+            ),
     );
   }
 
