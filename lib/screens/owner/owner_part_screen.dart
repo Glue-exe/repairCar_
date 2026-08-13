@@ -37,7 +37,7 @@ class _OwnerPartScreenState extends State<OwnerPartScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text('ข้อมูลอะไหล่'),
+        title: Text('อนุมัติอะไหล่'),
         centerTitle: true,
         actions: [
           IconButton(
