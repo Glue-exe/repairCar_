@@ -4,6 +4,7 @@ import 'package:my_app/screens/owner/owner_intakecar_screen.dart';
 import 'package:my_app/screens/owner/owner_jobpool_screen.dart';
 import 'package:my_app/screens/owner/owner_part_screen.dart';
 import 'package:my_app/screens/owner/owner_profile_screen.dart';
+import 'package:my_app/screens/owner/owner_intakecar_screen2.dart';
 
 class NavbarOwner extends StatefulWidget {
   final int initialIndex;
@@ -31,7 +32,7 @@ class _NavbarOwnerState extends State<NavbarOwner> {
   final List<Widget> _pages = [
     OwnerHomeScreen(),
     OwnerJobpoolScreen(),
-    OwnerIntakecarScreen(),
+    OwnerIntakecarScreen2(),
     OwnerPartScreen(),
     OwnerProfileScreen(),
   ];

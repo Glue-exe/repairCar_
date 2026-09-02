@@ -1,6 +1,6 @@
 class MonthlyIncomeModel {
-  String monthYear = "";
-  double totalAmount = 0.0;
+  String monthYear;
+  double totalAmount;
 
   MonthlyIncomeModel({
     required this.monthYear,
@@ -16,9 +16,9 @@ class MonthlyIncomeModel {
 }
 
 class MonthlyIncomeResponse {
-  bool isError = false;
-  List<MonthlyIncomeModel> data = [];
-  String errorMessage = "";
+  bool isError;
+  List<MonthlyIncomeModel> data;
+  String errorMessage;
 
   MonthlyIncomeResponse({
     required this.isError,
@@ -30,8 +30,8 @@ class MonthlyIncomeResponse {
     return MonthlyIncomeResponse(
       isError: json['isError'] as bool,
       data: (json['data'] as List)
-              .map((item) => MonthlyIncomeModel.fromJson(item as Map<String, dynamic>))
-              .toList(),
+          .map((item) => MonthlyIncomeModel.fromJson(item as Map<String, dynamic>))
+          .toList(),
       errorMessage: json['errorMessage'] as String,
     );
   }

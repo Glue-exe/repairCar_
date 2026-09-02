@@ -1,45 +1,55 @@
 class EmployeeModel {
-  int empId = 0;
-  int titleId = 0;
-  String titleName = "";
-  String empFirstname = "";
-  String empLastname = "";
-  String empPhone = "";
-  int userRoleId = 0;
-  String userRoleName = "";
-  String empActive = "";
+  int id;
+  int titleId;
+  String titleName;
+  String firstName;
+  String lastName;
+  String phone;
+  int userRoleId;
+  String userRoleName;
+  String empActive;
+  double salary;
+
+  // Getters for legacy compatibility
+  int get empId => id;
+  String get empFirstname => firstName;
+  String get empLastname => lastName;
+  String get empPhone => phone;
+  double get empSalary => salary;
 
   EmployeeModel({
-    required this.empId,
+    required this.id,
     required this.titleId,
     required this.titleName,
-    required this.empFirstname,
-    required this.empLastname,
-    required this.empPhone,
+    required this.firstName,
+    required this.lastName,
+    required this.phone,
     required this.userRoleId,
     required this.userRoleName,
     required this.empActive,
+    required this.salary,
   });
 
   factory EmployeeModel.fromJson(Map<String, dynamic> json) {
     return EmployeeModel(
-      empId: json['emp_id'] as int,
+      id: json['id'] as int,
       titleId: json['title_id'] as int,
       titleName: json['title_name'] as String,
-      empFirstname: json['emp_firstname'] as String,
-      empLastname: json['emp_lastname'] as String,
-      empPhone: json['emp_phone'] as String,
+      firstName: json['first_name'] as String,
+      lastName: json['last_name'] as String,
+      phone: json['phone'] as String,
       userRoleId: json['user_role_id'] as int,
       userRoleName: json['user_role_name'] as String,
       empActive: json['emp_active'] as String,
+      salary: double.parse(json['current_salary'].toString()),
     );
   }
 }
 
 class EmployeeResponse {
-  bool isError = false;
-  List<EmployeeModel> data = [];
-  String errorMessage = "";
+  bool isError;
+  List<EmployeeModel> data;
+  String errorMessage;
 
   EmployeeResponse({
     required this.isError,
@@ -49,11 +59,11 @@ class EmployeeResponse {
 
   factory EmployeeResponse.fromJson(Map<String, dynamic> json) {
     return EmployeeResponse(
-      isError: json['isError'],
+      isError: json['isError'] as bool,
       data: (json['data'] as List)
-          .map((item) => EmployeeModel.fromJson(item))
+          .map((item) => EmployeeModel.fromJson(item as Map<String, dynamic>))
           .toList(),
-      errorMessage: json['errorMessage'],
+      errorMessage: json['errorMessage'] as String,
     );
   }
 }
