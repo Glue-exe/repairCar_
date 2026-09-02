@@ -1,4 +1,3 @@
-
 class AddNewCustomerModel {
   String cusFirstname;
   String cusLastname;
@@ -21,15 +20,32 @@ class AddNewCustomerModel {
   });
 
   Map<String, dynamic> toJson() {
-    return{
-      'cus_firstname' : cusFirstname,
-      'cus_lastname' : cusLastname,
-      'cus_phone' : cusPhone,
-      'veh_lecenseplate' : vehLicenseplate,
-      'band_id': brandId,
-      'veh_model' : vehModel,
-      'veh_color' : vehColor,
-      'veh_year' : vehYear,
+    return {
+      'first_name': cusFirstname,
+      'last_name': cusLastname,
+      'phone': cusPhone,
+      'license_plate': vehLicenseplate,
+      'brand_id': brandId,
+      'model_name': vehModel,
+      'color': vehColor,
+      'year': vehYear,
+      // create_table_latest.sql fields
+      'cus_first_name': cusFirstname,
+      'cus_last_name': cusLastname,
+      'cus_phone': cusPhone,
+      'v_license_plate': vehLicenseplate,
+      'vb_id': brandId,
+      'vm_brand_id': brandId,
+      'vm_name': vehModel,
+      'v_color': vehColor,
+      'v_year': vehYear,
+      // legacy keys
+      'cus_firstname': cusFirstname,
+      'cus_lastname': cusLastname,
+      'veh_licenseplate': vehLicenseplate,
+      'veh_model': vehModel,
+      'veh_color': vehColor,
+      'veh_year': vehYear,
     };
   }
 }

@@ -1,8 +1,8 @@
 class DashboardSummaryModel {
-  double monthlyIncome = 0.0;
-  int vehiclesThisMonth = 0;
-  int activeJobsCount = 0;
-  int pendingApprovalsCount = 0;
+  double monthlyIncome;
+  int vehiclesThisMonth;
+  int activeJobsCount;
+  int pendingApprovalsCount;
 
   DashboardSummaryModel({
     required this.monthlyIncome,
@@ -22,9 +22,9 @@ class DashboardSummaryModel {
 }
 
 class DashboardSummaryResponse {
-  bool isError = false;
+  bool isError;
   DashboardSummaryModel data;
-  String errorMessage = "";
+  String errorMessage;
 
   DashboardSummaryResponse({
     required this.isError,

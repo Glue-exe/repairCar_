@@ -1,26 +1,30 @@
 class TitleModel {
-  int titleId = 0;
-  String titleName = "";
+  int id;
+  String name;
 
-  TitleModel ({
-    required this.titleId,
-    required this.titleName
+  // Getters for legacy compatibility
+  int get titleId => id;
+  String get titleName => name;
+
+  TitleModel({
+    required this.id,
+    required this.name,
   });
 
   factory TitleModel.fromJson(Map<String, dynamic> json) {
     return TitleModel(
-      titleId: json["title_id"] as int,
-      titleName: json["title_name"] as String,
+      id: json['id'] as int,
+      name: json['name'] as String,
     );
   }
 }
 
 class TitleResponse {
-  bool isError = false;
-  List<TitleModel> data = [];
-  String errorMessage = "";
+  bool isError;
+  List<TitleModel> data;
+  String errorMessage;
 
-  TitleResponse ({
+  TitleResponse({
     required this.isError,
     required this.data,
     required this.errorMessage,
@@ -30,8 +34,9 @@ class TitleResponse {
     return TitleResponse(
       isError: json['isError'] as bool,
       data: (json['data'] as List)
-            .map((item) => TitleModel.fromJson(item as Map<String, dynamic>))
-            .toList(),
-      errorMessage: json['errorMessage'] as String);
+          .map((item) => TitleModel.fromJson(item as Map<String, dynamic>))
+          .toList(),
+      errorMessage: json['errorMessage'] as String,
+    );
   }
 }

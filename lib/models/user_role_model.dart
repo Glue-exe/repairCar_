@@ -1,26 +1,31 @@
 class RoleModel {
-  int userRoleId = 0;
-  String uesrRoleName = "";
+  int id;
+  String name;
 
-  RoleModel ({
-    required this.userRoleId,
-    required this.uesrRoleName,
+  // Getters for legacy compatibility
+  int get userRoleId => id;
+  String get userRoleName => name;
+  String get uesrRoleName => name;
+
+  RoleModel({
+    required this.id,
+    required this.name,
   });
 
   factory RoleModel.fromJson(Map<String, dynamic> json) {
     return RoleModel(
-      userRoleId: json["user_role_id"] as int,
-      uesrRoleName: json["user_role_name"] as String
+      id: json['id'] as int,
+      name: json['name'] as String,
     );
   }
 }
 
 class RoleResponse {
-  bool isError = false;
-  List<RoleModel> data = [];
-  String errorMessage = "";
+  bool isError;
+  List<RoleModel> data;
+  String errorMessage;
 
-  RoleResponse ({
+  RoleResponse({
     required this.isError,
     required this.data,
     required this.errorMessage,
@@ -30,8 +35,9 @@ class RoleResponse {
     return RoleResponse(
       isError: json['isError'] as bool,
       data: (json['data'] as List)
-            .map((item) => RoleModel.fromJson(item as Map<String, dynamic>))
-            .toList(),
-      errorMessage: json['errorMessage'] as String);
+          .map((item) => RoleModel.fromJson(item as Map<String, dynamic>))
+          .toList(),
+      errorMessage: json['errorMessage'] as String,
+    );
   }
 }

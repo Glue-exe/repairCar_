@@ -10,6 +10,16 @@ class VehicleLicenseplateSearch {
   String customerLastname;
   String customerPhone;
 
+  int get id => vehicleId;
+  String get licensePlate => vehicleLicenseplate;
+  String get brandName => vehicleBrand;
+  String get modelName => vehicleModel;
+  String get color => vehicleColor;
+  int get year => vehicleYear;
+  String get firstName => customerFirstname;
+  String get lastName => customerLastname;
+  String get phone => customerPhone;
+
   VehicleLicenseplateSearch({
     required this.vehicleId,
     required this.vehicleLicenseplate,
@@ -25,32 +35,17 @@ class VehicleLicenseplateSearch {
 
   factory VehicleLicenseplateSearch.fromJson(Map<String, dynamic> json) {
     return VehicleLicenseplateSearch(
-      vehicleId: json['veh_id'] as int,
-      vehicleLicenseplate: json['veh_licenseplate'] as String,
-      vehicleBrand: (json['brand_name'] as String?) ?? '',
-      vehicleModel: json['veh_model'] as String,
-      vehicleColor: json['veh_color'] as String,
-      vehicleYear: json['veh_year'] as int,
+      vehicleId: json['id'] as int,
+      vehicleLicenseplate: json['license_plate'] as String,
+      vehicleBrand: json['brand_name'] as String,
+      vehicleModel: json['model_name'] as String,
+      vehicleColor: json['color'] as String,
+      vehicleYear: json['year'] as int,
       customerId: json['cus_id'] as int,
-      customerFirstname: json['cus_firstname'] as String,
-      customerLastname: json['cus_lastname'] as String,
-      customerPhone: json['cus_phone'] as String,
+      customerFirstname: json['first_name'] as String,
+      customerLastname: json['last_name'] as String,
+      customerPhone: json['phone'] as String,
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'veh_id': vehicleId,
-      'veh_licenseplate': vehicleLicenseplate,
-      'brand_name': vehicleBrand,
-      'veh_model': vehicleModel,
-      'veh_color': vehicleColor,
-      'veh_year': vehicleYear,
-      'cus_id': customerId,
-      'cus_firstname': customerFirstname,
-      'cus_lastname': customerLastname,
-      'cus_phone': customerPhone,
-    };
   }
 
   String get customerFullName => '$customerFirstname $customerLastname';
@@ -73,18 +68,14 @@ class VehicleLicenseplateSearchResponse {
   });
 
   factory VehicleLicenseplateSearchResponse.fromJson(Map<String, dynamic> json) {
-    final dataMap = json['data'] as Map<String, dynamic>?;
-    final vehiclesList = dataMap != null ? (dataMap['customersAndVehicles'] as List?) : null;
-    final ordersList = dataMap != null ? (dataMap['orders'] as List?) : null;
+    final dataMap = json['data'] as Map<String, dynamic>;
+    final vehiclesList = dataMap['customersAndVehicles'] as List;
+    final ordersList = dataMap['orders'] as List;
     return VehicleLicenseplateSearchResponse(
       isError: json['isError'] as bool,
-      data: vehiclesList != null
-          ? vehiclesList.map((item) => VehicleLicenseplateSearch.fromJson(item as Map<String, dynamic>)).toList()
-          : [],
-      orders: ordersList != null
-          ? ordersList.map((item) => OrderSearchModel.fromJson(item as Map<String, dynamic>)).toList()
-          : [],
-      errorMessage: json['errorMessage'] as String? ?? '',
+      data: vehiclesList.map((item) => VehicleLicenseplateSearch.fromJson(item as Map<String, dynamic>)).toList(),
+      orders: ordersList.map((item) => OrderSearchModel.fromJson(item as Map<String, dynamic>)).toList(),
+      errorMessage: json['errorMessage'] as String,
     );
   }
 }
@@ -101,6 +92,11 @@ class OrderSearchModel {
   String? repairTime;
   String createdAt;
 
+  int get id => orderId;
+  String get symptom => orderSymptom;
+  int get orderStatusId => statusId;
+  int get priorityId => ordersPriorityId;
+
   OrderSearchModel({
     required this.orderId,
     required this.customerId,
@@ -116,16 +112,16 @@ class OrderSearchModel {
 
   factory OrderSearchModel.fromJson(Map<String, dynamic> json) {
     return OrderSearchModel(
-      orderId: json['orders_id'] as int,
+      orderId: json['id'] as int,
       customerId: json['cus_id'] as int,
-      vehicleId: json['veh_id'] as int,
+      vehicleId: json['vehicle_id'] as int,
       employeeId: json['emp_id'] as int?,
-      orderSymptom: json['order_symptom'] as String? ?? '',
+      orderSymptom: json['symptom'] as String,
       statusId: json['status_id'] as int,
       ordersPriorityId: json['orders_priority_id'] as int,
       laborCost: json['labor_cost'] != null ? double.parse(json['labor_cost'].toString()) : null,
       repairTime: json['repair_time']?.toString(),
-      createdAt: json['created_at'] as String? ?? '',
+      createdAt: json['created_at'] as String,
     );
   }
 }
