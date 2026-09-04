@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_app/widgets/owner/intakecar/intakecar_search_licensePlate_widget.dart';
 import 'package:my_app/widgets/owner/intakecar/intakecar_search_phone_widget.dart';
+import 'package:my_app/widgets/owner/intakecar/intakecar_add_cus_widget.dart';
 
 class OwnerIntakecarScreen2 extends StatefulWidget {
   const OwnerIntakecarScreen2({super.key});
@@ -23,6 +24,7 @@ class _OwnerIntakecarScreen2State extends State<OwnerIntakecarScreen2> {
             children: [
               IntakecarSearchWidget(),
               IntakecarSearchPhoneWidget(),
+              IntakecarAddCusWidget(),
             ],
           ),
         ),

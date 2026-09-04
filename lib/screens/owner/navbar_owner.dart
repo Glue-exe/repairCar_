@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:my_app/screens/owner/owner_home_screen.dart';
 import 'package:my_app/screens/owner/owner_intakecar_screen.dart';
 import 'package:my_app/screens/owner/owner_jobpool_screen.dart';
+import 'package:my_app/screens/owner/owner_part_screen.dart';
 import 'package:my_app/screens/owner/owner_profile_screen.dart';
 import 'package:my_app/screens/owner/owner_intakecar_screen2.dart';
 

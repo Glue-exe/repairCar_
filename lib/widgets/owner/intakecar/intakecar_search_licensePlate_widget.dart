@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:my_app/utils/app_api.dart';
 import 'package:my_app/models/vehicle_search_license_plate_model.dart';
+import 'package:my_app/screens/owner/owner_vehicle_detail_screen.dart';
 
 class IntakecarSearchWidget extends StatefulWidget {
   const IntakecarSearchWidget({super.key});
@@ -25,7 +26,6 @@ class _IntakecarSearchWidgetState extends State<IntakecarSearchWidget> {
   Future<void> _searchVehicle() async {
     final query = _searchController.text.trim();
 
-    print(query);
     if (query.isEmpty) {
       setState(() {
         _vehicle = null;
@@ -94,6 +94,16 @@ class _IntakecarSearchWidgetState extends State<IntakecarSearchWidget> {
             Card(
               elevation: 2,
               child: ListTile(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => OwnerVehicleDetailScreen(
+                        vehicle: _vehicle!,
+                      ),
+                    ),
+                  );
+                },
                 leading: const CircleAvatar(
                   child: Icon(Icons.directions_car),
                 ),
@@ -105,8 +115,16 @@ class _IntakecarSearchWidgetState extends State<IntakecarSearchWidget> {
                   'สี: ${_vehicle!.color}\n'
                   'เจ้าของรถ: ${_vehicle!.fullName}',
                 ),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
               ),
             ),
+          if (_errorMessage.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Text(
+              _errorMessage,
+              style: const TextStyle(color: Colors.red),
+            ),
+          ],
         ],
       ),
     );
