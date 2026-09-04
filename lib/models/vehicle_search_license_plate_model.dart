@@ -1,5 +1,7 @@
 class VehicleSearchResultModel {
+  final int vId;
   final String fullName;
+  final String cusPhone;
   final String licensePlate;
   final String modelName;
   final String brandName;
@@ -7,7 +9,9 @@ class VehicleSearchResultModel {
   final String color;
 
   VehicleSearchResultModel({
+    required this.vId,
     required this.fullName,
+    required this.cusPhone,
     required this.licensePlate,
     required this.modelName,
     required this.brandName,
@@ -17,7 +21,9 @@ class VehicleSearchResultModel {
 
   factory VehicleSearchResultModel.fromJson(Map<String, dynamic> json) {
     return VehicleSearchResultModel(
+      vId: json['v_id'] as int,
       fullName: json['fullname'] as String,
+      cusPhone: json['cus_phone'] as String,
       licensePlate: json['v_license_plate'] as String,
       modelName: json['vm_name'] as String,
       brandName: json['vb_name'] as String,
