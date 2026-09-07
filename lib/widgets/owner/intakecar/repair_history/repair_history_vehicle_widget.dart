@@ -18,9 +18,15 @@ class RepairHistoryVehicleWidget extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'ข้อมูลรถยนต์และเจ้าของรถ',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            const Row(
+              children: [
+                Icon(Icons.directions_car, color: Colors.blueAccent),
+                SizedBox(width: 8),
+                Text(
+                  'ข้อมูลรถยนต์และเจ้าของรถ',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
             const Divider(height: 24),
             Row(

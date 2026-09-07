@@ -10,17 +10,19 @@ class InvoiceData {
   final double total;
   final String paymentMethod;
   final String paymentStatus;
+  final bool isCreated;
 
   const InvoiceData({
-    required this.invoiceNo,
-    required this.customerName,
-    required this.licensePlate,
-    required this.createdAt,
-    required this.laborTotal,
-    required this.partsTotal,
-    required this.total,
-    required this.paymentMethod,
-    required this.paymentStatus,
+    this.invoiceNo = '',
+    this.customerName = '',
+    this.licensePlate = '',
+    this.createdAt = '',
+    this.laborTotal = 0.0,
+    this.partsTotal = 0.0,
+    this.total = 0.0,
+    this.paymentMethod = 'ยังไม่ระบุ',
+    this.paymentStatus = 'รอชำระเงิน',
+    this.isCreated = false,
   });
 }
 
@@ -34,6 +36,8 @@ class RepairHistoryInvoiceWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool hasInvoice = invoice != null && invoice!.isCreated;
+
     return Card(
       elevation: 2,
       child: Padding(
@@ -42,24 +46,35 @@ class RepairHistoryInvoiceWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                const Icon(Icons.receipt_long, color: Colors.teal),
+                const SizedBox(width: 8),
                 const Text(
                   'ใบเสร็จรับเงิน / คิดเงิน',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-                if (invoice != null)
-                  Text(
-                    invoice!.paymentStatus,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
+                const Spacer(),
+                if (hasInvoice)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: Colors.green.shade200),
+                    ),
+                    child: Text(
+                      invoice!.paymentStatus,
+                      style: TextStyle(
+                        color: Colors.green.shade800,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
               ],
             ),
             const Divider(height: 24),
-            if (invoice == null)
+            if (!hasInvoice)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 12.0),
                 child: Center(
@@ -116,6 +131,7 @@ class RepairHistoryInvoiceWidget extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
+                      color: Colors.green,
                     ),
                   ),
                 ],
@@ -127,7 +143,13 @@ class RepairHistoryInvoiceWidget extends StatelessWidget {
                   color: Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Text('วิธีชำระเงิน: ${invoice!.paymentMethod}'),
+                child: Row(
+                  children: [
+                    const Icon(Icons.payment, size: 18, color: Colors.grey),
+                    const SizedBox(width: 8),
+                    Text('วิธีชำระเงิน: ${invoice!.paymentMethod}'),
+                  ],
+                ),
               ),
             ],
           ],

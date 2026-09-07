@@ -30,12 +30,14 @@ class RepairHistorySubTaskWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                const Icon(Icons.assignment, color: Colors.deepPurple),
+                const SizedBox(width: 8),
                 const Text(
                   'รายการงานซ่อม (Sub-tasks)',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
+                const Spacer(),
                 Text(
                   '${subTasks.length} รายการ',
                   style: const TextStyle(color: Colors.grey),
@@ -68,11 +70,20 @@ class RepairHistorySubTaskWidget extends StatelessWidget {
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text('ค่าแรง: ${item.laborCost.toStringAsFixed(2)} บาท'),
-                    trailing: Text(
-                      item.status,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
+                    trailing: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.purple.shade50,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.purple.shade200),
+                      ),
+                      child: Text(
+                        item.status,
+                        style: TextStyle(
+                          color: Colors.purple.shade800,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   );
