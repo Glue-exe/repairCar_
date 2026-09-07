@@ -1,3 +1,5 @@
+import 'package:my_app/models/order_pool_model.dart';
+
 class OrderModel {
   final int orderId;
   final int vehicleId;
@@ -6,6 +8,7 @@ class OrderModel {
   final String orderStatusName;
   final String createdAt;
   final List<String> images;
+  final List<OrderTechnicianItemModel> technicians;
 
   OrderModel({
     required this.orderId,
@@ -15,6 +18,7 @@ class OrderModel {
     required this.orderStatusName,
     required this.createdAt,
     this.images = const [],
+    this.technicians = const [],
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
@@ -25,10 +29,12 @@ class OrderModel {
       orderStatusId: json['o_order_status_id'] as int,
       orderStatusName: json['os_name'] as String,
       createdAt: json['o_created_at'] as String,
-      images: (json['images'] as List<dynamic>?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          [],
+      images: (json['images'] as List)
+          .map((e) => e.toString())
+          .toList(),
+      technicians: (json['technicians'] as List)
+          .map((e) => OrderTechnicianItemModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 }

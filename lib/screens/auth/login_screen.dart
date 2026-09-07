@@ -119,6 +119,8 @@ class _LoginScreenState extends State<LoginScreen> {
       await prefs.setString("username", _usernameValueController.text);
       await prefs.setString("user_role", json["data"]["role_name"]);
       await prefs.setString("full_name", json["data"]["full_name"]);
+      await prefs.setInt("user_id", json["data"]["user_id"] as int);
+      await prefs.setInt("role_id", json["data"]["role_id"] as int);
     }
 
     return (

@@ -45,14 +45,12 @@ class RepairHistoryImagesWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Icon(Icons.photo_library, color: Colors.teal),
-                const SizedBox(width: 8),
                 const Text(
                   'รูปถ่ายสภาพรถ / ชิ้นส่วน',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-                const Spacer(),
                 Text(
                   '${images.length} รูป',
                   style: const TextStyle(color: Colors.grey),
@@ -96,11 +94,6 @@ class RepairHistoryImagesWidget extends StatelessWidget {
                         child: Image.network(
                           imgUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Center(
-                              child: Icon(Icons.broken_image, color: Colors.grey),
-                            );
-                          },
                         ),
                       ),
                     ),
