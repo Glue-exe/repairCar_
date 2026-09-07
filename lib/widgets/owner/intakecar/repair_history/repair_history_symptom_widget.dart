@@ -17,15 +17,9 @@ class RepairHistorySymptomWidget extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
-              children: [
-                Icon(Icons.build, color: Colors.orange),
-                SizedBox(width: 8),
-                Text(
-                  'อาการเสีย / รายการที่ต้องซ่อม',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ],
+            const Text(
+              'อาการเสีย / รายการที่ต้องซ่อม',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const Divider(height: 24),
             Text(

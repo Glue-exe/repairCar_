@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:my_app/models/order_pool_model.dart';
 
 class RepairHistoryTechnicianWidget extends StatelessWidget {
-  final List<String> technicians;
+  final List<OrderTechnicianItemModel> technicians;
 
   const RepairHistoryTechnicianWidget({
     super.key,
@@ -18,14 +19,12 @@ class RepairHistoryTechnicianWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Icon(Icons.engineering, color: Colors.indigo),
-                const SizedBox(width: 8),
                 const Text(
                   'ช่างผู้รับผิดชอบ',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-                const Spacer(),
                 Text(
                   '${technicians.length} คน',
                   style: const TextStyle(color: Colors.grey),
@@ -49,15 +48,18 @@ class RepairHistoryTechnicianWidget extends StatelessWidget {
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: technicians.length,
                 itemBuilder: (context, index) {
+                  final tech = technicians[index];
+
                   return ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: const CircleAvatar(
-                      backgroundColor: Colors.indigo,
-                      foregroundColor: Colors.white,
-                      child: Icon(Icons.person, size: 20),
+                    title: Text(
+                      '${tech.firstname} ${tech.lastname}',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
-                    title: Text(technicians[index]),
-                    subtitle: const Text('ช่างประจำอู่'),
+                    subtitle: Text(
+                      tech.roleName,
+                      style: const TextStyle(color: Colors.grey),
+                    ),
                   );
                 },
               ),
