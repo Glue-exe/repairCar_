@@ -37,7 +37,7 @@ class OrderPoolFilterHeaderWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. หัวข้อ งานทั้งหมด + จำนวนรายการ
+          // งานทั้งหมด + จำนวนรายการ
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -59,7 +59,7 @@ class OrderPoolFilterHeaderWidget extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          // 2. ตัวกรองแบบที่ 1: สถานะการรับงาน (ทั้งหมด / ยังไม่มีคนรับ / มีคนรับแล้ว)
+          // สถานะการรับงาน (ทั้งหมด / ยังไม่มีคนรับ / มีคนรับแล้ว)
           const Text(
             'สถานะช่างรับงาน',
             style: TextStyle(
@@ -98,7 +98,7 @@ class OrderPoolFilterHeaderWidget extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          // 3. ตัวกรองแบบที่ 2: ความสำคัญ (Priority) เรียงต่อกัน
+          // ความสำคัญ (Priority)
           const Text(
             'ความสำคัญ',
             style: TextStyle(
@@ -134,7 +134,7 @@ class OrderPoolFilterHeaderWidget extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          // 4. ตัวกรองแบบที่ 3: สถานะงาน (Order Status) เรียงต่อกัน
+          // สถานะงาน (Order Status)
           const Text(
             'สถานะงาน',
             style: TextStyle(
@@ -183,19 +183,6 @@ class OrderPoolFilterHeaderWidget extends StatelessWidget {
       label: Text(label),
       selected: isSelected,
       onSelected: (_) => onSelected(),
-      selectedColor: Theme.of(context).primaryColor,
-      backgroundColor: Colors.grey.shade100,
-      labelStyle: TextStyle(
-        fontSize: 13,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-        color: isSelected ? Colors.white : Colors.black87,
-      ),
-      side: BorderSide(
-        color: isSelected ? Theme.of(context).primaryColor : Colors.black12,
-      ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
     );
   }
 }
