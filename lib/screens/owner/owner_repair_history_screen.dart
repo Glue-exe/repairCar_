@@ -148,8 +148,8 @@ class _OwnerRepairHistoryScreenState extends State<OwnerRepairHistoryScreen> {
             RepairHistoryTechnicianWidget(technicians: _technicians),
             const SizedBox(height: 16),
 
-            // ายการงานซ่อมย่อย sub_task
-            const RepairHistorySubTaskWidget(),
+            // รายการงานซ่อมย่อย
+            RepairHistorySubTaskWidget(orderId: widget.order.orderId),
             const SizedBox(height: 16),
 
             // ใบเสร็จรับเงิน / สรุปค่าบริการ
