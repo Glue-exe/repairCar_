@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:my_app/models/employee_model.dart';
 import 'package:my_app/utils/app_api.dart';
-import 'package:my_app/widgets/owner/profile/emp_list_widget.dart';
-import 'package:my_app/screens/owner/emp_add_screen.dart';
+import 'package:my_app/widgets/owner/profile/emp/emp_list_widget.dart';
+import 'package:my_app/screens/owner/profile/emp_add_screen.dart';
 
 class OwnerViewUser extends StatefulWidget {
   const OwnerViewUser({super.key});
@@ -20,9 +20,11 @@ class _OwnerViewUserState extends State<OwnerViewUser> {
     Map<String, dynamic> json = jsonDecode(response.body);
     EmployeeResponse employeeResponse = EmployeeResponse.fromJson(json);
 
-    setState(() {
-      employeeModelStore = employeeResponse.data;
-    });
+    if (mounted) {
+      setState(() {
+        employeeModelStore = employeeResponse.data;
+      });
+    }
   }
 
   @override
@@ -45,7 +47,9 @@ class _OwnerViewUserState extends State<OwnerViewUser> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const EmpAddScreen()),
+                MaterialPageRoute(
+                  builder: (context) => EmpAddScreen(onRefresh: _fetchData),
+                ),
               );
             },
           ),
@@ -65,6 +69,7 @@ class _OwnerViewUserState extends State<OwnerViewUser> {
               Expanded(
                 child: EmpListWidget(
                   employeeModelStore: employeeModelStore,
+                  onRefresh: _fetchData,
                 ),
               ),
             ],
