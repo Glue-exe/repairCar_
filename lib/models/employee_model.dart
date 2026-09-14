@@ -1,5 +1,6 @@
 class EmployeeModel {
   int id;
+  String username;
   int titleId;
   String titleName;
   String firstName;
@@ -7,18 +8,12 @@ class EmployeeModel {
   String phone;
   int userRoleId;
   String userRoleName;
-  String empActive;
   double salary;
-
-  // Getters for legacy compatibility
-  int get empId => id;
-  String get empFirstname => firstName;
-  String get empLastname => lastName;
-  String get empPhone => phone;
-  double get empSalary => salary;
+  int accStatusId;
 
   EmployeeModel({
     required this.id,
+    required this.username,
     required this.titleId,
     required this.titleName,
     required this.firstName,
@@ -26,13 +21,14 @@ class EmployeeModel {
     required this.phone,
     required this.userRoleId,
     required this.userRoleName,
-    required this.empActive,
     required this.salary,
+    required this.accStatusId,
   });
 
   factory EmployeeModel.fromJson(Map<String, dynamic> json) {
     return EmployeeModel(
       id: json['id'] as int,
+      username: json['username']as String,
       titleId: json['title_id'] as int,
       titleName: json['title_name'] as String,
       firstName: json['first_name'] as String,
@@ -40,8 +36,8 @@ class EmployeeModel {
       phone: json['phone'] as String,
       userRoleId: json['user_role_id'] as int,
       userRoleName: json['user_role_name'] as String,
-      empActive: json['emp_active'] as String,
       salary: double.parse(json['current_salary'].toString()),
+      accStatusId: json['acc_status_id'] as int,
     );
   }
 }
