@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:my_app/models/order_pool_model.dart';
 
-class RepairHistoryTechnicianWidget extends StatelessWidget {
+class OrderTechnicianWidget extends StatelessWidget {
   final List<OrderTechnicianItemModel> technicians;
 
-  const RepairHistoryTechnicianWidget({
+  const OrderTechnicianWidget({
     super.key,
     this.technicians = const [],
   });

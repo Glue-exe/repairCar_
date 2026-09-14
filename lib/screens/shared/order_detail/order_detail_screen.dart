@@ -1,44 +1,54 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_app/utils/app_api.dart';
 import 'package:my_app/models/order_model.dart';
 import 'package:my_app/models/order_pool_model.dart';
 import 'package:my_app/models/order_status_model.dart';
 import 'package:my_app/models/vehicle_search_license_plate_model.dart';
-import 'package:my_app/widgets/owner/intakecar/repair_history/repair_history_status_widget.dart';
-import 'package:my_app/widgets/owner/intakecar/repair_history/repair_history_vehicle_widget.dart';
-import 'package:my_app/widgets/owner/intakecar/repair_history/repair_history_symptom_widget.dart';
-import 'package:my_app/widgets/owner/intakecar/repair_history/repair_history_images_widget.dart';
-import 'package:my_app/widgets/owner/intakecar/repair_history/repair_history_technician_widget.dart';
-import 'package:my_app/widgets/owner/intakecar/repair_history/repair_history_sub_task_widget.dart';
-import 'package:my_app/widgets/owner/intakecar/repair_history/repair_history_invoice_widget.dart';
+import 'package:my_app/widgets/shared/order_detail/order_status_widget.dart';
+import 'package:my_app/widgets/shared/order_detail/order_vehicle_widget.dart';
+import 'package:my_app/widgets/shared/order_detail/order_symptom_widget.dart';
+import 'package:my_app/widgets/shared/order_detail/order_images_widget.dart';
+import 'package:my_app/widgets/shared/order_detail/order_technician_widget.dart';
+import 'package:my_app/widgets/shared/order_detail/order_sub_task_widget.dart';
+import 'package:my_app/widgets/shared/order_detail/order_invoice_widget.dart';
 
-class OwnerRepairHistoryScreen extends StatefulWidget {
+class OrderDetailScreen extends StatefulWidget {
   final OrderModel order;
   final VehicleSearchResultModel vehicle;
 
-  const OwnerRepairHistoryScreen({
+  const OrderDetailScreen({
     super.key,
     required this.order,
     required this.vehicle,
   });
 
   @override
-  State<OwnerRepairHistoryScreen> createState() => _OwnerRepairHistoryScreenState();
+  State<OrderDetailScreen> createState() => _OrderDetailScreenState();
 }
 
-class _OwnerRepairHistoryScreenState extends State<OwnerRepairHistoryScreen> {
+class _OrderDetailScreenState extends State<OrderDetailScreen> {
   List<OrderTechnicianItemModel> _technicians = [];
   List<OrderStatusModel> _statuses = [];
   int _currentStatusId = 0;
+  int? _currentUserId;
 
   @override
   void initState() {
     super.initState();
     _currentStatusId = widget.order.orderStatusId;
     _technicians = List<OrderTechnicianItemModel>.from(widget.order.technicians);
+    _loadCurrentUserId();
     _fetchStatuses();
     _fetchTechnicians();
+  }
+
+  Future<void> _loadCurrentUserId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _currentUserId = prefs.getInt('user_id');
+    });
   }
 
   Future<void> _fetchStatuses() async {
@@ -112,8 +122,51 @@ class _OwnerRepairHistoryScreenState extends State<OwnerRepairHistoryScreen> {
     }
   }
 
+  // กดรับงาน
+  Future<void> _handleAcceptOrder() async {
+    bool confirm = await _showConfirm(
+      'ยืนยันการรับงาน',
+      'ต้องการรับงานใบรับซ่อม #${widget.order.orderId} หรือไม่?',
+    );
+    if (!confirm) return;
+
+    await AppAPI.post('/order/accept', {
+      'order_id': widget.order.orderId,
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('รับงานเรียบร้อยแล้ว')),
+      );
+    }
+    _fetchTechnicians();
+  }
+
+  // กดยกเลิกการรับงาน
+  Future<void> _handleCancelOrder() async {
+    bool confirm = await _showConfirm(
+      'ยืนยันยกเลิกการรับงาน',
+      'ต้องการยกเลิกการรับงานใบรับซ่อม #${widget.order.orderId} หรือไม่?',
+    );
+    if (!confirm) return;
+
+    await AppAPI.post('/order/cancel_technician', {
+      'order_id': widget.order.orderId,
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ยกเลิกการรับงานเรียบร้อยแล้ว')),
+      );
+    }
+    _fetchTechnicians();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final bool isAcceptedByMe = _currentUserId != null &&
+        _technicians.any((tech) => tech.accountId == _currentUserId);
+
     return Scaffold(
       appBar: AppBar(
         title: Text('ใบรับซ่อม #${widget.order.orderId}'),
@@ -124,7 +177,7 @@ class _OwnerRepairHistoryScreenState extends State<OwnerRepairHistoryScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // สถานะและวันที่ใบรับซ่อม
-            RepairHistoryStatusWidget(
+            OrderStatusWidget(
               order: widget.order,
               currentStatusId: _currentStatusId,
               statuses: _statuses,
@@ -133,27 +186,50 @@ class _OwnerRepairHistoryScreenState extends State<OwnerRepairHistoryScreen> {
             const SizedBox(height: 16),
 
             // ข้อมูลรถยนต์และเจ้าของรถ
-            RepairHistoryVehicleWidget(vehicle: widget.vehicle),
+            OrderVehicleWidget(vehicle: widget.vehicle),
             const SizedBox(height: 16),
 
             // อาการเสีย / รายการที่ต้องซ่อม
-            RepairHistorySymptomWidget(symptom: widget.order.symptom),
+            OrderSymptomWidget(symptom: widget.order.symptom),
             const SizedBox(height: 16),
 
             // รูปถ่ายชิ้นส่วน / สภาพรถ
-            RepairHistoryImagesWidget(images: widget.order.images),
+            OrderImagesWidget(images: widget.order.images),
             const SizedBox(height: 16),
 
             // ช่างผู้รับผิดชอบ order นั้น
-            RepairHistoryTechnicianWidget(technicians: _technicians),
+            OrderTechnicianWidget(technicians: _technicians),
             const SizedBox(height: 16),
 
             // รายการงานซ่อมย่อย
-            RepairHistorySubTaskWidget(orderId: widget.order.orderId),
+            OrderSubTaskWidget(
+              orderId: widget.order.orderId,
+              isOrderAccepted: isAcceptedByMe,
+            ),
             const SizedBox(height: 16),
 
             // ใบเสร็จรับเงิน / สรุปค่าบริการ
-            const RepairHistoryInvoiceWidget(),
+            const OrderInvoiceWidget(),
+            const SizedBox(height: 24),
+
+            // ปุ่มกดรับงานนี้ / ยกเลิกการรับงานนี้
+            if (_currentUserId != null) ...[
+              if (isAcceptedByMe)
+                Center(
+                  child: OutlinedButton(
+                    onPressed: _handleCancelOrder,
+                    child: const Text('ยกเลิกการรับงานนี้'),
+                  ),
+                )
+              else
+                Center(
+                  child: ElevatedButton(
+                    onPressed: _handleAcceptOrder,
+                    child: const Text('กดรับงานนี้'),
+                  ),
+                ),
+              const SizedBox(height: 20),
+            ],
           ],
         ),
       ),

@@ -3,22 +3,24 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_app/models/sub_task_model.dart';
 import 'package:my_app/utils/app_api.dart';
-import 'package:my_app/widgets/owner/intakecar/repair_history/repair_history_add_sub_task_widget.dart';
-import 'package:my_app/widgets/owner/intakecar/repair_history/repair_history_sub_task_detail_widget.dart';
+import 'package:my_app/widgets/shared/order_detail/order_add_sub_task_widget.dart';
+import 'package:my_app/widgets/shared/order_detail/order_sub_task_detail_widget.dart';
 
-class RepairHistorySubTaskWidget extends StatefulWidget {
+class OrderSubTaskWidget extends StatefulWidget {
   final int orderId;
+  final bool isOrderAccepted;
 
-  const RepairHistorySubTaskWidget({
+  const OrderSubTaskWidget({
     super.key,
     required this.orderId,
+    this.isOrderAccepted = false,
   });
 
   @override
-  State<RepairHistorySubTaskWidget> createState() => _RepairHistorySubTaskWidgetState();
+  State<OrderSubTaskWidget> createState() => _OrderSubTaskWidgetState();
 }
 
-class _RepairHistorySubTaskWidgetState extends State<RepairHistorySubTaskWidget> {
+class _OrderSubTaskWidgetState extends State<OrderSubTaskWidget> {
   List<SubTaskModel> _subTasks = [];
   int _currentUserId = 0;
 
@@ -32,7 +34,7 @@ class _RepairHistorySubTaskWidgetState extends State<RepairHistorySubTaskWidget>
   Future<void> _loadCurrentUserId() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      _currentUserId = prefs.getInt('user_id') as int;
+      _currentUserId = prefs.getInt('user_id') ?? 0;
     });
   }
 
@@ -91,9 +93,8 @@ class _RepairHistorySubTaskWidgetState extends State<RepairHistorySubTaskWidget>
                     final result = await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => RepairHistoryAddSubTaskWidget(
-                          orderId: widget.orderId,
-                        ),
+                        builder: (context) =>
+                            OrderAddSubTaskWidget(orderId: widget.orderId),
                       ),
                     );
                     if (result == true) {
@@ -122,8 +123,9 @@ class _RepairHistorySubTaskWidgetState extends State<RepairHistorySubTaskWidget>
                 itemCount: _subTasks.length,
                 itemBuilder: (context, index) {
                   final item = _subTasks[index];
-                  final isAcceptedByMe = item.technicianAccountId == _currentUserId;
-                  final hasTechnician = item.technicianAccountId > 0;
+                  final isAcceptedByMe = _currentUserId != 0 &&
+                      item.technicians.any((tech) => tech.accountId == _currentUserId);
+                  final hasTechnicians = item.technicians.isNotEmpty;
 
                   return Container(
                     margin: const EdgeInsets.symmetric(vertical: 6),
@@ -131,7 +133,10 @@ class _RepairHistorySubTaskWidgetState extends State<RepairHistorySubTaskWidget>
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.grey.shade300, width: 1.2),
+                      border: Border.all(
+                        color: Colors.grey.shade300,
+                        width: 1.2,
+                      ),
                     ),
                     child: InkWell(
                       onTap: isAcceptedByMe
@@ -139,11 +144,10 @@ class _RepairHistorySubTaskWidgetState extends State<RepairHistorySubTaskWidget>
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => RepairHistorySubTaskDetailWidget(
-                                    subTask: item,
-                                  ),
+                                  builder: (context) =>
+                                      OrderSubTaskDetailWidget(subTask: item),
                                 ),
-                              );
+                              ).then((_) => _fetchSubTasks());
                             }
                           : null,
                       child: Column(
@@ -169,16 +173,13 @@ class _RepairHistorySubTaskWidgetState extends State<RepairHistorySubTaskWidget>
                             ],
                           ),
                           const SizedBox(height: 6),
-                          Text('ค่าแรง: ${item.laborCost.toStringAsFixed(2)} บาท'),
-                          if (hasTechnician)
+                          if (hasTechnicians)
                             Padding(
                               padding: const EdgeInsets.only(top: 4),
                               child: Text(
-                                isAcceptedByMe
-                                    ? 'ช่าง: คุณ (${item.technicianFirstName})'
-                                    : 'ช่าง: ${item.technicianFirstName}',
-                                style: TextStyle(
-                                  color: isAcceptedByMe ? Colors.green : Colors.grey,
+                                'ช่าง: ${item.technicians.map((t) => t.firstname).join(", ")}',
+                                style: const TextStyle(
+                                  color: Colors.grey,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -190,11 +191,13 @@ class _RepairHistorySubTaskWidgetState extends State<RepairHistorySubTaskWidget>
                               if (isAcceptedByMe)
                                 const Row(
                                   children: [
-                                    Icon(Icons.touch_app, size: 16, color: Colors.blue),
                                     SizedBox(width: 4),
                                     Text(
-                                      'แตะเพื่อดูงานข้างใน',
-                                      style: TextStyle(color: Colors.blue, fontSize: 12),
+                                      'แตะเพื่อดูรายละเอียดงาน',
+                                      style: TextStyle(
+                                        color: Colors.blue,
+                                        fontSize: 12,
+                                      ),
                                     ),
                                   ],
                                 )
@@ -205,11 +208,19 @@ class _RepairHistorySubTaskWidgetState extends State<RepairHistorySubTaskWidget>
                                   onPressed: () => _cancelSubTask(item.id),
                                   child: const Text('ยกเลิก'),
                                 )
-                              else if (!hasTechnician)
-                                ElevatedButton(
-                                  onPressed: () => _acceptSubTask(item.id),
-                                  child: const Text('กดรับงาน'),
-                                ),
+                              else
+                                widget.isOrderAccepted
+                                    ? ElevatedButton(
+                                        onPressed: () => _acceptSubTask(item.id),
+                                        child: const Text('กดรับงาน'),
+                                      )
+                                    : const Text(
+                                        'โปรดกดรับงานซ่อมนี้ก่อน',
+                                        style: TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 12,
+                                        ),
+                                      ),
                             ],
                           ),
                         ],

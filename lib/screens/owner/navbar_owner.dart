@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:my_app/screens/owner/owner_home_screen.dart';
-import 'package:my_app/screens/owner/owner_order_pool_screen.dart';
+import 'package:my_app/screens/shared/orderpool/order_pool_screen.dart';
 import 'package:my_app/screens/owner/owner_part_screen.dart';
 import 'package:my_app/screens/owner/profile/owner_profile_screen.dart';
-import 'package:my_app/screens/owner/owner_intakecar_screen2.dart';
+import 'package:my_app/screens/shared/intakecar/intakecar_screen.dart';
 
 class NavbarOwner extends StatefulWidget {
   final int initialIndex;
@@ -30,8 +30,8 @@ class _NavbarOwnerState extends State<NavbarOwner> {
 
   final List<Widget> _pages = [
     OwnerHomeScreen(),
-    OwnerOrderPoolScreen(),
-    OwnerIntakecarScreen2(),
+    OrderPoolScreen(),
+    IntakecarScreen(),
     OwnerPartScreen(),
     OwnerProfileScreen(),
   ];

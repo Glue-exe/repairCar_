@@ -23,11 +23,11 @@ class _PartEditWidgetState extends State<PartEditWidget> {
   @override
   void initState() {
     super.initState();
-    _partNameController = TextEditingController(text: widget.part.partName);
+    _partNameController = TextEditingController(text: widget.part.name);
     _partPriceController = TextEditingController(
-      text: widget.part.partPrice.toString(),
+      text: widget.part.price.toString(),
     );
-    _partBrandController = TextEditingController(text: widget.part.partBrand);
+    _partBrandController = TextEditingController(text: widget.part.brand);
   }
 
   @override
@@ -66,7 +66,7 @@ class _PartEditWidgetState extends State<PartEditWidget> {
       );
       if (confirm == true) {
         Map<String, dynamic> data = {
-          'part_id': widget.part.partId,
+          'part_id': widget.part.id,
           'part_name': _partNameController.text,
           'part_price': _partPriceController.text,
           'part_brand': _partBrandController.text,

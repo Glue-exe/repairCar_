@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:my_app/models/vehicle_search_license_plate_model.dart';
 
-class RepairHistoryVehicleWidget extends StatelessWidget {
+class OrderVehicleWidget extends StatelessWidget {
   final VehicleSearchResultModel vehicle;
 
-  const RepairHistoryVehicleWidget({
+  const OrderVehicleWidget({
     super.key,
     required this.vehicle,
   });

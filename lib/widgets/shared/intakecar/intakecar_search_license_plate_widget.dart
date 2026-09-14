@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:my_app/utils/app_api.dart';
 import 'package:my_app/models/vehicle_search_license_plate_model.dart';
-import 'package:my_app/screens/owner/owner_vehicle_detail_screen.dart';
+import 'package:my_app/screens/shared/intakecar/vehicle_detail_screen.dart';
 
 class IntakecarSearchWidget extends StatefulWidget {
   const IntakecarSearchWidget({super.key});
@@ -98,7 +98,7 @@ class _IntakecarSearchWidgetState extends State<IntakecarSearchWidget> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => OwnerVehicleDetailScreen(
+                      builder: (context) => VehicleDetailScreen(
                         vehicle: _vehicle!,
                       ),
                     ),

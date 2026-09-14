@@ -24,10 +24,10 @@ class InvoiceData {
   });
 }
 
-class RepairHistoryInvoiceWidget extends StatelessWidget {
+class OrderInvoiceWidget extends StatelessWidget {
   final InvoiceData? invoice;
 
-  const RepairHistoryInvoiceWidget({
+  const OrderInvoiceWidget({
     super.key,
     this.invoice,
   });

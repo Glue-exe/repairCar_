@@ -90,43 +90,43 @@ class _IntakecarSearchPhoneWidgetState
           ElevatedButton(
             onPressed: _searchPhone,
             child: const Text('ค้นหา'),
-            ),
-            const SizedBox(height: 16),
-            if (_cus.isNotEmpty)
-              Card(
-                elevation: 2,
-                child: ListTile(
-                  leading: const CircleAvatar(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    child: Icon(Icons.person),
-                  ),
-                  title: Text(
-                    'ชื่อลูกค้า: ${_cus.first.fullName}',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text('เบอร์โทร: ${_cus.first.cusPhone} (${_cus.length} คัน)'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => OwnerCustomerVehiclesScreen(
-                          vehicles: _cus,
-                        ),
+          ),
+          const SizedBox(height: 16),
+          if (_cus.isNotEmpty)
+            Card(
+              elevation: 2,
+              child: ListTile(
+                leading: const CircleAvatar(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                  child: Icon(Icons.person),
+                ),
+                title: Text(
+                  'ชื่อลูกค้า: ${_cus.first.fullName}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text('เบอร์โทร: ${_cus.first.cusPhone} (${_cus.length} คัน)'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => OwnerCustomerVehiclesScreen(
+                        vehicles: _cus,
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  );
+                },
               ),
-            if (_errorMessage.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 12.0),
-                child: Text(
-                  _errorMessage,
-                  style: const TextStyle(color: Colors.red),
-                ),
+            ),
+          if (_errorMessage.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 12.0),
+              child: Text(
+                _errorMessage,
+                style: const TextStyle(color: Colors.red),
               ),
+            ),
         ],
       ),
     );

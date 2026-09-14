@@ -6,17 +6,17 @@ import 'package:my_app/utils/app_api.dart';
 import 'package:my_app/models/priority_model.dart';
 import 'package:my_app/models/order_status_model.dart';
 import 'package:my_app/models/order_pool_model.dart';
-import 'package:my_app/widgets/owner/orderpool/order_pool_filter_widget.dart';
-import 'package:my_app/widgets/owner/orderpool/order_pool_card_widget.dart';
+import 'package:my_app/widgets/shared/orderpool/order_pool_filter_widget.dart';
+import 'package:my_app/widgets/shared/orderpool/order_pool_card_widget.dart';
 
-class OwnerOrderPoolScreen extends StatefulWidget {
-  const OwnerOrderPoolScreen({super.key});
+class OrderPoolScreen extends StatefulWidget {
+  const OrderPoolScreen({super.key});
 
   @override
-  State<OwnerOrderPoolScreen> createState() => _OwnerOrderPoolScreenState();
+  State<OrderPoolScreen> createState() => _OrderPoolScreenState();
 }
 
-class _OwnerOrderPoolScreenState extends State<OwnerOrderPoolScreen> {
+class _OrderPoolScreenState extends State<OrderPoolScreen> {
   bool _isLoading = false;
 
   List<OrderPoolItemModel> _allOrders = [];
@@ -88,13 +88,9 @@ class _OwnerOrderPoolScreenState extends State<OwnerOrderPoolScreen> {
 
   // คำนวณการกรอง
   List<OrderPoolItemModel> get _filteredOrders {
-
     List<OrderPoolItemModel> list = _allOrders;
 
     // กรองตามสถานะช่างรับงาน
-    // - _techFilterIndex == 0: เลือก "ทั้งหมด" (ไม่กรอง)
-    // - _techFilterIndex == 1: เลือก "ยังไม่มีคนรับ" (หยิบเฉพาะงานที่มีช่าง = 0 คน)
-    // - _techFilterIndex == 2: เลือก "มีคนรับแล้ว" (หยิบเฉพาะงานที่มีช่าง > 0 คน)
     if (_techFilterIndex == 1) {
       list = list.where((order) => order.technicianCount == 0).toList();
     } else if (_techFilterIndex == 2) {
@@ -102,13 +98,11 @@ class _OwnerOrderPoolScreenState extends State<OwnerOrderPoolScreen> {
     }
 
     // กรองตามระดับความสำคัญ
-    // - หยิบเฉพาะงานที่ priorityId ตรงกับที่เลือก
     if (_selectedPriorityId != null) {
       list = list.where((order) => order.priorityId == _selectedPriorityId).toList();
     }
 
     // กรองตามสถานะงาน
-    // - ให้หยิบเฉพาะงานที่ orderStatusId ตรงกับที่เลือก
     if (_selectedStatusId != null) {
       list = list.where((order) => order.orderStatusId == _selectedStatusId).toList();
     }

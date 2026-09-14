@@ -4,12 +4,6 @@ class PartModel {
   double price;
   String brand;
 
-  // Getters for legacy compatibility
-  int get partId => id;
-  String get partName => name;
-  double get partPrice => price;
-  String get partBrand => brand;
-
   PartModel({
     required this.id,
     required this.name,
@@ -19,10 +13,10 @@ class PartModel {
 
   factory PartModel.fromJson(Map<String, dynamic> json) {
     return PartModel(
-      id: json['id'] as int,
-      name: json['name'] as String,
-      price: double.parse(json['price'].toString()),
-      brand: json['brand'] as String,
+      id: json['part_id'] as int,
+      name: json['part_name'] as String,
+      price: double.parse(json['part_price'].toString()),
+      brand: json['part_brand'] as String,
     );
   }
 }

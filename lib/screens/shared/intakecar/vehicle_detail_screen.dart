@@ -3,24 +3,24 @@ import 'dart:convert';
 import 'package:my_app/utils/app_api.dart';
 import 'package:my_app/models/vehicle_search_license_plate_model.dart';
 import 'package:my_app/models/order_model.dart';
-import 'package:my_app/screens/owner/owner_create_order_screen2.dart';
-import 'package:my_app/widgets/owner/intakecar/vehicle_detail/vehicle_detail_info_widget.dart';
-import 'package:my_app/widgets/owner/intakecar/vehicle_detail/vehicle_detail_customer_widget.dart';
-import 'package:my_app/widgets/owner/intakecar/vehicle_detail/vehicle_detail_orders_widget.dart';
+import 'package:my_app/screens/shared/intakecar/create_order_screen.dart';
+import 'package:my_app/widgets/shared/intakecar/vehicle_detail/vehicle_detail_info_widget.dart';
+import 'package:my_app/widgets/shared/intakecar/vehicle_detail/vehicle_detail_customer_widget.dart';
+import 'package:my_app/widgets/shared/intakecar/vehicle_detail/vehicle_detail_orders_widget.dart';
 
-class OwnerVehicleDetailScreen extends StatefulWidget {
+class VehicleDetailScreen extends StatefulWidget {
   final VehicleSearchResultModel vehicle;
 
-  const OwnerVehicleDetailScreen({
+  const VehicleDetailScreen({
     super.key,
     required this.vehicle,
   });
 
   @override
-  State<OwnerVehicleDetailScreen> createState() => _OwnerVehicleDetailScreenState();
+  State<VehicleDetailScreen> createState() => _VehicleDetailScreenState();
 }
 
-class _OwnerVehicleDetailScreenState extends State<OwnerVehicleDetailScreen> {
+class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   List<OrderModel> _orderList = [];
   bool _isLoadingOrders = true;
 
@@ -101,7 +101,7 @@ class _OwnerVehicleDetailScreenState extends State<OwnerVehicleDetailScreen> {
                   final result = await Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => OwnerCreateOrderScreen2(
+                      builder: (context) => CreateOrderScreen(
                         vehicle: vehicle,
                       ),
                     ),

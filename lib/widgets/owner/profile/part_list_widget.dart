@@ -40,8 +40,8 @@ class PartListWidget extends StatelessWidget {
                 ),
                 child: Icon(Icons.build),
               ),
-              title: Text(item.partName),
-              subtitle: Text(item.partBrand),
+              title: Text(item.name),
+              subtitle: Text(item.brand),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -81,7 +81,7 @@ class PartListWidget extends StatelessWidget {
 
                       if (confirm == true) {
                         var response = await AppAPI.delete('/part', {
-                          'part_id': item.partId,
+                          'part_id': item.id,
                         });
 
                         if (response.statusCode == 200) {
