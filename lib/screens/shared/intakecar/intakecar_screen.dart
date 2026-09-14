@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:my_app/widgets/owner/intakecar/intakecar_search_licensePlate_widget.dart';
-import 'package:my_app/widgets/owner/intakecar/intakecar_search_phone_widget.dart';
-import 'package:my_app/widgets/owner/intakecar/intakecar_add_cus_widget.dart';
+import 'package:my_app/widgets/shared/intakecar/intakecar_search_license_plate_widget.dart';
+import 'package:my_app/widgets/shared/intakecar/intakecar_search_phone_widget.dart';
+import 'package:my_app/widgets/shared/intakecar/intakecar_add_cus_widget.dart';
 
-class OwnerIntakecarScreen2 extends StatefulWidget {
-  const OwnerIntakecarScreen2({super.key});
+class IntakecarScreen extends StatefulWidget {
+  const IntakecarScreen({super.key});
 
   @override
-  State<OwnerIntakecarScreen2> createState() => _OwnerIntakecarScreen2State();
+  State<IntakecarScreen> createState() => _IntakecarScreenState();
 }
 
-class _OwnerIntakecarScreen2State extends State<OwnerIntakecarScreen2> {
+class _IntakecarScreenState extends State<IntakecarScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(

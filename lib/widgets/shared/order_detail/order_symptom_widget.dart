@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-class RepairHistorySymptomWidget extends StatelessWidget {
+class OrderSymptomWidget extends StatelessWidget {
   final String symptom;
 
-  const RepairHistorySymptomWidget({
+  const OrderSymptomWidget({
     super.key,
     required this.symptom,
   });

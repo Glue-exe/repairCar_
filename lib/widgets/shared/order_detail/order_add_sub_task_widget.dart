@@ -4,19 +4,19 @@ import 'package:my_app/models/service_model.dart';
 import 'package:my_app/models/sub_task_status_model.dart';
 import 'package:my_app/utils/app_api.dart';
 
-class RepairHistoryAddSubTaskWidget extends StatefulWidget {
+class OrderAddSubTaskWidget extends StatefulWidget {
   final int orderId;
 
-  const RepairHistoryAddSubTaskWidget({
+  const OrderAddSubTaskWidget({
     super.key,
     required this.orderId,
   });
 
   @override
-  State<RepairHistoryAddSubTaskWidget> createState() => _RepairHistoryAddSubTaskWidgetState();
+  State<OrderAddSubTaskWidget> createState() => _OrderAddSubTaskWidgetState();
 }
 
-class _RepairHistoryAddSubTaskWidgetState extends State<RepairHistoryAddSubTaskWidget> {
+class _OrderAddSubTaskWidgetState extends State<OrderAddSubTaskWidget> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _laborCostController = TextEditingController();
 
@@ -42,6 +42,7 @@ class _RepairHistoryAddSubTaskWidgetState extends State<RepairHistoryAddSubTaskW
     super.dispose();
   }
 
+  // fetch Services
   Future<void> _fetchServices() async {
     final response = await AppAPI.get('/service');
     final res = ServiceResponse.fromJson(jsonDecode(response.body));
@@ -55,6 +56,7 @@ class _RepairHistoryAddSubTaskWidgetState extends State<RepairHistoryAddSubTaskW
     });
   }
 
+  // fetch Status SubTask
   Future<void> _fetchSubTaskStatuses() async {
     final response = await AppAPI.get('/sub_task_status');
     final res = SubTaskStatusResponse.fromJson(jsonDecode(response.body));
@@ -66,7 +68,28 @@ class _RepairHistoryAddSubTaskWidgetState extends State<RepairHistoryAddSubTaskW
     });
   }
 
+  // save subtask
   Future<void> _saveSubTask() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('ยืนยันการเพิ่มรายการซ่อม'),
+        content: Text('ต้องการบันทึกรายการ ${_nameController.text.trim()} หรือไม่?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('ยกเลิก'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('ยืนยัน'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
     final response = await AppAPI.post('/sub_task', {
       'st_order_id': widget.orderId,
       'st_service_id': _selectedServiceId,
@@ -119,6 +142,8 @@ class _RepairHistoryAddSubTaskWidgetState extends State<RepairHistoryAddSubTaskW
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const Text('เลือกบริการ:'),
+            const SizedBox(height: 8),
             DropdownButton<int>(
               hint: const Text('เลือกบริการ'),
               value: _selectedServiceId,
@@ -139,6 +164,8 @@ class _RepairHistoryAddSubTaskWidgetState extends State<RepairHistoryAddSubTaskW
               },
             ),
             const SizedBox(height: 16),
+            const Text('เลือกสถานะงานย่อย:'),
+            const SizedBox(height: 8),
             DropdownButton<int>(
               hint: const Text('เลือกสถานะงานย่อย'),
               value: _selectedSubTaskStatusId,
@@ -156,19 +183,25 @@ class _RepairHistoryAddSubTaskWidgetState extends State<RepairHistoryAddSubTaskW
               },
             ),
             const SizedBox(height: 16),
+            const Text('ชื่องานซ่อม:'),
+            const SizedBox(height: 8),
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'ชื่องานซ่อม',
+              decoration: const InputDecoration(  
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 hintText: 'ชื่องานซ่อม',
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
+            const Text('ค่าแรง:'),
+            const SizedBox(height: 8),
             TextField(
               controller: _laborCostController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(
-                labelText: 'ค่าแรง',
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 hintText: 'ค่าแรง',
               ),
             ),

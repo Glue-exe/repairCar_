@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:my_app/config/app_config.dart';
 
-class RepairHistoryImagesWidget extends StatelessWidget {
+class OrderImagesWidget extends StatelessWidget {
   final List<String> images;
 
-  const RepairHistoryImagesWidget({
+  const OrderImagesWidget({
     super.key,
     required this.images,
   });
@@ -48,7 +47,7 @@ class RepairHistoryImagesWidget extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  'รูปถ่ายสภาพรถ / ชิ้นส่วน',
+                  'รูปถ่ายสภาพรถ',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 Text(
@@ -60,45 +59,46 @@ class RepairHistoryImagesWidget extends StatelessWidget {
             const Divider(height: 24),
             if (images.isEmpty)
               const Padding(
-                padding: EdgeInsets.symmetric(vertical: 16.0),
+                padding: EdgeInsets.symmetric(vertical: 12.0),
                 child: Center(
                   child: Text(
-                    'ไม่มีรูปถ่ายที่แนบไว้',
+                    'ไม่มีรูปภาพประกอบ',
                     style: TextStyle(color: Colors.grey),
                   ),
                 ),
               )
             else
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                  childAspectRatio: 1,
-                ),
-                itemCount: images.length,
-                itemBuilder: (context, index) {
-                  final imgUrl =
-                      "${AppConfig.apiBaseUri.replaceAll('/api', '')}${images[index]}";
-                  return GestureDetector(
-                    onTap: () => _showFullImage(context, imgUrl),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
+              SizedBox(
+                height: 100,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: images.length,
+                  separatorBuilder: (context, index) => const SizedBox(width: 8),
+                  itemBuilder: (context, index) {
+                    final imageUrl = images[index];
+
+                    return GestureDetector(
+                      onTap: () => _showFullImage(context, imageUrl),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: Image.network(
-                          imgUrl,
+                          imageUrl,
+                          width: 100,
+                          height: 100,
                           fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              width: 100,
+                              height: 100,
+                              color: Colors.grey[200],
+                              child: const Icon(Icons.broken_image, color: Colors.grey),
+                            );
+                          },
                         ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
           ],
         ),

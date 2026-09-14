@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:my_app/config/app_config.dart';
 import 'package:my_app/models/order_model.dart';
 import 'package:my_app/models/vehicle_search_license_plate_model.dart';
-import 'package:my_app/screens/owner/owner_repair_history_screen.dart';
+import 'package:my_app/screens/shared/order_detail/order_detail_screen.dart';
 
 class VehicleDetailOrdersWidget extends StatelessWidget {
   final List<OrderModel> orderList;
@@ -88,7 +88,7 @@ class VehicleDetailOrdersWidget extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => OwnerRepairHistoryScreen(
+                          builder: (context) => OrderDetailScreen(
                             order: order,
                             vehicle: vehicle,
                           ),
@@ -110,14 +110,9 @@ class VehicleDetailOrdersWidget extends StatelessWidget {
                               children: [
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue.shade50,
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(color: Colors.blue.shade200),
-                                  ),
                                   child: Text(
                                     order.orderStatusName,
-                                    style: TextStyle(color: Colors.blue.shade800, fontSize: 13),
+                                    style: TextStyle(fontSize: 16),
                                   ),
                                 ),
                                 const SizedBox(width: 4),
@@ -125,6 +120,7 @@ class VehicleDetailOrdersWidget extends StatelessWidget {
                               ],
                             ),
                           ),
+                          // แสดงรูปถ่าย
                           if (order.images.isNotEmpty) ...[
                             const SizedBox(height: 6),
                             SizedBox(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_app/models/vehicle_search_phone_model.dart';
 import 'package:my_app/models/vehicle_search_license_plate_model.dart';
-import 'package:my_app/screens/owner/owner_vehicle_detail_screen.dart';
+import 'package:my_app/screens/shared/intakecar/vehicle_detail_screen.dart';
 
 class OwnerCustomerVehiclesScreen extends StatelessWidget {
   final List<PhoneSearchResultModel> vehicles;
@@ -136,7 +136,7 @@ class OwnerCustomerVehiclesScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => OwnerVehicleDetailScreen(
+                            builder: (context) => VehicleDetailScreen(
                               vehicle: VehicleSearchResultModel(
                                 vId: vehicle.vId,
                                 fullName: vehicle.fullName,

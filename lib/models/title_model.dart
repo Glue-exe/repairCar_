@@ -2,10 +2,6 @@ class TitleModel {
   int id;
   String name;
 
-  // Getters for legacy compatibility
-  int get titleId => id;
-  String get titleName => name;
-
   TitleModel({
     required this.id,
     required this.name,

@@ -1,23 +1,24 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_app/utils/app_api.dart';
 import 'package:my_app/models/vehicle_search_license_plate_model.dart';
 import 'package:my_app/models/priority_model.dart';
 
-class OwnerCreateOrderScreen2 extends StatefulWidget {
+class CreateOrderScreen extends StatefulWidget {
   final VehicleSearchResultModel vehicle;
 
-  const OwnerCreateOrderScreen2({
+  const CreateOrderScreen({
     super.key,
     required this.vehicle,
   });
 
   @override
-  State<OwnerCreateOrderScreen2> createState() => _OwnerCreateOrderScreen2State();
+  State<CreateOrderScreen> createState() => _CreateOrderScreenState();
 }
 
-class _OwnerCreateOrderScreen2State extends State<OwnerCreateOrderScreen2> {
+class _CreateOrderScreenState extends State<CreateOrderScreen> {
   final TextEditingController _symptomController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
 
@@ -25,11 +26,20 @@ class _OwnerCreateOrderScreen2State extends State<OwnerCreateOrderScreen2> {
   List<PriorityModel> _priorityList = [];
   final List<String> _base64Images = [];
   String _errorMessage = '';
+  int? _currentUserId;
 
   @override
   void initState() {
     super.initState();
+    _loadCurrentUserId();
     _getPriorities();
+  }
+
+  Future<void> _loadCurrentUserId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _currentUserId = prefs.getInt('user_id') ?? 1;
+    });
   }
 
   Future<void> _getPriorities() async {
@@ -138,7 +148,7 @@ class _OwnerCreateOrderScreen2State extends State<OwnerCreateOrderScreen2> {
         'o_symptom': symptom,
         'o_priority_id': _priorityId,
         'o_order_status_id': 1,
-        'o_created_by_account_id': 1,
+        'o_created_by_account_id': _currentUserId ?? 1,
         'images': _base64Images, // ส่งรายการรูปภาพไปยัง TABLE order_image
       });
 

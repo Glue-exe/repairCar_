@@ -1,3 +1,5 @@
+import 'package:my_app/models/order_pool_model.dart';
+
 class SubTaskModel {
   int id;
   int orderId;
@@ -6,9 +8,7 @@ class SubTaskModel {
   double laborCost;
   int statusId;
   String statusName;
-  int technicianAccountId;
-  String technicianFirstName;
-  String technicianLastName;
+  List<OrderTechnicianItemModel> technicians;
 
   SubTaskModel({
     required this.id,
@@ -18,9 +18,7 @@ class SubTaskModel {
     required this.laborCost,
     required this.statusId,
     required this.statusName,
-    required this.technicianAccountId,
-    required this.technicianFirstName,
-    required this.technicianLastName,
+    required this.technicians,
   });
 
   factory SubTaskModel.fromJson(Map<String, dynamic> json) {
@@ -32,9 +30,10 @@ class SubTaskModel {
       laborCost: double.parse(json['labor_cost'].toString()),
       statusId: json['status_id'] as int,
       statusName: json['status_name'] as String,
-      technicianAccountId: json['technician_account_id'] as int,
-      technicianFirstName: json['technician_first_name'] as String,
-      technicianLastName: json['technician_last_name'] as String,
+      technicians: (json['technicians'] as List)
+          .map((item) =>
+              OrderTechnicianItemModel.fromJson(item as Map<String, dynamic>))
+          .toList(),
     );
   }
 }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:my_app/models/order_pool_model.dart';
 import 'package:my_app/models/order_model.dart';
 import 'package:my_app/models/vehicle_search_license_plate_model.dart';
-import 'package:my_app/screens/owner/owner_repair_history_screen.dart';
+import 'package:my_app/screens/shared/order_detail/order_detail_screen.dart';
 import 'package:my_app/utils/app_api.dart';
 
 class OrderPoolCardWidget extends StatefulWidget {
@@ -26,6 +26,7 @@ class _OrderPoolCardWidgetState extends State<OrderPoolCardWidget> {
 
   // ตรวจสอบว่าฉันเคยกดรับงานนี้หรือยัง
   bool _checkIsAcceptedByMe() {
+    if (widget.currentUserId == null) return false;
     return widget.order.technicians.any((tech) => tech.accountId == widget.currentUserId);
   }
 
@@ -207,12 +208,14 @@ class _OrderPoolCardWidgetState extends State<OrderPoolCardWidget> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => OwnerRepairHistoryScreen(
+              builder: (context) => OrderDetailScreen(
                 order: orderObj,
                 vehicle: vehicleObj,
               ),
             ),
-          );
+          ).then((_) {
+            widget.onActionSuccess();
+          });
         },
         child: Padding(
           padding: const EdgeInsets.all(16),
