@@ -201,7 +201,7 @@ class _OrderPoolCardWidgetState extends State<OrderPoolCardWidget> {
             licensePlate: widget.order.licensePlate,
             modelName: widget.order.modelName,
             brandName: widget.order.brandName,
-            year: 0,
+            year: widget.order.year,
             color: widget.order.color,
           );
 
