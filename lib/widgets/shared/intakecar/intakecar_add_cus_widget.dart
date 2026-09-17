@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:my_app/screens/owner/owner_add_cus_screen.dart';
+import 'package:my_app/screens/shared/intakecar/intakecar_add_cus_screen.dart';
 
 class IntakecarAddCusWidget extends StatefulWidget {
   const IntakecarAddCusWidget({super.key});
@@ -18,7 +18,7 @@ class _IntakecarAddCusWidgetState extends State<IntakecarAddCusWidget> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const OwnerAddCusScreen(),
+              builder: (context) => const IntakecarAddCusScreen(),
             ),
           );
         },

@@ -6,14 +6,14 @@ import 'package:my_app/models/title_model.dart';
 import 'package:my_app/models/vehicle_brand_model.dart';
 import 'package:my_app/models/vehicle_model_model.dart';
 
-class OwnerAddCusScreen extends StatefulWidget {
-  const OwnerAddCusScreen({super.key});
+class IntakecarAddCusScreen extends StatefulWidget {
+  const IntakecarAddCusScreen({super.key});
 
   @override
-  State<OwnerAddCusScreen> createState() => _OwnerAddCusScreenState();
+  State<IntakecarAddCusScreen> createState() => _IntakecarAddCusScreenState();
 }
 
-class _OwnerAddCusScreenState extends State<OwnerAddCusScreen> {
+class _IntakecarAddCusScreenState extends State<IntakecarAddCusScreen> {
   // ข้อมูลลูกค้า
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
@@ -23,14 +23,32 @@ class _OwnerAddCusScreenState extends State<OwnerAddCusScreen> {
 
   // ข้อมูลรถยนต์
   final TextEditingController _licensePlateController = TextEditingController();
-  final TextEditingController _yearController = TextEditingController();
-  final TextEditingController _colorController = TextEditingController();
 
   List<VehicleBrandModel> _brandList = [];
   int? _selectedBrandId;
 
   List<VehicleModelModel> _modelList = [];
   int? _selectedModelId;
+
+  // ปีรถ (สร้าง List ปีย้อนหลัง 40 ปีอัตโนมัติ)
+  int? _selectedYear;
+  final List<int> _yearList = List.generate(40, (index) => DateTime.now().year - index);
+
+  // สีรถ (List สีมาตรฐาน)
+  String? _selectedColor;
+  final List<String> _colorList = [
+    'ขาว',
+    'ดำ',
+    'เทา',
+    'บรอนซ์เงิน',
+    'แดง',
+    'น้ำเงิน',
+    'น้ำตาล',
+    'เขียว',
+    'ส้ม',
+    'เหลือง',
+    'ทอง',
+  ];
 
   String _errorMessage = '';
 
@@ -55,8 +73,6 @@ class _OwnerAddCusScreenState extends State<OwnerAddCusScreen> {
     _lastNameController.dispose();
     _phoneController.dispose();
     _licensePlateController.dispose();
-    _yearController.dispose();
-    _colorController.dispose();
     super.dispose();
   }
 
@@ -71,7 +87,7 @@ class _OwnerAddCusScreenState extends State<OwnerAddCusScreen> {
         });
       }
 
-      // โหลดยี่ห้อรถยนต์ (Toyota, Honda, Isuzu)
+      // โหลดยี่ห้อรถยนต์
       final brandRes = await AppAPI.get('/vehicle_brand');
       final brandResponse = VehicleBrandResponse.fromJson(jsonDecode(brandRes.body));
       if (brandResponse.isError == false) {
@@ -103,8 +119,8 @@ class _OwnerAddCusScreenState extends State<OwnerAddCusScreen> {
         _licensePlateController.text.trim().isEmpty ||
         _selectedBrandId == null ||
         _selectedModelId == null ||
-        _yearController.text.trim().isEmpty ||
-        _colorController.text.trim().isEmpty) {
+        _selectedYear == null ||
+        _selectedColor == null) {
       setState(() {
         _errorMessage = 'กรุณากรอกข้อมูลให้ครบถ้วน';
       });
@@ -120,8 +136,8 @@ class _OwnerAddCusScreenState extends State<OwnerAddCusScreen> {
         'cus_created_by_account_id': 1,
         'v_license_plate': _licensePlateController.text.trim(),
         'v_vehicle_model_id': _selectedModelId,
-        'v_year': int.parse(_yearController.text.trim()),
-        'v_color': _colorController.text.trim(),
+        'v_year': _selectedYear,
+        'v_color': _selectedColor,
       });
 
       final Map<String, dynamic> resJson = jsonDecode(response.body);
@@ -200,7 +216,7 @@ class _OwnerAddCusScreenState extends State<OwnerAddCusScreen> {
             ),
             const SizedBox(height: 12),
 
-            // 1. Dropdown เลือกยี่ห้อ (Toyota, Honda, Isuzu)
+            // 1. Dropdown เลือกยี่ห้อ
             DropdownButton<int>(
               hint: const Text('เลือกยี่ห้อรถยนต์ (เช่น Toyota, Honda, Isuzu)'),
               value: _selectedBrandId,
@@ -239,14 +255,41 @@ class _OwnerAddCusScreenState extends State<OwnerAddCusScreen> {
             ),
             const SizedBox(height: 12),
 
-            TextField(
-              controller: _yearController,
-              decoration: const InputDecoration(hintText: 'กรอกปีรุ่นรถ เช่น 2022'),
+            // 3. Dropdown เลือกปีรุ่นรถ
+            DropdownButton<int>(
+              hint: const Text('เลือกปีรุ่นรถ (ค.ศ.)'),
+              value: _selectedYear,
+              isExpanded: true,
+              items: _yearList.map((year) {
+                return DropdownMenuItem<int>(
+                  value: year,
+                  child: Text('$year'),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedYear = value;
+                });
+              },
             ),
             const SizedBox(height: 12),
-            TextField(
-              controller: _colorController,
-              decoration: const InputDecoration(hintText: 'กรอกสีรถ'),
+
+            // 4. Dropdown เลือกสีรถ
+            DropdownButton<String>(
+              hint: const Text('เลือกสีรถ'),
+              value: _selectedColor,
+              isExpanded: true,
+              items: _colorList.map((color) {
+                return DropdownMenuItem<String>(
+                  value: color,
+                  child: Text(color),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedColor = value;
+                });
+              },
             ),
             const SizedBox(height: 20),
             Center(

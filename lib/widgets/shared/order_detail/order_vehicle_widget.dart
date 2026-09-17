@@ -56,6 +56,19 @@ class OrderVehicleWidget extends StatelessWidget {
               children: [
                 const Expanded(
                   flex: 2,
+                  child: Text('ปีรถ:', style: TextStyle(color: Colors.grey)),
+                ),
+                Expanded(
+                  flex: 3,
+                  child: Text('${vehicle.year}'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Expanded(
+                  flex: 2,
                   child: Text('เจ้าของรถ:', style: TextStyle(color: Colors.grey)),
                 ),
                 Expanded(

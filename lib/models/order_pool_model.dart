@@ -36,6 +36,7 @@ class OrderPoolItemModel {
   final String createdAt;
   final String licensePlate;
   final String color;
+  final int year;
   final String brandName;
   final String modelName;
   final int customerId;
@@ -57,6 +58,7 @@ class OrderPoolItemModel {
     required this.createdAt,
     required this.licensePlate,
     required this.color,
+    required this.year,
     required this.brandName,
     required this.modelName,
     required this.customerId,
@@ -80,6 +82,7 @@ class OrderPoolItemModel {
       createdAt: json['o_created_at'] as String,
       licensePlate: json['v_license_plate'] as String,
       color: json['v_color'] as String,
+      year: json['v_year'] as int,
       brandName: json['brand_name'] as String,
       modelName: json['model_name'] as String,
       customerId: json['cus_id'] as int,
