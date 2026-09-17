@@ -6,6 +6,12 @@ import 'package:my_app/models/sub_task_status_model.dart';
 import 'package:my_app/utils/app_api.dart';
 import 'package:my_app/widgets/shared/order_detail/order_sub_task_add_part_widget.dart';
 
+// pdf
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+
 class OrderSubTaskDetailWidget extends StatefulWidget {
   final SubTaskModel subTask;
 
@@ -59,6 +65,120 @@ class _OrderSubTaskDetailWidgetState extends State<OrderSubTaskDetailWidget> {
       _partRequests = res.data;
     });
   }
+
+    Future<void> _printPdf(RequestPartModel req) async {
+    // 1. สร้างเอกสาร PDF
+    final pdf = pw.Document();
+
+    // 2. โหลดฟอนต์ภาษาไทย (มีอยู่ในโฟลเดอร์ fonts ของโปรเจกต์แล้ว)
+    final fontData = await rootBundle.load('fonts/Kanit-Regular.ttf');
+    final thaiFont = pw.Font.ttf(fontData);
+
+    // 3. ออกแบบหน้ากระดาษ
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        theme: pw.ThemeData.withFont(base: thaiFont), // กำหนดฟอนต์ไทยให้ทั้งหน้า
+        build: (pw.Context context) {
+          return pw.Padding(
+            padding: const pw.EdgeInsets.all(24),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                // หัวกระดาษ
+                pw.Center(
+                  child: pw.Text(
+                    'ใบขอเบิกอะไหล่ (Parts Requisition Slip)',
+                    style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
+                  ),
+                ),
+                pw.SizedBox(height: 16),
+                pw.Divider(),
+
+                // ข้อมูลใบเบิก
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text('เลขที่ใบเบิก: #${req.id}'),
+                    pw.Text('วันที่: ${req.requestedAt}'),
+                  ],
+                ),
+                pw.SizedBox(height: 8),
+                pw.Text('ชื่องานซ่อม: ${widget.subTask.name} (Order #${widget.subTask.orderId})'),
+                pw.SizedBox(height: 8),
+                pw.Text('ผู้ขอเบิก: ${req.requesterName}'),
+                pw.SizedBox(height: 8),
+                pw.Text('สถานะ: ${req.statusName}'),
+                pw.SizedBox(height: 16),
+                pw.Divider(),
+
+                // ตารางรายการอะไหล่
+                pw.Text('รายการอะไหล่ที่ขอเบิก:', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                pw.SizedBox(height: 8),
+                pw.TableHelper.fromTextArray(
+                  headers: ['ลำดับ', 'ชื่ออะไหล่', 'ยี่ห้อ', 'จำนวน', 'ราคาต่อหน่วย', 'ราคารวม'],
+                  data: [
+                    [
+                      '1',
+                      req.partName,
+                      req.partBrand,
+                      '${req.quantity}',
+                      '${req.partPrice.toStringAsFixed(2)}',
+                      '${req.totalPrice.toStringAsFixed(2)}',
+                    ]
+                  ],
+                  headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                  headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
+                  cellAlignment: pw.Alignment.centerLeft,
+                ),
+                pw.SizedBox(height: 16),
+                pw.Align(
+                  alignment: pw.Alignment.centerRight,
+                  child: pw.Text(
+                    'ยอดรวมสุทธิ: ${req.totalPrice.toStringAsFixed(2)} บาท',
+                    style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+                  ),
+                ),
+
+                pw.Spacer(),
+
+                // ช่องลงลายมือชื่อด้านล่าง
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Column(
+                      children: [
+                        pw.Text('ลงชื่อ ................................................'),
+                        pw.SizedBox(height: 4),
+                        pw.Text('( ${req.requesterName} )'),
+                        pw.Text('ผู้ขอเบิก'),
+                      ],
+                    ),
+                    pw.Column(
+                      children: [
+                        pw.Text('ลงชื่อ ................................................'),
+                        pw.SizedBox(height: 4),
+                        pw.Text('( ................................................ )'),
+                        pw.Text('ผู้อนุมัติ / เจ้าของอู่'),
+                      ],
+                    ),
+                  ],
+                ),
+                pw.SizedBox(height: 20),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+
+    // 4. สั่งแสดงหน้าต่างพรีวิว / พิมพ์ / เซฟเป็น PDF
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+      name: 'ใบเบิกอะไหล่_${req.id}.pdf',
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -235,6 +355,17 @@ class _OrderSubTaskDetailWidgetState extends State<OrderSubTaskDetailWidget> {
                     ),
                   ],
                 ),
+                if (req.statusId == 2) ...[
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _printPdf(req),
+                      icon: const Icon(Icons.print, size: 18),
+                      label: const Text('ปริ้น PDF'),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
