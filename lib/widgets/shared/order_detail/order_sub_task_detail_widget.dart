@@ -7,7 +7,6 @@ import 'package:my_app/utils/app_api.dart';
 import 'package:my_app/widgets/shared/order_detail/order_sub_task_add_part_widget.dart';
 
 // pdf
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -67,18 +66,21 @@ class _OrderSubTaskDetailWidgetState extends State<OrderSubTaskDetailWidget> {
   }
 
     Future<void> _printPdf(RequestPartModel req) async {
-    // 1. สร้างเอกสาร PDF
+    // สร้างเอกสาร PDF
     final pdf = pw.Document();
 
-    // 2. โหลดฟอนต์ภาษาไทย (มีอยู่ในโฟลเดอร์ fonts ของโปรเจกต์แล้ว)
-    final fontData = await rootBundle.load('fonts/Kanit-Regular.ttf');
-    final thaiFont = pw.Font.ttf(fontData);
+    // โหลดฟอนต์ภาษาไทยจาก Google Fonts (ทั้งตัวปกติและตัวหนา)
+    final thaiFont = await PdfGoogleFonts.kanitRegular();
+    final thaiBoldFont = await PdfGoogleFonts.kanitBold();
 
-    // 3. ออกแบบหน้ากระดาษ
+    // ออกแบบหน้ากระดาษ
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
-        theme: pw.ThemeData.withFont(base: thaiFont), // กำหนดฟอนต์ไทยให้ทั้งหน้า
+        theme: pw.ThemeData.withFont(
+          base: thaiFont,
+          bold: thaiBoldFont,
+        ),
         build: (pw.Context context) {
           return pw.Padding(
             padding: const pw.EdgeInsets.all(24),
@@ -123,8 +125,8 @@ class _OrderSubTaskDetailWidgetState extends State<OrderSubTaskDetailWidget> {
                       req.partName,
                       req.partBrand,
                       '${req.quantity}',
-                      '${req.partPrice.toStringAsFixed(2)}',
-                      '${req.totalPrice.toStringAsFixed(2)}',
+                      req.partPrice.toStringAsFixed(2),
+                      req.totalPrice.toStringAsFixed(2),
                     ]
                   ],
                   headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
@@ -139,32 +141,6 @@ class _OrderSubTaskDetailWidgetState extends State<OrderSubTaskDetailWidget> {
                     style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
                   ),
                 ),
-
-                pw.Spacer(),
-
-                // ช่องลงลายมือชื่อด้านล่าง
-                pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                  children: [
-                    pw.Column(
-                      children: [
-                        pw.Text('ลงชื่อ ................................................'),
-                        pw.SizedBox(height: 4),
-                        pw.Text('( ${req.requesterName} )'),
-                        pw.Text('ผู้ขอเบิก'),
-                      ],
-                    ),
-                    pw.Column(
-                      children: [
-                        pw.Text('ลงชื่อ ................................................'),
-                        pw.SizedBox(height: 4),
-                        pw.Text('( ................................................ )'),
-                        pw.Text('ผู้อนุมัติ / เจ้าของอู่'),
-                      ],
-                    ),
-                  ],
-                ),
-                pw.SizedBox(height: 20),
               ],
             ),
           );
@@ -172,7 +148,7 @@ class _OrderSubTaskDetailWidgetState extends State<OrderSubTaskDetailWidget> {
       ),
     );
 
-    // 4. สั่งแสดงหน้าต่างพรีวิว / พิมพ์ / เซฟเป็น PDF
+    // สั่งแสดงหน้าต่างพรีวิว / พิมพ์ / เซฟเป็น PDF
     await Printing.layoutPdf(
       onLayout: (PdfPageFormat format) async => pdf.save(),
       name: 'ใบเบิกอะไหล่_${req.id}.pdf',
