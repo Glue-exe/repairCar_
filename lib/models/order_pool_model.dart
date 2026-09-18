@@ -46,6 +46,7 @@ class OrderPoolItemModel {
   final int technicianCount;
   final List<OrderTechnicianItemModel> technicians;
   final List<String> images;
+  final bool isAcceptedByMe;
 
   OrderPoolItemModel({
     required this.orderId,
@@ -68,6 +69,7 @@ class OrderPoolItemModel {
     required this.technicianCount,
     required this.technicians,
     required this.images,
+    this.isAcceptedByMe = false,
   });
 
   factory OrderPoolItemModel.fromJson(Map<String, dynamic> json) {
@@ -96,6 +98,7 @@ class OrderPoolItemModel {
       images: (json['images'] as List)
           .map((e) => e.toString())
           .toList(),
+      isAcceptedByMe: json['is_accepted_by_me'] ?? false,
     );
   }
 }

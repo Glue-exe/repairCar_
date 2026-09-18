@@ -90,6 +90,7 @@ class _AppovalPartDetailWidgetState extends State<AppovalPartDetailWidget> {
             createdAt: match.createdAt,
             images: match.images,
             technicians: match.technicians,
+            isAcceptedByMe: match.isAcceptedByMe,
           ),
           vehicle: VehicleSearchResultModel(
             vId: match.vehicleId,

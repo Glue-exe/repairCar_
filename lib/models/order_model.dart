@@ -9,6 +9,7 @@ class OrderModel {
   final String createdAt;
   final List<String> images;
   final List<OrderTechnicianItemModel> technicians;
+  final bool isAcceptedByMe;
 
   OrderModel({
     required this.orderId,
@@ -19,6 +20,7 @@ class OrderModel {
     required this.createdAt,
     this.images = const [],
     this.technicians = const [],
+    this.isAcceptedByMe = false,
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
@@ -35,6 +37,7 @@ class OrderModel {
       technicians: (json['technicians'] as List)
           .map((e) => OrderTechnicianItemModel.fromJson(e as Map<String, dynamic>))
           .toList(),
+      isAcceptedByMe: json['is_accepted_by_me'] ?? false,
     );
   }
 }

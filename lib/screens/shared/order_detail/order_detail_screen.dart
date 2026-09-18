@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_app/utils/app_api.dart';
 import 'package:my_app/models/order_model.dart';
 import 'package:my_app/models/order_pool_model.dart';
@@ -32,23 +31,16 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   List<OrderTechnicianItemModel> _technicians = [];
   List<OrderStatusModel> _statuses = [];
   int _currentStatusId = 0;
-  int? _currentUserId;
+  bool _isAcceptedByMe = false;
 
   @override
   void initState() {
     super.initState();
     _currentStatusId = widget.order.orderStatusId;
+    _isAcceptedByMe = widget.order.isAcceptedByMe;
     _technicians = List<OrderTechnicianItemModel>.from(widget.order.technicians);
-    _loadCurrentUserId();
     _fetchStatuses();
     _fetchTechnicians();
-  }
-
-  Future<void> _loadCurrentUserId() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _currentUserId = prefs.getInt('user_id');
-    });
   }
 
   Future<void> _fetchStatuses() async {
@@ -134,6 +126,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       'order_id': widget.order.orderId,
     });
 
+    setState(() {
+      _isAcceptedByMe = true;
+    });
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('รับงานเรียบร้อยแล้ว')),
@@ -154,6 +150,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       'order_id': widget.order.orderId,
     });
 
+    setState(() {
+      _isAcceptedByMe = false;
+    });
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('ยกเลิกการรับงานเรียบร้อยแล้ว')),
@@ -164,8 +164,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isAcceptedByMe = _currentUserId != null &&
-        _technicians.any((tech) => tech.accountId == _currentUserId);
+    final bool isAcceptedByMe = _isAcceptedByMe;
 
     return Scaffold(
       appBar: AppBar(
@@ -213,23 +212,21 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             const SizedBox(height: 24),
 
             // ปุ่มกดรับงานนี้ / ยกเลิกการรับงานนี้
-            if (_currentUserId != null) ...[
-              if (isAcceptedByMe)
-                Center(
-                  child: OutlinedButton(
-                    onPressed: _handleCancelOrder,
-                    child: const Text('ยกเลิกการรับงานนี้'),
-                  ),
-                )
-              else
-                Center(
-                  child: ElevatedButton(
-                    onPressed: _handleAcceptOrder,
-                    child: const Text('กดรับงานนี้'),
-                  ),
+            if (isAcceptedByMe)
+              Center(
+                child: OutlinedButton(
+                  onPressed: _handleCancelOrder,
+                  child: const Text('ยกเลิกการรับงานนี้'),
                 ),
-              const SizedBox(height: 20),
-            ],
+              )
+            else
+              Center(
+                child: ElevatedButton(
+                  onPressed: _handleAcceptOrder,
+                  child: const Text('กดรับงานนี้'),
+                ),
+              ),
+            const SizedBox(height: 20),
           ],
         ),
       ),

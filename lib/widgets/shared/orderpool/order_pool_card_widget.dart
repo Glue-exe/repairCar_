@@ -26,8 +26,7 @@ class _OrderPoolCardWidgetState extends State<OrderPoolCardWidget> {
 
   // ตรวจสอบว่าฉันเคยกดรับงานนี้หรือยัง
   bool _checkIsAcceptedByMe() {
-    if (widget.currentUserId == null) return false;
-    return widget.order.technicians.any((tech) => tech.accountId == widget.currentUserId);
+    return widget.order.isAcceptedByMe;
   }
 
   // กล่องแจ้งเตือนถามยืนยัน
@@ -192,6 +191,7 @@ class _OrderPoolCardWidgetState extends State<OrderPoolCardWidget> {
             createdAt: widget.order.createdAt,
             images: widget.order.images,
             technicians: widget.order.technicians,
+            isAcceptedByMe: widget.order.isAcceptedByMe,
           );
 
           final vehicleObj = VehicleSearchResultModel(

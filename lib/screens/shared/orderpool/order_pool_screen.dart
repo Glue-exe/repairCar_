@@ -32,21 +32,16 @@ class _OrderPoolScreenState extends State<OrderPoolScreen> {
   @override
   void initState() {
     super.initState();
-    _loadCurrentUserId();
     _loadInitialData();
-  }
-
-  Future<void> _loadCurrentUserId() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _currentUserId = prefs.getInt('user_id');
-    });
   }
 
   Future<void> _loadInitialData() async {
     setState(() {
       _isLoading = true;
     });
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    _currentUserId = prefs.getInt('user_id');
 
     await Future.wait([
       _fetchPriorities(),
@@ -78,7 +73,18 @@ class _OrderPoolScreenState extends State<OrderPoolScreen> {
   }
 
   Future<void> _fetchOrders() async {
-    final response = await AppAPI.get('/all_orders');
+    String url = '/all_orders?user_id=$_currentUserId';
+    if (_techFilterIndex > 0) {
+      url += '&tech_filter=$_techFilterIndex';
+    }
+    if (_selectedPriorityId != null) {
+      url += '&priority_id=$_selectedPriorityId';
+    }
+    if (_selectedStatusId != null) {
+      url += '&status_id=$_selectedStatusId';
+    }
+
+    final response = await AppAPI.get(url);
     final Map<String, dynamic> json = jsonDecode(response.body);
     final res = OrderPoolResponse.fromJson(json);
     setState(() {
@@ -86,34 +92,8 @@ class _OrderPoolScreenState extends State<OrderPoolScreen> {
     });
   }
 
-  // คำนวณการกรอง
-  List<OrderPoolItemModel> get _filteredOrders {
-    List<OrderPoolItemModel> list = _allOrders;
-
-    // กรองตามสถานะช่างรับงาน
-    if (_techFilterIndex == 1) {
-      list = list.where((order) => order.technicianCount == 0).toList();
-    } else if (_techFilterIndex == 2) {
-      list = list.where((order) => order.technicianCount > 0).toList();
-    }
-
-    // กรองตามระดับความสำคัญ
-    if (_selectedPriorityId != null) {
-      list = list.where((order) => order.priorityId == _selectedPriorityId).toList();
-    }
-
-    // กรองตามสถานะงาน
-    if (_selectedStatusId != null) {
-      list = list.where((order) => order.orderStatusId == _selectedStatusId).toList();
-    }
-
-    return list;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final filteredList = _filteredOrders;
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -131,12 +111,13 @@ class _OrderPoolScreenState extends State<OrderPoolScreen> {
       body: Column(
         children: [
           OrderPoolFilterHeaderWidget(
-            totalCount: filteredList.length,
+            totalCount: _allOrders.length,
             techFilterIndex: _techFilterIndex,
             onTechFilterChanged: (index) {
               setState(() {
                 _techFilterIndex = index;
               });
+              _fetchOrders();
             },
             selectedPriorityId: _selectedPriorityId,
             priorities: _priorities,
@@ -144,6 +125,7 @@ class _OrderPoolScreenState extends State<OrderPoolScreen> {
               setState(() {
                 _selectedPriorityId = priorityId;
               });
+              _fetchOrders();
             },
             selectedStatusId: _selectedStatusId,
             statuses: _statuses,
@@ -151,25 +133,26 @@ class _OrderPoolScreenState extends State<OrderPoolScreen> {
               setState(() {
                 _selectedStatusId = statusId;
               });
+              _fetchOrders();
             },
           ),
           const Divider(height: 1, thickness: 1),
           Expanded(
-            child: _buildBodyContent(filteredList),
+            child: _buildBodyContent(),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildBodyContent(List<OrderPoolItemModel> filteredList) {
+  Widget _buildBodyContent() {
     if (_isLoading) {
       return const Center(
         child: CircularProgressIndicator(),
       );
     }
 
-    if (filteredList.isEmpty) {
+    if (_allOrders.isEmpty) {
       return const Center(
         child: Text(
           'ไม่พบรายการงานตามเงื่อนไขที่เลือก',
@@ -182,9 +165,9 @@ class _OrderPoolScreenState extends State<OrderPoolScreen> {
       onRefresh: _loadInitialData,
       child: ListView.builder(
         padding: const EdgeInsets.all(12),
-        itemCount: filteredList.length,
+        itemCount: _allOrders.length,
         itemBuilder: (context, index) {
-          final order = filteredList[index];
+          final order = _allOrders[index];
           return OrderPoolCardWidget(
             order: order,
             currentUserId: _currentUserId,
