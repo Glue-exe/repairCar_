@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:my_app/models/service_model.dart';
 import 'package:my_app/models/sub_task_status_model.dart';
 import 'package:my_app/utils/app_api.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OrderAddSubTaskWidget extends StatefulWidget {
   final int orderId;
@@ -90,12 +91,16 @@ class _OrderAddSubTaskWidgetState extends State<OrderAddSubTaskWidget> {
 
     if (confirm != true) return;
 
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int accId = prefs.getInt('user_id')!;
     final response = await AppAPI.post('/sub_task', {
+
       'st_order_id': widget.orderId,
       'st_service_id': _selectedServiceId,
       'st_name': _nameController.text.trim(),
       'st_labor_cost': double.parse(_laborCostController.text.trim()),
       'st_sub_task_status_id': _selectedSubTaskStatusId,
+      'accId': accId,
     });
 
     final Map<String, dynamic> resJson = jsonDecode(response.body);

@@ -1,20 +1,100 @@
 import 'package:flutter/material.dart';
 import 'package:my_app/models/order_model.dart';
 import 'package:my_app/models/order_status_model.dart';
+import 'package:my_app/utils/app_api.dart';
 
-class OrderStatusWidget extends StatelessWidget {
+class OrderStatusWidget extends StatefulWidget {
   final OrderModel order;
   final int currentStatusId;
   final List<OrderStatusModel> statuses;
-  final Function(int) onStatusChanged;
+  final Function(int)? onStatusChanged;
+  final bool isOrderAccepted;
 
   const OrderStatusWidget({
     super.key,
     required this.order,
     required this.currentStatusId,
     required this.statuses,
-    required this.onStatusChanged,
+    this.onStatusChanged,
+    this.isOrderAccepted = false,
   });
+
+  @override
+  State<OrderStatusWidget> createState() => _OrderStatusWidgetState();
+}
+
+class _OrderStatusWidgetState extends State<OrderStatusWidget> {
+  late int _currentStatusId;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentStatusId = widget.currentStatusId;
+  }
+
+  @override
+  void didUpdateWidget(covariant OrderStatusWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.currentStatusId != widget.currentStatusId) {
+      _currentStatusId = widget.currentStatusId;
+    }
+  }
+
+  // กล่องยืนยันการทำรายการ
+  Future<bool> _showConfirm(String title, String message) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('ยกเลิก', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('ยืนยัน'),
+            ),
+          ],
+        );
+      },
+    );
+    return result == true;
+  }
+
+  // ยิง API อัปเดตสถานะ
+  Future<void> _postUpdateStatus(int newStatusId) async {
+    await AppAPI.post('/order/update_status', {
+      'order_id': widget.order.orderId,
+      'status_id': newStatusId,
+    });
+  }
+
+  void onPassStatus(int newStatusId, String statusName) async {
+    bool confirm = await _showConfirm(
+      'ยืนยันการเปลี่ยนสถานะ',
+      'ต้องการเปลี่ยนสถานะเป็น "$statusName" หรือไม่?',
+    );
+    if (!confirm) return;
+
+    await _postUpdateStatus(newStatusId);
+
+    setState(() {
+      _currentStatusId = newStatusId;
+    });
+
+    if (widget.onStatusChanged != null) {
+      widget.onStatusChanged!(newStatusId);
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('เปลี่ยนสถานะเป็น "$statusName" เรียบร้อยแล้ว')),
+      );
+    }
+  }
 
   String _formatThaiDate(String dateStr) {
     DateTime dt = DateTime.parse(dateStr).toLocal();
@@ -32,62 +112,41 @@ class OrderStatusWidget extends StatelessWidget {
       elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
                   'สถานะการซ่อม',
                   style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 8),
-                DropdownButton<int>(
-                  value: currentStatusId,
-                  underline: const SizedBox(),
-                  icon: const Icon(Icons.arrow_drop_down),
-                  items: statuses.map((status) {
-                    return DropdownMenuItem<int>(
-                      value: status.id,
-                      child: Text(
-                        status.name,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (newStatusId) {
-                    if (newStatusId != null && newStatusId != currentStatusId) {
-                      onStatusChanged(newStatusId);
-                    }
-                  },
+                Text(
+                  widget.order.createdAt.isNotEmpty ? _formatThaiDate(widget.order.createdAt) : '',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey,
+                  ),
                 ),
               ],
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
-                const Text(
-                  'วันที่เปิดงาน',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
+                for (var status in widget.statuses)
+                  ChoiceChip(
+                    label: Text(status.name),
+                    selected: status.id == _currentStatusId,
+                    onSelected: widget.isOrderAccepted && status.id != _currentStatusId
+                        ? (_) => onPassStatus(status.id, status.name)
+                        : null,
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  _formatThaiDate(order.createdAt),
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
               ],
             ),
           ],
