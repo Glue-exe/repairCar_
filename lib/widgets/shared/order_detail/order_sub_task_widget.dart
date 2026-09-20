@@ -34,7 +34,7 @@ class _OrderSubTaskWidgetState extends State<OrderSubTaskWidget> {
   Future<void> _loadCurrentUserId() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      _currentUserId = prefs.getInt('user_id') ?? 0;
+      _currentUserId = prefs.getInt('user_id')!;
     });
   }
 
@@ -89,18 +89,19 @@ class _OrderSubTaskWidgetState extends State<OrderSubTaskWidget> {
                   style: const TextStyle(color: Colors.grey),
                 ),
                 TextButton(
-                  onPressed: () async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            OrderAddSubTaskWidget(orderId: widget.orderId),
-                      ),
-                    );
-                    if (result == true) {
-                      _fetchSubTasks();
-                    }
-                  },
+                  onPressed: widget.isOrderAccepted
+                      ? () async {
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => OrderAddSubTaskWidget(orderId: widget.orderId),
+                            ),
+                          );
+                          if (result == true) {
+                            _fetchSubTasks();
+                          }
+                        }
+                      : null,
                   child: const Text('เพิ่มรายการซ่อม'),
                 ),
               ],

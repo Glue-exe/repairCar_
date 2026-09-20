@@ -88,30 +88,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     return result == true;
   }
 
-  // อัปเดตสถานะงานซ่อม
-  Future<void> _handleStatusChange(int newStatusId) async {
-    final newStatus = _statuses.firstWhere((s) => s.id == newStatusId);
-
-    bool confirm = await _showConfirm(
-      'ยืนยันการเปลี่ยนสถานะ',
-      'ต้องการเปลี่ยนสถานะเป็น "${newStatus.name}" หรือไม่?',
-    );
-    if (!confirm) return;
-
-    await AppAPI.post('/order/update_status', {
-      'order_id': widget.order.orderId,
-      'status_id': newStatusId,
-    });
-
+  // อัปเดตสถานะงานซ่อมในหน้าหลัก (ซิงก์สถานะ)
+  void _handleStatusChange(int newStatusId) {
     setState(() {
       _currentStatusId = newStatusId;
     });
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('เปลี่ยนสถานะเป็น "${newStatus.name}" เรียบร้อยแล้ว')),
-      );
-    }
   }
 
   // กดรับงาน
@@ -181,6 +162,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               currentStatusId: _currentStatusId,
               statuses: _statuses,
               onStatusChanged: _handleStatusChange,
+              isOrderAccepted: isAcceptedByMe,
             ),
             const SizedBox(height: 16),
 
@@ -208,7 +190,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             const SizedBox(height: 16),
 
             // ใบเสร็จรับเงิน / สรุปค่าบริการ
-            const OrderInvoiceWidget(),
+            OrderInvoiceWidget(
+              orderId: widget.order.orderId,
+              orderStatusId: _currentStatusId,
+            ),
             const SizedBox(height: 24),
 
             // ปุ่มกดรับงานนี้ / ยกเลิกการรับงานนี้
