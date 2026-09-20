@@ -18,14 +18,14 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
 
   void _loadProfile() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? fullName = prefs.getString("full_name");
-    String? roleName = prefs.getString("user_role");
+    String fullName = prefs.getString("full_name")!;
+    String roleName = prefs.getString("user_role")!;
     print('Fullname: $fullName');
     print('Role: $roleName');
 
     setState(() {
-      _fullName = fullName ?? '';
-      _roleName = roleName ?? '';
+      _fullName = fullName!;
+      _roleName = roleName!;
     });
   }
 
