@@ -1,3 +1,4 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:my_app/models/monthly_income_model.dart';
 
@@ -8,18 +9,8 @@ class IncomeChartWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // หาค่ายอดขายสูงสุดเพื่อนำมาคำนวณความสูงของแท่งกราฟ (ถ้าไม่มีข้อมูลให้เป็น 1.0 เพื่อกันหารด้วยศูนย์)
-    double maxIncome = 1.0;
-    for (var item in incomeList) {
-      if (item.totalAmount > maxIncome) {
-        maxIncome = item.totalAmount;
-      }
-    }
-
     return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: Colors.white,
+      elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -27,14 +18,9 @@ class IncomeChartWidget extends StatelessWidget {
           children: [
             const Text(
               'แนวโน้มรายได้รายเดือน',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
-
-            // กรณีไม่มีข้อมูล
+            const SizedBox(height: 20),
             if (incomeList.isEmpty)
               const SizedBox(
                 height: 150,
@@ -42,65 +28,55 @@ class IncomeChartWidget extends StatelessWidget {
               )
             else
               SizedBox(
-                width: double.infinity,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  physics: const BouncingScrollPhysics(
-                    parent: AlwaysScrollableScrollPhysics(),
-                  ),
-                  child: SizedBox(
-                    height: 170,
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: incomeList.map((item) {
-                        // คำนวณความสูงแท่งกราฟ (ความสูงสูงสุด 100 px)
-                        double barHeight = (item.totalAmount / maxIncome) * 100;
-
-                        // กำหนดความสูงขั้นต่ำอย่างน้อย 6 px เพื่อให้มองเห็นแท่งแม้ว่ายอดจะเป็น 0
-                        if (barHeight < 6) barHeight = 6;
-
-                        return Container(
-                          width: 64,
-                          margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  '฿${item.totalAmount}',
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.teal,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Container(
-                                width: 22,
-                                height: barHeight,
-                                decoration: BoxDecoration(
-                                  color: Colors.teal.shade400,
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  item.monthYear,
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
+                height: 200,
+                child: LineChart(
+                  LineChartData(
+                    gridData: const FlGridData(show: true),
+                    borderData: FlBorderData(show: false),
+                    titlesData: FlTitlesData(
+                      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 45,
+                          getTitlesWidget: (value, meta) {
+                            return Text(
+                              value.toInt().toString(),
+                              style: const TextStyle(fontSize: 10),
+                            );
+                          },
+                        ),
+                      ),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 25,
+                          getTitlesWidget: (value, meta) {
+                            int index = value.toInt();
+                            if (index >= 0 && index < incomeList.length) {
+                              return Text(
+                                incomeList[index].monthYear,
+                                style: const TextStyle(fontSize: 10),
+                              );
+                            }
+                            return const SizedBox();
+                          },
+                        ),
+                      ),
                     ),
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: [
+                          for (int i = 0; i < incomeList.length; i++)
+                            FlSpot(i.toDouble(), incomeList[i].totalAmount),
+                        ],
+                        isCurved: true,
+                        color: Colors.blue,
+                        barWidth: 3,
+                        dotData: const FlDotData(show: true),
+                      ),
+                    ],
                   ),
                 ),
               ),
