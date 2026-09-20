@@ -24,8 +24,8 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
     print('Role: $roleName');
 
     setState(() {
-      _fullName = fullName!;
-      _roleName = roleName!;
+      _fullName = fullName;
+      _roleName = roleName;
     });
   }
 
