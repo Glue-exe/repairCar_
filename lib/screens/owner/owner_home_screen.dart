@@ -3,10 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:my_app/models/dashboard_summary_model.dart';
 import 'package:my_app/models/monthly_income_model.dart';
 import 'package:my_app/utils/app_api.dart';
-import 'package:my_app/widgets/owner/home/income_summary_card.dart';
-import 'package:my_app/widgets/owner/home/vehicles_summary_card.dart';
-import 'package:my_app/widgets/owner/home/active_jobs_card.dart';
-import 'package:my_app/widgets/owner/home/pending_approvals_card.dart';
 import 'package:my_app/widgets/owner/home/income_chart_widget.dart';
 
 class OwnerHomeScreen extends StatefulWidget {
@@ -17,88 +13,148 @@ class OwnerHomeScreen extends StatefulWidget {
 }
 
 class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
-  DashboardSummaryModel dashboardSummaryStore = DashboardSummaryModel(
+  DashboardSummaryModel _summary = DashboardSummaryModel(
     monthlyIncome: 0.0,
+    unpaidTotal: 0.0,
     vehiclesThisMonth: 0,
     activeJobsCount: 0,
     pendingApprovalsCount: 0,
   );
 
-  List<MonthlyIncomeModel> monthlyIncomeHistoryStore = [];
-
-  void _fetchData() async {
-    var response = await Future.wait([
-      AppAPI.get("/dashboard/summary"),
-      AppAPI.get("/income/monthly_history"),
-    ]);
-
-    Map<String, dynamic> summaryJson = jsonDecode(response[0].body);
-    DashboardSummaryResponse dashboardSummaryResponse =
-        DashboardSummaryResponse.fromJson(summaryJson);
-
-    Map<String, dynamic> historyJson = jsonDecode(response[1].body);
-    MonthlyIncomeResponse monthlyIncomeResponse =
-        MonthlyIncomeResponse.fromJson(historyJson);
-
-    setState(() {
-      dashboardSummaryStore = dashboardSummaryResponse.data;
-      monthlyIncomeHistoryStore = monthlyIncomeResponse.data;
-    });
-  }
+  List<MonthlyIncomeModel> _monthlyIncomes = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
-    _fetchData();
     super.initState();
+    _fetchDashboardData();
+  }
+
+  Future<void> _fetchDashboardData() async {
+    final resSummary = await AppAPI.get("/dashboard/summary");
+    final summaryJson = jsonDecode(resSummary.body);
+
+    final resHistory = await AppAPI.get("/income/monthly_history");
+    final historyJson = jsonDecode(resHistory.body);
+
+    setState(() {
+      _summary = DashboardSummaryModel.fromJson(summaryJson['data']);
+      _monthlyIncomes = (historyJson['data'] as List)
+          .map((item) => MonthlyIncomeModel.fromJson(item as Map<String, dynamic>))
+          .toList();
+      _isLoading = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.teal.shade50,
       appBar: AppBar(
         title: const Text('Dashboard'),
-        backgroundColor: Colors.teal.shade50,
-        centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            children: [
-              Row(
-                children: <Widget>[
-                  Expanded(
-                    child: IncomeSummaryCard(
-                      summaryData: dashboardSummaryStore,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // แถวที่ 1
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('รายได้เดือนนี้ (ชำระแล้ว)', style: TextStyle(fontSize: 13, color: Colors.grey)),
+                                const SizedBox(height: 8),
+                                Text('${_summary.monthlyIncome} ฿', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('ยอดค้างชำระ', style: TextStyle(fontSize: 13, color: Colors.grey)),
+                                const SizedBox(height: 8),
+                                Text('${_summary.unpaidTotal} ฿', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // แถวที่ 2
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('งานที่กำลังซ่อม', style: TextStyle(fontSize: 13, color: Colors.grey)),
+                                const SizedBox(height: 8),
+                                Text('${_summary.activeJobsCount} งาน', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('รถเข้าซ่อมเดือนนี้', style: TextStyle(fontSize: 13, color: Colors.grey)),
+                                const SizedBox(height: 8),
+                                Text('${_summary.vehiclesThisMonth} คัน', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // แถวที่ 3 (การ์ดยาว)
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('อะไหล่รออนุมัติสั่งซื้อ', style: TextStyle(fontSize: 13, color: Colors.grey)),
+                          Text('${_summary.pendingApprovalsCount} รายการ', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.purple)),
+                        ],
+                      ),
                     ),
                   ),
-                  Expanded(
-                    child: VehiclesSummaryCard(
-                      summaryData: dashboardSummaryStore,
-                    ),
-                  ),
+                  const SizedBox(height: 16),
+
+                  // กราฟรายได้
+                  IncomeChartWidget(incomeList: _monthlyIncomes),
                 ],
               ),
-              const SizedBox(height: 8),
-              Row(
-                children: <Widget>[
-                  Expanded(
-                    child: ActiveJobsCard(summaryData: dashboardSummaryStore),
-                  ),
-                  Expanded(
-                    child: PendingApprovalsCard(
-                      summaryData: dashboardSummaryStore,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              IncomeChartWidget(incomeList: monthlyIncomeHistoryStore),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 }

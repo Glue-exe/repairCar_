@@ -1,11 +1,13 @@
 class DashboardSummaryModel {
   double monthlyIncome;
+  double unpaidTotal;
   int vehiclesThisMonth;
   int activeJobsCount;
   int pendingApprovalsCount;
 
   DashboardSummaryModel({
     required this.monthlyIncome,
+    required this.unpaidTotal,
     required this.vehiclesThisMonth,
     required this.activeJobsCount,
     required this.pendingApprovalsCount,
@@ -13,10 +15,11 @@ class DashboardSummaryModel {
 
   factory DashboardSummaryModel.fromJson(Map<String, dynamic> json) {
     return DashboardSummaryModel(
-      monthlyIncome: (json['monthlyIncome'] as num).toDouble(),
-      vehiclesThisMonth: json['vehiclesThisMonth'] as int,
-      activeJobsCount: json['activeJobsCount'] as int,
-      pendingApprovalsCount: json['pendingApprovalsCount'] as int,
+      monthlyIncome: double.parse(json['monthlyIncome'].toString()),
+      unpaidTotal: double.parse(json['unpaidTotal'].toString()),
+      vehiclesThisMonth: int.parse(json['vehiclesThisMonth'].toString()),
+      activeJobsCount: int.parse(json['activeJobsCount'].toString()),
+      pendingApprovalsCount: int.parse(json['pendingApprovalsCount'].toString()),
     );
   }
 }
