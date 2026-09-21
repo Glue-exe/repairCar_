@@ -9,52 +9,61 @@ class VehicleDetailInfoWidget extends StatelessWidget {
     required this.vehicle,
   });
 
+  Widget _buildRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 90,
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: Colors.black87,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 2,
-      child: Padding(
+      child: Container(
+        width: double.infinity,
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
-                const CircleAvatar(
-                  backgroundColor: Colors.blueAccent,
-                  foregroundColor: Colors.white,
-                  child: Icon(Icons.directions_car),
-                ),
-                const SizedBox(width: 12),
+                Icon(Icons.directions_car, size: 20),
+                SizedBox(width: 8),
                 Text(
-                  vehicle.licensePlate,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  'ข้อมูลรถยนต์',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
-            const Divider(height: 24),
-            Text(
-              'ยี่ห้อ: ${vehicle.brandName}',
-              style: const TextStyle(fontSize: 16),
-            ),
+            const Divider(height: 20),
+            _buildRow('ทะเบียนรถ:', vehicle.licensePlate),
             const SizedBox(height: 8),
-            Text(
-              'รุ่น: ${vehicle.modelName}',
-              style: const TextStyle(fontSize: 16),
-            ),
+            _buildRow('ยี่ห้อ:', vehicle.brandName),
             const SizedBox(height: 8),
-            Text(
-              'ปี: ${vehicle.year}',
-              style: const TextStyle(fontSize: 16),
-            ),
+            _buildRow('รุ่น:', vehicle.modelName),
             const SizedBox(height: 8),
-            Text(
-              'สี: ${vehicle.color}',
-              style: const TextStyle(fontSize: 16),
-            ),
+            _buildRow('ปีรุ่นรถ:', '${vehicle.year}'),
+            const SizedBox(height: 8),
+            _buildRow('สีรถ:', vehicle.color),
           ],
         ),
       ),

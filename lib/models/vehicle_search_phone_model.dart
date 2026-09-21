@@ -1,4 +1,5 @@
 class PhoneSearchResultModel {
+  final int cusId;
   final int vId;
   final String fullName;
   final String cusPhone;
@@ -9,6 +10,7 @@ class PhoneSearchResultModel {
   final String vbName;
 
   PhoneSearchResultModel({
+    required this.cusId,
     required this.vId,
     required this.fullName,
     required this.cusPhone,
@@ -21,6 +23,7 @@ class PhoneSearchResultModel {
 
   factory PhoneSearchResultModel.fromJson(Map<String, dynamic> json) {
     return PhoneSearchResultModel(
+      cusId: json['cus_id'] as int? ?? 0,
       vId: json['v_id'] as int,
       fullName: json['fullname'] as String,
       cusPhone: json['cus_phone'] as String,

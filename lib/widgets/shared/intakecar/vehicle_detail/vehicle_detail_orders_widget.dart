@@ -33,30 +33,23 @@ class VehicleDetailOrdersWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 2,
-      child: Padding(
+      child: Container(
+        width: double.infinity,
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Row(
               children: [
-                CircleAvatar(
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
-                  child: Icon(Icons.history),
-                ),
-                SizedBox(width: 12),
+                Icon(Icons.history, size: 20),
+                SizedBox(width: 8),
                 Text(
                   'ประวัติการซ่อม',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
-            const Divider(height: 24),
+            const Divider(height: 20),
             if (isLoading)
               const Center(
                 child: Padding(

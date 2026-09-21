@@ -9,42 +9,55 @@ class VehicleDetailCustomerWidget extends StatelessWidget {
     required this.vehicle,
   });
 
+  Widget _buildRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 100,
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: Colors.black87,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 2,
-      child: Padding(
+      child: Container(
+        width: double.infinity,
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Row(
               children: [
-                CircleAvatar(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  child: Icon(Icons.person),
-                ),
-                SizedBox(width: 12),
+                Icon(Icons.person, size: 20),
+                SizedBox(width: 8),
                 Text(
                   'ข้อมูลเจ้าของรถ',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
-            const Divider(height: 24),
-            Text(
-              'เจ้าของรถ: ${vehicle.fullName}',
-              style: const TextStyle(fontSize: 16),
-            ),
+            const Divider(height: 20),
+            _buildRow('ชื่อเจ้าของรถ:', vehicle.fullName),
             const SizedBox(height: 8),
-            Text(
-              'เบอร์โทรศัพท์: ${vehicle.cusPhone}',
-              style: const TextStyle(fontSize: 16),
-            ),
+            _buildRow('เบอร์โทรศัพท์:', vehicle.cusPhone),
           ],
         ),
       ),
