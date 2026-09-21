@@ -70,7 +70,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // ส่วนที่ 1: ข้อมูลรถยนต์
             VehicleDetailInfoWidget(vehicle: vehicle),
@@ -89,35 +89,24 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             const SizedBox(height: 24),
 
             // ส่วนที่ 4: ปุ่มสร้างใบรับซ่อม
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                ),
-                onPressed: () async {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CreateOrderScreen(
-                        vehicle: vehicle,
-                      ),
+            ElevatedButton.icon(
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CreateOrderScreen(
+                      vehicle: vehicle,
                     ),
-                  );
+                  ),
+                );
 
-                  // ถ้ารับซ่อมสำเร็จ ให้โหลดประวัติการซ่อมใหม่ทันที
-                  if (result == true) {
-                    _getOrders();
-                  }
-                },
-                icon: const Icon(Icons.note_add),
-                label: const Text(
-                  'สร้างใบรับซ่อม',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ),
+                // ถ้ารับซ่อมสำเร็จ ให้โหลดประวัติการซ่อมใหม่ทันที
+                if (result == true) {
+                  _getOrders();
+                }
+              },
+              icon: const Icon(Icons.post_add),
+              label: const Text('สร้างใบรับซ่อม'),
             ),
           ],
         ),

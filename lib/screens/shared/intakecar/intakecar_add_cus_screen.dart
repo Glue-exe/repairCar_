@@ -167,129 +167,220 @@ class _IntakecarAddCusScreenState extends State<IntakecarAddCusScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('ข้อมูลลูกค้า', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            DropdownButton<int>(
-              hint: const Text('เลือกคำนำหน้าชื่อ'),
-              value: _selectedTitleId,
-              isExpanded: true,
-              items: _titleList.map((item) {
-                return DropdownMenuItem<int>(
-                  value: item.id,
-                  child: Text(item.name),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedTitleId = value;
-                });
-              },
+            // ส่วนที่ 1: ข้อมูลลูกค้า
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'ข้อมูลลูกค้า',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 16),
+                    InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'คำนำหน้าชื่อ',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<int>(
+                          hint: const Text('เลือกคำนำหน้าชื่อ'),
+                          value: _selectedTitleId,
+                          isExpanded: true,
+                          items: _titleList.map((item) {
+                            return DropdownMenuItem<int>(
+                              value: item.id,
+                              child: Text(item.name),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedTitleId = value;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _firstNameController,
+                      decoration: const InputDecoration(
+                        labelText: 'ชื่อ',
+                        hintText: 'กรอกชื่อ',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _lastNameController,
+                      decoration: const InputDecoration(
+                        labelText: 'นามสกุล',
+                        hintText: 'กรอกนามสกุล',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      maxLength: 10,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                      ],
+                      decoration: const InputDecoration(
+                        labelText: 'เบอร์โทรศัพท์',
+                        hintText: 'กรอกเบอร์โทรศัพท์ 10 หลัก',
+                        border: OutlineInputBorder(),
+                        counterText: '',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _firstNameController,
-              decoration: const InputDecoration(hintText: 'กรอกชื่อ'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _lastNameController,
-              decoration: const InputDecoration(hintText: 'กรอกนามสกุล'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              maxLength: 10,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-              ],
-              decoration: const InputDecoration(hintText: 'กรอกเบอร์โทรศัพท์'),
-            ),
-            const SizedBox(height: 24),
-            const Text('ข้อมูลรถยนต์', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _licensePlateController,
-              decoration: const InputDecoration(hintText: 'กรอกทะเบียนรถ เช่น กข1234สงขลา'),
-            ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
-            // 1. Dropdown เลือกยี่ห้อ
-            DropdownButton<int>(
-              hint: const Text('เลือกยี่ห้อรถยนต์ (เช่น Toyota, Honda, Isuzu)'),
-              value: _selectedBrandId,
-              isExpanded: true,
-              items: _brandList.map((item) {
-                return DropdownMenuItem<int>(
-                  value: item.id,
-                  child: Text(item.name),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedBrandId = value;
-                  _selectedModelId = null; // รีเซ็ตรุ่นเมื่อเปลี่ยนยี่ห้อ
-                });
-              },
-            ),
-            const SizedBox(height: 12),
+            // ส่วนที่ 2: ข้อมูลรถยนต์
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'ข้อมูลรถยนต์',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _licensePlateController,
+                      decoration: const InputDecoration(
+                        labelText: 'ทะเบียนรถ',
+                        hintText: 'กรอกทะเบียนรถ เช่น กข1234สงขลา',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
 
-            // 2. Dropdown เลือกรุ่นรถยนต์ (กรองตามยี่ห้อที่เลือก)
-            DropdownButton<int>(
-              hint: const Text('เลือกรุ่นรถยนต์'),
-              value: _selectedModelId,
-              isExpanded: true,
-              items: _filteredModels.map((item) {
-                return DropdownMenuItem<int>(
-                  value: item.id,
-                  child: Text(item.name),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedModelId = value;
-                });
-              },
-            ),
-            const SizedBox(height: 12),
+                    // 1. Dropdown เลือกยี่ห้อ
+                    InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'ยี่ห้อรถยนต์',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<int>(
+                          hint: const Text('เลือกยี่ห้อรถยนต์'),
+                          value: _selectedBrandId,
+                          isExpanded: true,
+                          items: _brandList.map((item) {
+                            return DropdownMenuItem<int>(
+                              value: item.id,
+                              child: Text(item.name),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedBrandId = value;
+                              _selectedModelId = null; // รีเซ็ตรุ่นเมื่อเปลี่ยนยี่ห้อ
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
 
-            // 3. Dropdown เลือกปีรุ่นรถ
-            DropdownButton<int>(
-              hint: const Text('เลือกปีรุ่นรถ (ค.ศ.)'),
-              value: _selectedYear,
-              isExpanded: true,
-              items: _yearList.map((year) {
-                return DropdownMenuItem<int>(
-                  value: year,
-                  child: Text('$year'),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedYear = value;
-                });
-              },
-            ),
-            const SizedBox(height: 12),
+                    // 2. Dropdown เลือกรุ่นรถยนต์ (กรองตามยี่ห้อที่เลือก)
+                    InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'รุ่นรถยนต์',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<int>(
+                          hint: const Text('เลือกรุ่นรถยนต์'),
+                          value: _selectedModelId,
+                          isExpanded: true,
+                          items: _filteredModels.map((item) {
+                            return DropdownMenuItem<int>(
+                              value: item.id,
+                              child: Text(item.name),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedModelId = value;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
 
-            // 4. Dropdown เลือกสีรถ
-            DropdownButton<String>(
-              hint: const Text('เลือกสีรถ'),
-              value: _selectedColor,
-              isExpanded: true,
-              items: _colorList.map((color) {
-                return DropdownMenuItem<String>(
-                  value: color,
-                  child: Text(color),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedColor = value;
-                });
-              },
+                    // 3. Dropdown เลือกปีรุ่นรถ
+                    InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'ปีรุ่นรถ (ค.ศ.)',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<int>(
+                          hint: const Text('เลือกปีรุ่นรถ (ค.ศ.)'),
+                          value: _selectedYear,
+                          isExpanded: true,
+                          items: _yearList.map((year) {
+                            return DropdownMenuItem<int>(
+                              value: year,
+                              child: Text('$year'),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedYear = value;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // 4. Dropdown เลือกสีรถ
+                    InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'สีรถ',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          hint: const Text('เลือกสีรถ'),
+                          value: _selectedColor,
+                          isExpanded: true,
+                          items: _colorList.map((color) {
+                            return DropdownMenuItem<String>(
+                              value: color,
+                              child: Text(color),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedColor = value;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
             const SizedBox(height: 20),
             Center(

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:my_app/utils/app_api.dart';
 import 'package:my_app/models/vehicle_search_phone_model.dart';
-import 'package:my_app/screens/owner/owner_customer_vehicles_screen.dart';
+import 'package:my_app/screens/shared/intakecar/owner_customer_vehicles_screen.dart';
 
 class IntakecarSearchPhoneWidget extends StatefulWidget {
   const IntakecarSearchPhoneWidget({super.key});
@@ -70,64 +70,73 @@ class _IntakecarSearchPhoneWidgetState
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          const Text('ค้นหาด้วยเบอร์โทรศัพท์'),
-          Row(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: TextField(
-                  controller: _searchPhoneController,
-                  decoration: const InputDecoration(
-                    hintText: 'กรอกเบอร์โทรศัพท์',
+              const Text(
+                'ค้นหาด้วยเบอร์โทรศัพท์',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _searchPhoneController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'เบอร์โทรศัพท์',
+                  hintText: 'กรอกเบอร์โทรศัพท์ลูกค้า',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.phone),
+                ),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: _searchPhone,
+                child: const Text('ค้นหา'),
+              ),
+              if (_cus.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: ListTile(
+                    title: Text(
+                      'ชื่อลูกค้า: ${_cus.first.fullName}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                        'เบอร์โทร: ${_cus.first.cusPhone} (${_cus.length} คัน)'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => OwnerCustomerVehiclesScreen(
+                            vehicles: _cus,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
-              ),
+              ],
+              if (_errorMessage.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12.0),
+                  child: Text(
+                    _errorMessage,
+                    style: const TextStyle(color: Colors.red),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
             ],
           ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _searchPhone,
-            child: const Text('ค้นหา'),
-          ),
-          const SizedBox(height: 16),
-          if (_cus.isNotEmpty)
-            Card(
-              elevation: 2,
-              child: ListTile(
-                leading: const CircleAvatar(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  child: Icon(Icons.person),
-                ),
-                title: Text(
-                  'ชื่อลูกค้า: ${_cus.first.fullName}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text('เบอร์โทร: ${_cus.first.cusPhone} (${_cus.length} คัน)'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => OwnerCustomerVehiclesScreen(
-                        vehicles: _cus,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          if (_errorMessage.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 12.0),
-              child: Text(
-                _errorMessage,
-                style: const TextStyle(color: Colors.red),
-              ),
-            ),
-        ],
+        ),
       ),
     );
   }

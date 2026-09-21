@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_app/utils/app_api.dart';
 import 'package:my_app/models/vehicle_search_license_plate_model.dart';
 import 'package:my_app/models/priority_model.dart';
+import 'package:my_app/widgets/image_widget.dart';
 
 class CreateOrderScreen extends StatefulWidget {
   final VehicleSearchResultModel vehicle;
@@ -20,11 +21,10 @@ class CreateOrderScreen extends StatefulWidget {
 
 class _CreateOrderScreenState extends State<CreateOrderScreen> {
   final TextEditingController _symptomController = TextEditingController();
-  final ImagePicker _picker = ImagePicker();
 
   int? _priorityId;
   List<PriorityModel> _priorityList = [];
-  final List<String> _base64Images = [];
+  XFile? _imageFile;
   String _errorMessage = '';
   int? _currentUserId;
 
@@ -69,62 +69,6 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
     super.dispose();
   }
 
-  // ฟังก์ชันถ่ายรูป หรือเลือกรูป
-  Future<void> _pickImage(ImageSource source) async {
-    try {
-      final XFile? image = await _picker.pickImage(
-        source: source,
-        maxWidth: 1024,
-        maxHeight: 1024,
-        imageQuality: 80,
-      );
-
-      if (image != null) {
-        final bytes = await image.readAsBytes();
-        final base64String = base64Encode(bytes);
-
-        setState(() {
-          _base64Images.add(base64String);
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'ไม่สามารถเปิดกล้องหรือเลือกรูปได้';
-      });
-    }
-  }
-
-  // แสดงตัวเลือกว่าจะถ่ายรูป หรือเลือกจากคลังรูป
-  void _showImageSourceDialog() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return SafeArea(
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('ถ่ายรูปด้วยกล้อง'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickImage(ImageSource.camera);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('เลือกจากคลังภาพ'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickImage(ImageSource.gallery);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   Future<void> _saveOrder() async {
     final symptom = _symptomController.text.trim();
 
@@ -143,13 +87,19 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
     }
 
     try {
+      List<String> images = [];
+      if (_imageFile != null) {
+        final bytes = await _imageFile!.readAsBytes();
+        images.add(base64Encode(bytes));
+      }
+
       final response = await AppAPI.post('/create_order', {
         'o_vehicle_id': widget.vehicle.vId,
         'o_symptom': symptom,
         'o_priority_id': _priorityId,
         'o_order_status_id': 1,
         'o_created_by_account_id': _currentUserId ?? 1,
-        'images': _base64Images, // ส่งรายการรูปภาพไปยัง TABLE order_image
+        'images': images, // ส่งรายการรูปภาพไปยัง TABLE order_image
       });
 
       final Map<String, dynamic> resJson = jsonDecode(response.body);
@@ -187,136 +137,135 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // สรุปข้อมูลรถที่รับซ่อม
+            // ส่วนที่ 1: สรุปข้อมูลรถที่รับซ่อม
             Card(
-              elevation: 2,
-              child: ListTile(
-                leading: const CircleAvatar(
-                  child: Icon(Icons.directions_car),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'ข้อมูลรถที่รับซ่อม',
+                      style: TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Text('ทะเบียน: ',
+                            style: TextStyle(fontWeight: FontWeight.w600)),
+                        Text(widget.vehicle.licensePlate),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        const Text('ยี่ห้อ/รุ่น: ',
+                            style: TextStyle(fontWeight: FontWeight.w600)),
+                        Text(
+                            '${widget.vehicle.brandName} ${widget.vehicle.modelName}'),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        const Text('เจ้าของรถ: ',
+                            style: TextStyle(fontWeight: FontWeight.w600)),
+                        Text(widget.vehicle.fullName),
+                      ],
+                    ),
+                  ],
                 ),
-                title: Text('ทะเบียน: ${widget.vehicle.licensePlate}'),
-                subtitle: Text(
-                  '${widget.vehicle.brandName} ${widget.vehicle.modelName}\n'
-                  'เจ้าของรถ: ${widget.vehicle.fullName}',
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // ส่วนที่ 2: รายละเอียดการรับซ่อม
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'รายละเอียดการรับซ่อม',
+                      style: TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _symptomController,
+                      maxLines: 4,
+                      decoration: const InputDecoration(
+                        labelText: 'อาการเสีย / รายการที่ต้องซ่อม *',
+                        alignLabelWithHint: true,
+                        hintText:
+                            'ระบุอาการเสีย หรือสิ่งที่ลูกค้าแจ้ง เช่น เครื่องสั่น, เปลี่ยนถ่ายน้ำมันเครื่อง',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // ส่วนถ่ายรูป / แนบรูปภาพ
+                    const Text(
+                      'รูปถ่ายรถ / ชิ้นส่วนที่เสียหาย',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    Center(
+                      child: ImageWidget(
+                        imageFile: _imageFile,
+                        label: 'เพิ่มรูปภาพรถ / ชิ้นส่วนที่เสียหาย',
+                        onImageSelected: (file) {
+                          setState(() {
+                            _imageFile = file;
+                          });
+                        },
+                        onImageRemoved: () {
+                          setState(() {
+                            _imageFile = null;
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'ระดับความเร่งด่วน',
+                        border: OutlineInputBorder(),
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<int>(
+                          hint: const Text('เลือกระดับความเร่งด่วน'),
+                          value: _priorityId,
+                          isExpanded: true,
+                          items: _priorityList.map((item) {
+                            return DropdownMenuItem<int>(
+                              value: item.id,
+                              child: Text(item.name),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _priorityId = value;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
             const SizedBox(height: 20),
 
-            const Text(
-              'อาการเสีย / รายการที่ต้องซ่อม *',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _symptomController,
-              maxLines: 4,
-              decoration: const InputDecoration(
-                hintText: 'ระบุอาการเสีย หรือสิ่งที่ลูกค้าแจ้ง เช่น เครื่องสั่น, เปลี่ยนถ่ายน้ำมันเครื่อง',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // ส่วนถ่ายรูป / แนบรูปภาพ
-            const Text(
-              'รูปถ่ายรถ / ชิ้นส่วนที่เสียหาย',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-
-            // แสดงรายการรูปที่ถ่าย
-            if (_base64Images.isNotEmpty) ...[
-              SizedBox(
-                height: 100,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _base64Images.length,
-                  itemBuilder: (context, index) {
-                    return Stack(
-                      children: [
-                        Container(
-                          margin: const EdgeInsets.only(right: 10),
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.grey.shade300),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.memory(
-                              base64Decode(_base64Images[index]),
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          top: 2,
-                          right: 12,
-                          child: GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _base64Images.removeAt(index);
-                              });
-                            },
-                            child: const CircleAvatar(
-                              radius: 12,
-                              backgroundColor: Colors.red,
-                              child: Icon(Icons.close, size: 14, color: Colors.white),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 12),
-            ],
-
-            OutlinedButton.icon(
-              onPressed: _showImageSourceDialog,
-              icon: const Icon(Icons.camera_alt),
-              label: const Text('ถ่ายรูป / เพิ่มรูปภาพ'),
-            ),
-            const SizedBox(height: 16),
-
-            const Text(
-              'ระดับความเร่งด่วน',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<int>(
-              key: ValueKey(_priorityId),
-              initialValue: _priorityId,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-              ),
-              hint: const Text('เลือกระดับความเร่งด่วน'),
-              items: _priorityList.map((item) {
-                return DropdownMenuItem<int>(
-                  value: item.id,
-                  child: Text(item.name),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _priorityId = value;
-                });
-              },
-            ),
-            const SizedBox(height: 24),
-
             Center(
-              child: SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton.icon(
-                  onPressed: _saveOrder,
-                  icon: const Icon(Icons.save),
-                  label: const Text('บันทึกใบรับซ่อม', style: TextStyle(fontSize: 16)),
-                ),
+              child: ElevatedButton(
+                onPressed: _saveOrder,
+                child: const Text('บันทึกใบรับซ่อม'),
               ),
             ),
             if (_errorMessage.isNotEmpty) ...[

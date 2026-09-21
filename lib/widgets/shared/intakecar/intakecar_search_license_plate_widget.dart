@@ -68,64 +68,73 @@ class _IntakecarSearchWidgetState extends State<IntakecarSearchWidget> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          const Text('ค้นหาทะเบียนรถ'),
-          Row(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: TextField(
-                  controller: _searchController,
-                  decoration: const InputDecoration(
-                    hintText: 'กรอกทะเบียน',
+              const Text(
+                'ค้นหาทะเบียนรถ',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _searchController,
+                decoration: const InputDecoration(
+                  labelText: 'ทะเบียนรถ',
+                  hintText: 'กรอกทะเบียนรถ เช่น กข1234สงขลา',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.search),
+                ),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: _searchVehicle,
+                child: const Text('ค้นหา'),
+              ),
+              if (_vehicle != null) ...[
+                const SizedBox(height: 16),
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: ListTile(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => VehicleDetailScreen(
+                            vehicle: _vehicle!,
+                          ),
+                        ),
+                      );
+                    },
+                    title: Text(
+                      'ทะเบียน: ${_vehicle!.licensePlate}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      '${_vehicle!.brandName} ${_vehicle!.modelName} (ปี ${_vehicle!.year})\n'
+                      'เจ้าของรถ: ${_vehicle!.fullName}',
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
                   ),
                 ),
-              ),
+              ],
+              if (_errorMessage.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Text(
+                  _errorMessage,
+                  style: const TextStyle(color: Colors.red),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ],
           ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _searchVehicle,
-            child: const Text('ค้นหา'),
-          ),
-          const SizedBox(height: 16),
-          if (_vehicle != null)
-            Card(
-              elevation: 2,
-              child: ListTile(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => VehicleDetailScreen(
-                        vehicle: _vehicle!,
-                      ),
-                    ),
-                  );
-                },
-                leading: const CircleAvatar(
-                  child: Icon(Icons.directions_car),
-                ),
-                title: Text(
-                  'ทะเบียน: ${_vehicle!.licensePlate}',
-                ),
-                subtitle: Text(
-                  'ยี่ห้อ: ${_vehicle!.brandName} ${_vehicle!.modelName} (ปี ${_vehicle!.year})\n'
-                  'สี: ${_vehicle!.color}\n'
-                  'เจ้าของรถ: ${_vehicle!.fullName}',
-                ),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-              ),
-            ),
-          if (_errorMessage.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            Text(
-              _errorMessage,
-              style: const TextStyle(color: Colors.red),
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }

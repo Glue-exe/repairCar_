@@ -1,0 +1,346 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:my_app/models/vehicle_brand_model.dart';
+import 'package:my_app/models/vehicle_model_model.dart';
+import 'package:my_app/utils/app_api.dart';
+
+class AddVehicleForCustomerScreen extends StatefulWidget {
+  final int customerId;
+  final String customerName;
+  final String customerPhone;
+
+  const AddVehicleForCustomerScreen({
+    super.key,
+    required this.customerId,
+    required this.customerName,
+    required this.customerPhone,
+  });
+
+  @override
+  State<AddVehicleForCustomerScreen> createState() =>
+      _AddVehicleForCustomerScreenState();
+}
+
+class _AddVehicleForCustomerScreenState
+    extends State<AddVehicleForCustomerScreen> {
+  // ข้อมูลรถยนต์
+  final TextEditingController _licensePlateController = TextEditingController();
+
+  List<VehicleBrandModel> _brandList = [];
+  int? _selectedBrandId;
+
+  List<VehicleModelModel> _modelList = [];
+  int? _selectedModelId;
+
+  // ปีรถ (สร้าง List ปีย้อนหลัง 40 ปีอัตโนมัติ)
+  int? _selectedYear;
+  final List<int> _yearList =
+      List.generate(40, (index) => DateTime.now().year - index);
+
+  // สีรถ (List สีมาตรฐาน)
+  String? _selectedColor;
+  final List<String> _colorList = [
+    'ขาว',
+    'ดำ',
+    'เทา',
+    'บรอนซ์เงิน',
+    'แดง',
+    'น้ำเงิน',
+    'น้ำตาล',
+    'เขียว',
+    'ส้ม',
+    'เหลือง',
+    'ทอง',
+  ];
+
+  String _errorMessage = '';
+
+  // กรองรุ่นรถตามยี่ห้อที่เลือก
+  List<VehicleModelModel> get _filteredModels {
+    if (_selectedBrandId == null) {
+      return [];
+    } else {
+      return _modelList.where((m) => m.brandId == _selectedBrandId).toList();
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialData();
+  }
+
+  @override
+  void dispose() {
+    _licensePlateController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadInitialData() async {
+    try {
+      // โหลดยี่ห้อรถยนต์
+      final brandRes = await AppAPI.get('/vehicle_brand');
+      final brandResponse =
+          VehicleBrandResponse.fromJson(jsonDecode(brandRes.body));
+      if (brandResponse.isError == false) {
+        setState(() {
+          _brandList = brandResponse.data;
+        });
+      }
+
+      // โหลดรุ่นรถยนต์ทั้งหมด
+      final modelRes = await AppAPI.get('/vehicle_model');
+      final modelResponse =
+          VehicleModelResponse.fromJson(jsonDecode(modelRes.body));
+      if (modelResponse.isError == false) {
+        setState(() {
+          _modelList = modelResponse.data;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'ไม่สามารถโหลดข้อมูลเริ่มต้นได้';
+      });
+    }
+  }
+
+  Future<void> _saveVehicle() async {
+    if (_licensePlateController.text.trim().isEmpty ||
+        _selectedBrandId == null ||
+        _selectedModelId == null ||
+        _selectedYear == null ||
+        _selectedColor == null) {
+      setState(() {
+        _errorMessage = 'กรุณากรอกข้อมูลให้ครบถ้วน';
+      });
+      return;
+    }
+
+    try {
+      final response = await AppAPI.post('/add_vehicle_by_cus', {
+        'v_license_plate': _licensePlateController.text.trim(),
+        'v_vehicle_model_id': _selectedModelId,
+        'v_year': _selectedYear,
+        'v_color': _selectedColor,
+        'v_customer_id': widget.customerId,
+      });
+
+      final Map<String, dynamic> resJson = jsonDecode(response.body);
+
+      if (resJson['isError'] == false) {
+        if (mounted) {
+          Navigator.pop(context, true);
+        }
+      } else {
+        setState(() {
+          _errorMessage = resJson['errorMessage'];
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'ไม่สามารถเชื่อมต่อระบบได้';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('ลงทะเบียนรถยนต์ (ลูกค้าเดิม)'),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // ส่วนที่ 1: ข้อมูลลูกค้า
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'ข้อมูลลูกค้า',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Text('ชื่อลูกค้า: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                        Text(widget.customerName),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Text('เบอร์โทรศัพท์: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                        Text(widget.customerPhone),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // ส่วนที่ 2: ข้อมูลรถยนต์
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'ข้อมูลรถยนต์',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _licensePlateController,
+                      decoration: const InputDecoration(
+                        labelText: 'ทะเบียนรถ',
+                        hintText: 'กรอกทะเบียนรถ เช่น กข1234สงขลา',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // 1. Dropdown เลือกยี่ห้อ
+                    InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'ยี่ห้อรถยนต์',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<int>(
+                          hint: const Text('เลือกยี่ห้อรถยนต์'),
+                          value: _selectedBrandId,
+                          isExpanded: true,
+                          items: _brandList.map((item) {
+                            return DropdownMenuItem<int>(
+                              value: item.id,
+                              child: Text(item.name),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedBrandId = value;
+                              _selectedModelId = null; // รีเซ็ตรุ่นเมื่อเปลี่ยนยี่ห้อ
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // 2. Dropdown เลือกรุ่นรถยนต์ (กรองตามยี่ห้อที่เลือก)
+                    InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'รุ่นรถยนต์',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<int>(
+                          hint: const Text('เลือกรุ่นรถยนต์'),
+                          value: _selectedModelId,
+                          isExpanded: true,
+                          items: _filteredModels.map((item) {
+                            return DropdownMenuItem<int>(
+                              value: item.id,
+                              child: Text(item.name),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedModelId = value;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // 3. Dropdown เลือกปีรุ่นรถ
+                    InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'ปีรุ่นรถ (ค.ศ.)',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<int>(
+                          hint: const Text('เลือกปีรุ่นรถ (ค.ศ.)'),
+                          value: _selectedYear,
+                          isExpanded: true,
+                          items: _yearList.map((year) {
+                            return DropdownMenuItem<int>(
+                              value: year,
+                              child: Text('$year'),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedYear = value;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // 4. Dropdown เลือกสีรถ
+                    InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'สีรถ',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          hint: const Text('เลือกสีรถ'),
+                          value: _selectedColor,
+                          isExpanded: true,
+                          items: _colorList.map((color) {
+                            return DropdownMenuItem<String>(
+                              value: color,
+                              child: Text(color),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedColor = value;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Center(
+              child: ElevatedButton(
+                onPressed: _saveVehicle,
+                child: const Text('บันทึกข้อมูล'),
+              ),
+            ),
+            if (_errorMessage.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Center(
+                child: Text(
+                  _errorMessage,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
