@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_app/models/employee_model.dart';
-import 'package:my_app/widgets/owner/profile/emp/emp_edit_widget.dart';
+import 'package:my_app/widgets/owner/profile/CRUD_Emp/emp_edit_widget.dart';
 import 'package:my_app/utils/app_api.dart';
 
 class EmpListWidget extends StatefulWidget {
