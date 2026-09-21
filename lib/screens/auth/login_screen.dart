@@ -4,6 +4,7 @@ import 'dart:convert'; // รับ-ส่งข้อมูลกับเซ�
 import 'package:crypto/crypto.dart'; // การเข้ารหัสข้อมูล  Hashing สับข้อมูลให้เป็นรหัสลับ
 import 'package:http/http.dart' as http;
 import 'package:my_app/screens/owner/navbar_owner.dart';
+import 'package:my_app/screens/technican/navbar_technican.dart';
 import 'package:my_app/screens/technican/technician_home_screen.dart';
 import 'package:my_app/screens/accountant/accountant_home_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -160,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => const TechnicianHomeScreen(),
+                builder: (context) => const NavbarTechnican(),
               ),
             );
           } else if (userRole == 'Accountant' || userRole == 'พนักงานบัญชี') {
