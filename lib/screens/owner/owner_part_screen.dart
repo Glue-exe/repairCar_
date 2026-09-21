@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:my_app/models/part_model.dart';
 import 'package:my_app/screens/owner/part_add_screen.dart';
 import 'package:my_app/utils/app_api.dart';
-import 'package:my_app/widgets/owner/profile/part_list_widget.dart';
-
+import 'package:my_app/widgets/owner/profile/CRUD_Part/part_list_del_widget.dart';
 
 class OwnerPartScreen extends StatefulWidget {
   const OwnerPartScreen({super.key});
@@ -17,10 +16,11 @@ class _OwnerPartScreenState extends State<OwnerPartScreen> {
   List<PartModel> partModelStore = [];
 
   void _fetchData() async {
-    var response = await AppAPI.get("/part");
+    var response = await AppAPI.get("/getPart");
     Map<String, dynamic> json = jsonDecode(response.body);
     PartResponse partResponse = PartResponse.fromJson(json);
 
+    if (!mounted) return;
     setState(() {
       partModelStore = partResponse.data;
     });
@@ -37,7 +37,7 @@ class _OwnerPartScreenState extends State<OwnerPartScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text('อนุมัติอะไหล่'),
+        title: Text('ข้อมูลอะไหล่'),
         centerTitle: true,
         actions: [
           IconButton(
@@ -45,7 +45,9 @@ class _OwnerPartScreenState extends State<OwnerPartScreen> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const PartAddScreen()),
+                MaterialPageRoute(
+                  builder: (context) => PartAddScreen(onRefresh: _fetchData),
+                ),
               );
             },
           ),
@@ -56,15 +58,18 @@ class _OwnerPartScreenState extends State<OwnerPartScreen> {
         height: double.infinity,
         width: double.infinity,
         decoration: const BoxDecoration(),
-        child: SafeArea(child: Column(
-          children: [
-            Expanded(
-              child: PartListWidget(
-                partModelStore: partModelStore,
+        child: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: PartListWidget(
+                  partModelStore: partModelStore,
+                  onRefresh: _fetchData,
+                ),
               ),
-            ),
-          ],
-        )),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:my_app/models/employee_model.dart';
 import 'package:my_app/utils/app_api.dart';
-import 'package:my_app/widgets/owner/profile/emp/emp_list_widget.dart';
+import 'package:my_app/widgets/owner/profile/CRUD_Emp/emp_list_widget.dart';
 import 'package:my_app/screens/owner/profile/emp_add_screen.dart';
 
 class OwnerViewUser extends StatefulWidget {
