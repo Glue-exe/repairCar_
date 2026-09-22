@@ -71,6 +71,7 @@ class _AppovalPartDetailWidgetState extends State<AppovalPartDetailWidget> {
       _postApproval(2); // 2 = อนุมัติแล้ว
     }
   }
+
   void _openOrderDetail(int orderId) async {
     final response = await AppAPI.get('/order_by_id?order_id=$orderId');
     final Map<String, dynamic> json = jsonDecode(response.body);
@@ -107,6 +108,20 @@ class _AppovalPartDetailWidgetState extends State<AppovalPartDetailWidget> {
     );
   }
 
+  String _statusText(int statusId) {
+    if (statusId == 1) return 'รออนุมัติ';
+    if (statusId == 2) return 'อนุมัติแล้ว';
+    if (statusId == 3) return 'ไม่อนุมัติ';
+    return 'ไม่ระบุ';
+  }
+
+  Color _statusColor(int statusId) {
+    if (statusId == 1) return Colors.orange;
+    if (statusId == 2) return Colors.green;
+    if (statusId == 3) return Colors.red;
+    return Colors.grey;
+  }
+
   @override
   Widget build(BuildContext context) {
     final item = widget.item;
@@ -120,6 +135,15 @@ class _AppovalPartDetailWidgetState extends State<AppovalPartDetailWidget> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text(
+              'สถานะ: ${_statusText(item.approvalStatusId)}',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: _statusColor(item.approvalStatusId),
+              ),
+            ),
+            const SizedBox(height: 8),
             Text('ทะเบียนรถ: ${item.licensePlate}', style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 8),
             Text('งานซ่อม: ${item.subTaskName}', style: const TextStyle(fontSize: 16)),
@@ -129,7 +153,6 @@ class _AppovalPartDetailWidgetState extends State<AppovalPartDetailWidget> {
             Text('วันที่ส่งคำขอ: ${item.createdAt}', style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 12),
 
-            // ปุ่มกดไปดูรายละเอียดงานซ่อมเต็ม
             OutlinedButton.icon(
               icon: const Icon(Icons.assignment_outlined),
               label: Text('ดูรายละเอียดงานซ่อม (Order #${item.orderId})'),
@@ -145,28 +168,50 @@ class _AppovalPartDetailWidgetState extends State<AppovalPartDetailWidget> {
             const SizedBox(height: 8),
             Text('ราคาต่อหน่วย: ${item.partPrice} บาท', style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 8),
-            Text('ราคารวม: ${item.partPrice * item.quantity} บาท', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(
+              'ราคารวม: ${item.partPrice * item.quantity} บาท',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
             const Spacer(),
 
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                    onPressed: _disapprove,
-                    child: const Text('ไม่อนุมัติ', style: TextStyle(color: Colors.white)),
+            if (item.approvalStatusId == 1)
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                      onPressed: _disapprove,
+                      child: const Text('ไม่อนุมัติ', style: TextStyle(color: Colors.white)),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                    onPressed: _approve,
-                    child: const Text('อนุมัติ', style: TextStyle(color: Colors.white)),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                      onPressed: _approve,
+                      child: const Text('อนุมัติ', style: TextStyle(color: Colors.white)),
+                    ),
                   ),
+                ],
+              )
+            else if (item.approvalStatusId == 2)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                  onPressed: _disapprove,
+                  child: const Text('เปลี่ยนเป็น "ไม่อนุมัติ"', style: TextStyle(color: Colors.white)),
                 ),
-              ],
-            ),
+              )
+            else if (item.approvalStatusId == 3)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  onPressed: _approve,
+                  child: const Text('เปลี่ยนเป็น "อนุมัติ"', style: TextStyle(color: Colors.white)),
+                ),
+              ),
           ],
         ),
       ),
