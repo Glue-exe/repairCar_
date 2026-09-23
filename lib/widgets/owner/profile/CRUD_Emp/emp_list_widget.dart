@@ -24,22 +24,26 @@ class _EmpListWidgetState extends State<EmpListWidget> {
   // สลับสถานะเปิด-ปิด
   Future<void> _toggleStatus(EmployeeModel item, bool isEnabled) async {
     setState(() {
-      item.accStatusId = isEnabled ? 1 : 0;
+      if (isEnabled == true) {
+        item.accStatusId = 1; // 1 = ON
+      } else {
+        item.accStatusId = 2; // 2 = OFF
+      }
     });
 
     await AppAPI.put('/employee/status', {
-      'emp_id': item.id,
+      'emp_id': item.empId,
       'acc_status_id': item.accStatusId,
     });
   }
 
-  // ลบพนักงาน
-  Future<void> _deleteEmployee(EmployeeModel item) async {
+  // ฟังก์ชันแสดง Dialog ยืนยันการลบ
+  Future<bool> _showConfirmDialog(String empName) async {
     bool? confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('ลบข้อมูล'),
-        content: Text('ยืนยันที่จะลบ ${item.firstName} หรือไม่?'),
+        content: Text('ยืนยันที่จะลบ $empName หรือไม่?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -54,20 +58,36 @@ class _EmpListWidgetState extends State<EmpListWidget> {
     );
 
     if (confirm == true) {
-      await AppAPI.delete('/employee', {'emp_id': item.id});
+      return true;
+    } else {
+      return false;
+    }
+
+  }
+
+  // ลบพนักงาน
+  Future<void> _deleteEmployee(EmployeeModel item) async {
+    bool confirm = await _showConfirmDialog(item.empFirstName);
+
+    if (confirm == true) {
+      await AppAPI.delete('/employee', {'emp_id': item.accId});
       setState(() {
-        widget.employeeModelStore.removeWhere((e) => e.id == item.id);
+        widget.employeeModelStore.removeWhere((e) => e.accId == item.accId);
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final filteredList = _selectedRoleId == null
-        ? widget.employeeModelStore
-        : widget.employeeModelStore
-            .where((emp) => emp.userRoleId == _selectedRoleId)
-            .toList();
+    List<EmployeeModel> filteredList;
+
+    if (_selectedRoleId == null) {
+      filteredList = widget.employeeModelStore;
+    } else {
+      filteredList = widget.employeeModelStore
+          .where((emp) => emp.accRoleId == _selectedRoleId)
+          .toList();
+    }
 
     return Column(
       children: [
@@ -133,7 +153,12 @@ class _EmpListWidgetState extends State<EmpListWidget> {
                   itemCount: filteredList.length,
                   itemBuilder: (context, index) {
                     final item = filteredList[index];
-                    final bool isEnabled = item.accStatusId == 1;
+                    final bool isEnabled;
+                    if (item.accStatusId == 1) {
+                      isEnabled = true;  // ถ้าเป็น 1 (ON) ให้สวิตช์เปิด
+                    } else {
+                      isEnabled = false; // ถ้าเป็น 2 (OFF) ให้สวิตช์ปิด
+                    }
 
                     return Card(
                       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -149,10 +174,10 @@ class _EmpListWidgetState extends State<EmpListWidget> {
                                 child: Icon(Icons.person, color: Colors.white),
                               ),
                               title: Text(
-                                '${item.titleName}${item.firstName} ${item.lastName}',
+                                '${item.tName}${item.empFirstName} ${item.empLastName}',
                                 style: const TextStyle(fontWeight: FontWeight.bold),
                               ),
-                              subtitle: Text('ไอดีผู้ใช้: ${item.username}\nตำแหน่ง: ${item.userRoleName}\nเบอร์โทร: ${item.phone}'),
+                              subtitle: Text('ไอดีผู้ใช้: ${item.accUsername}\nตำแหน่ง: ${item.arName}\nเบอร์โทร: ${item.empPhone}'),
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [

@@ -1,42 +1,45 @@
 class EmployeeModel {
-  int id;
-  String username;
-  int titleId;
-  String titleName;
-  String firstName;
-  String lastName;
-  String phone;
-  int userRoleId;
-  String userRoleName;
-  double salary;
+  int empId;
+  int empTitleId;
+  String tName;
+  String empFirstName;
+  String empLastName;
+  String empPhone;
+  String empCurrentSalary;
+  int accId;
+  String accUsername;
+  int accRoleId;
+  String arName;
   int accStatusId;
 
   EmployeeModel({
-    required this.id,
-    required this.username,
-    required this.titleId,
-    required this.titleName,
-    required this.firstName,
-    required this.lastName,
-    required this.phone,
-    required this.userRoleId,
-    required this.userRoleName,
-    required this.salary,
+    required this.empId,
+    required this.empTitleId,
+    required this.tName,
+    required this.empFirstName,
+    required this.empLastName,
+    required this.empPhone,
+    required this.empCurrentSalary,
+    required this.accId,
+    required this.accUsername,
+    required this.accRoleId,
+    required this.arName,
     required this.accStatusId,
   });
 
   factory EmployeeModel.fromJson(Map<String, dynamic> json) {
     return EmployeeModel(
-      id: json['id'] as int,
-      username: json['username']as String,
-      titleId: json['title_id'] as int,
-      titleName: json['title_name'] as String,
-      firstName: json['first_name'] as String,
-      lastName: json['last_name'] as String,
-      phone: json['phone'] as String,
-      userRoleId: json['user_role_id'] as int,
-      userRoleName: json['user_role_name'] as String,
-      salary: double.parse(json['current_salary'].toString()),
+      empId: json['emp_id'] as int,
+      empTitleId: json['emp_title_id'] as int,
+      tName: json['t_name'] as String,
+      empFirstName: json['emp_first_name'] as String,
+      empLastName: json['emp_last_name'] as String,
+      empPhone: json['emp_phone'] as String,
+      empCurrentSalary: json['emp_current_salary'] as String,
+      accId: json['acc_id'] as int,
+      accUsername: json['acc_username'] as String,
+      accRoleId: json['acc_role_id'] as int,
+      arName: json['ar_name'] as String,
       accStatusId: json['acc_status_id'] as int,
     );
   }
