@@ -59,18 +59,12 @@ class _EmpEditWidgetState extends State<EmpEditWidget> {
   @override
   void initState() {
     super.initState();
-    _firstnameController = TextEditingController(
-      text: widget.employee.empFirstName,
-    );
-    _lastnameController = TextEditingController(
-      text: widget.employee.empLastName,
-    );
+    _firstnameController = TextEditingController(text: widget.employee.empFirstName);
+    _lastnameController = TextEditingController(text: widget.employee.empLastName);
     _phoneController = TextEditingController(text: widget.employee.empPhone);
     _selectedTitle = widget.employee.empTitleId;
     _selectedRole = widget.employee.accRoleId;
-
-    _selectedSalary =
-        double.tryParse(widget.employee.empCurrentSalary)?.toInt();
+    _selectedSalary = double.tryParse(widget.employee.empCurrentSalary)?.toInt();
 
     _fetchData();
   }

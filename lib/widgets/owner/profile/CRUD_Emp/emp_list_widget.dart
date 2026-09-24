@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:my_app/models/employee_model.dart';
 import 'package:my_app/widgets/owner/profile/CRUD_Emp/emp_edit_widget.dart';
@@ -38,12 +40,12 @@ class _EmpListWidgetState extends State<EmpListWidget> {
   }
 
   // ฟังก์ชันแสดง Dialog ยืนยันการลบ
-  Future<bool> _showConfirmDialog(String empName) async {
+  Future<bool> _showConfirmDialog(String empFirstName) async {
     bool? confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('ลบข้อมูล'),
-        content: Text('ยืนยันที่จะลบ $empName หรือไม่?'),
+        content: Text('ยืนยันที่จะลบ $empFirstName หรือไม่?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -70,10 +72,13 @@ class _EmpListWidgetState extends State<EmpListWidget> {
     bool confirm = await _showConfirmDialog(item.empFirstName);
 
     if (confirm == true) {
-      await AppAPI.delete('/employee', {'emp_id': item.accId});
-      setState(() {
-        widget.employeeModelStore.removeWhere((e) => e.accId == item.accId);
-      });
+      var response = await AppAPI.delete('/employee', {'emp_id': item.empId});
+
+      var res = jsonDecode(response.body);
+      
+      if (res['isError'] == false) {
+        widget.onRefresh();
+      }
     }
   }
 
@@ -152,12 +157,14 @@ class _EmpListWidgetState extends State<EmpListWidget> {
               : ListView.builder(
                   itemCount: filteredList.length,
                   itemBuilder: (context, index) {
+
                     final item = filteredList[index];
+
                     final bool isEnabled;
                     if (item.accStatusId == 1) {
-                      isEnabled = true;  // ถ้าเป็น 1 (ON) ให้สวิตช์เปิด
+                      isEnabled = true;  // ON
                     } else {
-                      isEnabled = false; // ถ้าเป็น 2 (OFF) ให้สวิตช์ปิด
+                      isEnabled = false; // OFF
                     }
 
                     return Card(
