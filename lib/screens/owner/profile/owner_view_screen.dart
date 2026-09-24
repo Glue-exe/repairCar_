@@ -16,7 +16,7 @@ class _OwnerViewUserState extends State<OwnerViewUser> {
   List<EmployeeModel> employeeModelStore = [];
 
   void _fetchData() async {
-    var response = await AppAPI.get("/employee");
+    var response = await AppAPI.get("/get_employee");
     Map<String, dynamic> json = jsonDecode(response.body);
     EmployeeResponse employeeResponse = EmployeeResponse.fromJson(json);
 

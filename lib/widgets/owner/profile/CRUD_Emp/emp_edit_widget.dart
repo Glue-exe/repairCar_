@@ -29,6 +29,29 @@ class _EmpEditWidgetState extends State<EmpEditWidget> {
 
   int? _selectedTitle;
   int? _selectedRole;
+  int? _selectedSalary;
+
+  final List<int> _salaryList = [
+    11500,
+    12000,
+    13000,
+    14000,
+    15000,
+    16000,
+    17000,
+    18000,
+    19000,
+    20000,
+    22000,
+    25000,
+  ];
+
+  String _formatNumber(int number) {
+    return number.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]},',
+    );
+  }
 
   List<TitleModel> titleModelStore = [];
   List<RoleModel> roleModelStore = [];
@@ -37,14 +60,18 @@ class _EmpEditWidgetState extends State<EmpEditWidget> {
   void initState() {
     super.initState();
     _firstnameController = TextEditingController(
-      text: widget.employee.firstName,
+      text: widget.employee.empFirstName,
     );
     _lastnameController = TextEditingController(
-      text: widget.employee.lastName,
+      text: widget.employee.empLastName,
     );
-    _phoneController = TextEditingController(text: widget.employee.phone);
-    _selectedTitle = widget.employee.titleId;
-    _selectedRole = widget.employee.userRoleId;
+    _phoneController = TextEditingController(text: widget.employee.empPhone);
+    _selectedTitle = widget.employee.empTitleId;
+    _selectedRole = widget.employee.accRoleId;
+
+    _selectedSalary =
+        double.tryParse(widget.employee.empCurrentSalary)?.toInt();
+
     _fetchData();
   }
 
@@ -77,13 +104,13 @@ class _EmpEditWidgetState extends State<EmpEditWidget> {
             .where((item) =>
                 item.id == 2 ||
                 item.id == 3 ||
-                item.id == widget.employee.userRoleId)
+                item.id == widget.employee.accRoleId)
             .toList();
       });
     }
   }
 
-  // ตรวจสอบข้อมูลบังคับกรอกทั่วไป
+  // ตรวจสอบการกรอกข้อมูล
   String? _validateRequired(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'กรุณากรอกข้อมูล';
@@ -91,37 +118,49 @@ class _EmpEditWidgetState extends State<EmpEditWidget> {
     return null;
   }
 
+  // Alert ยกเลิก ยืนยัน
+  Future<bool> _showConfirmDialog() async {
+    bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('ยืนยันการแก้ไขข้อมูล'),
+          content: const Text('คุณแน่ใจหรือไม่ว่าต้องการบันทึกการแก้ไขนี้?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('ยกเลิก'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('ยืนยัน'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm == true) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   // บันทึกการแก้ไขข้อมูล
   void _saveData() async {
     if (_formKey.currentState!.validate()) {
-      bool? confirm = await showDialog<bool>(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text('ยืนยันการแก้ไขข้อมูล'),
-            content: const Text('คุณแน่ใจหรือไม่ว่าต้องการบันทึกการแก้ไขนี้?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('ยกเลิก'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('ยืนยัน'),
-              ),
-            ],
-          );
-        },
-      );
+      bool confirm = await _showConfirmDialog();
 
       if (confirm == true) {
         Map<String, dynamic> data = {
-          'emp_id': widget.employee.id,
-          'title_id': _selectedTitle,
-          'firstname': _firstnameController.text,
-          'lastname': _lastnameController.text,
-          'phone': _phoneController.text,
-          'user_role_id': _selectedRole,
+          'emp_id': widget.employee.empId,
+          'emp_title_id': _selectedTitle,
+          'emp_first_name': _firstnameController.text,
+          'emp_last_name': _lastnameController.text,
+          'emp_phone': _phoneController.text,
+          'acc_role_id': _selectedRole,
+          'emp_current_salary': _selectedSalary,
         };
 
         var response = await AppAPI.put('/employee', data);
@@ -138,7 +177,7 @@ class _EmpEditWidgetState extends State<EmpEditWidget> {
               context: context,
               builder: (context) => AlertDialog(
                 title: const Text('เกิดข้อผิดพลาด'),
-                content: Text(responseBody['errorMessage'] ?? 'เกิดข้อผิดพลาดในการบันทึก'),
+                content: Text(responseBody['errorMessage']),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
@@ -295,6 +334,32 @@ class _EmpEditWidgetState extends State<EmpEditWidget> {
                 onChanged: (value) {
                   setState(() {
                     _selectedRole = value;
+                  });
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // เงินเดือน
+              DropdownButtonFormField<int>(
+                initialValue: _selectedSalary,
+                validator: (value) =>
+                    value == null ? 'กรุณาเลือกเงินเดือน' : null,
+                decoration: const InputDecoration(
+                  labelText: 'เงินเดือน *',
+                  prefixIcon: Icon(Icons.payments_outlined),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                  ),
+                ),
+                items: _salaryList.map((int salary) {
+                  return DropdownMenuItem<int>(
+                    value: salary,
+                    child: Text('${_formatNumber(salary)} บาท'),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedSalary = value;
                   });
                 },
               ),

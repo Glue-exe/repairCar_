@@ -27,6 +27,29 @@ class _EmpAddScreenState extends State<EmpAddScreen> {
 
   int? _selectedTitle;
   int? _selectedRole;
+  int? _selectedSalary;
+
+  final List<int> _salaryList = [
+    11500,
+    12000,
+    13000,
+    14000,
+    15000,
+    16000,
+    17000,
+    18000,
+    19000,
+    20000,
+    22000,
+    25000,
+  ];
+
+  String _formatNumber(int number) {
+    return number.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]},',
+    );
+  }
 
   List<TitleModel> titleModelStore = [];
   List<RoleModel> roleModelStore = [];
@@ -73,7 +96,7 @@ class _EmpAddScreenState extends State<EmpAddScreen> {
     });
   }
 
-  // ตรวจสอบข้อมูลบังคับกรอกทั่วไป
+  // ตรวจสอบการกรอกข้อมูล
   String? _validateRequired(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'กรุณากรอกข้อมูล';
@@ -92,28 +115,39 @@ class _EmpAddScreenState extends State<EmpAddScreen> {
     return null;
   }
 
+  // Alert ยกเลิก ยืนยัน
+  Future<bool> _showConfirmDialog() async {
+    bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('ยืนยันการเพิ่มข้อมูล'),
+          content: const Text('คุณต้องการยืนยันการเพิ่มข้อมูลพนักงานหรือไม่?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('ยกเลิก'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('ยืนยัน'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm == true) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   // บันทึกข้อมูลพนักงาน
   void _saveData() async {
     if (_formKey.currentState!.validate()) {
-      bool? confirm = await showDialog<bool>(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text('ยืนยันการเพิ่มข้อมูล'),
-            content: const Text('คุณต้องการยืนยันการเพิ่มข้อมูลพนักงานหรือไม่?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('ยกเลิก'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('ยืนยัน'),
-              ),
-            ],
-          );
-        },
-      );
+      bool confirm = await _showConfirmDialog();
 
       if (confirm == true) {
         String rawPassword = _passwordController.text;
@@ -122,13 +156,14 @@ class _EmpAddScreenState extends State<EmpAddScreen> {
             .toString();
 
         var data = {
-          'username': _usernameController.text,
-          'password': hashedPassword,
-          'title_id': _selectedTitle,
-          'firstname': _firstnameController.text,
-          'lastname': _lastnameController.text,
-          'phone': _phoneController.text,
-          'user_role_id': _selectedRole,
+          'acc_username': _usernameController.text,
+          'acc_password_hash': hashedPassword,
+          'emp_title_id': _selectedTitle,
+          'emp_first_name': _firstnameController.text,
+          'emp_last_name': _lastnameController.text,
+          'emp_phone': _phoneController.text,
+          'acc_role_id': _selectedRole,
+          'emp_current_salary': _selectedSalary,
         };
 
         var response = await AppAPI.post('/employee', data);
@@ -145,7 +180,7 @@ class _EmpAddScreenState extends State<EmpAddScreen> {
               context: context,
               builder: (context) => AlertDialog(
                 title: const Text('เกิดข้อผิดพลาด'),
-                content: Text(responseBody['errorMessage'] ?? 'บันทึกข้อมูลไม่สำเร็จ'),
+                content: Text(responseBody['errorMessage']),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
@@ -311,6 +346,32 @@ class _EmpAddScreenState extends State<EmpAddScreen> {
                 onChanged: (value) {
                   setState(() {
                     _selectedRole = value;
+                  });
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // เงินเดือน
+              DropdownButtonFormField<int>(
+                initialValue: _selectedSalary,
+                validator: (value) =>
+                    value == null ? 'กรุณาเลือกเงินเดือน' : null,
+                decoration: const InputDecoration(
+                  labelText: 'เงินเดือน *',
+                  prefixIcon: Icon(Icons.payments_outlined),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                  ),
+                ),
+                items: _salaryList.map((int salary) {
+                  return DropdownMenuItem<int>(
+                    value: salary,
+                    child: Text('${_formatNumber(salary)} บาท'),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedSalary = value;
                   });
                 },
               ),
