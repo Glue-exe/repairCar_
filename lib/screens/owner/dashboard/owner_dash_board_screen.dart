@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:my_app/models/dashboard_summary_model.dart';
 import 'package:my_app/models/monthly_income_model.dart';
 import 'package:my_app/utils/app_api.dart';
-import 'package:my_app/widgets/owner/home/income_chart_widget.dart';
+import 'package:my_app/widgets/owner/dashboard/income_chart_widget.dart';
 
 class OwnerHomeScreen extends StatefulWidget {
   const OwnerHomeScreen({super.key});
