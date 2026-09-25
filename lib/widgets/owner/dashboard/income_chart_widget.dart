@@ -20,7 +20,7 @@ class IncomeChartWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. คำนวณยอดรวม และหายอดสูงสุดเพื่อตั้งเพดานกราฟ (maxY)
+    // คำนวณยอดรวม และหายอดสูงสุดเพื่อตั้งเพดานกราฟ (maxY)
     double totalIncome = 0;
     double maxAmount = 0;
     for (var item in incomeList) {
@@ -51,7 +51,7 @@ class IncomeChartWidget extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ส่วนหัว: หัวข้อ + สรุปยอดรวม + บอกผู้ใช้ว่าเลื่อนดูได้
+            // ส่วนหัว: หัวข้อ + สรุปยอดรวม ข้อความเลื่อนดู
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -99,7 +99,7 @@ class IncomeChartWidget extends StatelessWidget {
                 height: 200,
                 child: Row(
                   children: [
-                    // 1. แกน Y ทางซ้าย (คงที่อยู่กับที่ เวลาเลื่อนจะไม่หายไป)
+                    // 1. แกน Y ทางซ้าย
                     SizedBox(
                       width: 42,
                       child: LineChart(
@@ -148,12 +148,12 @@ class IncomeChartWidget extends StatelessWidget {
                         ),
                       ),
                     ),
-                    // 2. ตัวกราฟที่สามารถเลื่อนซ้าย-ขวาดูข้อมูลได้
+                    // ตัวกราฟที่สามารถเลื่อนซ้าย-ขวาดูข้อมูลได้
                     Expanded(
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: SizedBox(
-                          // ขยายความกว้างเดือนละ 60px เพื่อให้เลื่อนดูได้สบาย ไม่เบียดกัน
+                          // ขยายความกว้างเดือนละ 60px
                           width: incomeList.length * 60.0,
                           child: LineChart(
                             LineChartData(
@@ -241,7 +241,7 @@ class IncomeChartWidget extends StatelessWidget {
                                 bottomTitles: AxisTitles(
                                   sideTitles: SideTitles(
                                     showTitles: true,
-                                    interval: 1, // เมื่อเลื่อนดูได้ สามารถแสดงครบทุกเดือนได้เลย
+                                    interval: 1,
                                     reservedSize: 25,
                                     getTitlesWidget: (value, meta) {
                                       final index = value.toInt();
