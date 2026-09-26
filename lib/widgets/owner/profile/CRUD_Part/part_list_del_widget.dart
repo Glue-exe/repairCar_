@@ -97,7 +97,7 @@ class PartListWidget extends StatelessWidget {
                     ),
               title: Text(item.name),
               subtitle: Text(
-                'ยี่ห้อ: ${item.brand}${item.modelName != null ? ' \nรุ่นที่เข้ากันได้: ${item.vehicleBrandName ?? ''} ${item.modelName}' : ''}\nราคา: ${item.price} บาท',
+                'ยี่ห้อ: ${item.partBrandName ?? item.brand}${item.modelName != null ? ' \nรุ่นที่เข้ากันได้: ${item.vehicleBrandName ?? ''} ${item.modelName}' : ''}\nราคา: ${item.price} บาท',
               ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,

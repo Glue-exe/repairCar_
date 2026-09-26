@@ -5,7 +5,7 @@ import 'package:my_app/config/app_color.dart';
 import 'package:my_app/models/accountant_model.dart';
 import 'package:my_app/models/monthly_income_model.dart';
 import 'package:my_app/utils/app_api.dart';
-import 'package:my_app/widgets/owner/home/income_chart_widget.dart';
+import 'package:my_app/widgets/owner/dashboard/income_chart_widget.dart';
 
 class AccountantReportScreen extends StatefulWidget {
   const AccountantReportScreen({super.key});
