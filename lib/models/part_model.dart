@@ -2,35 +2,50 @@ class PartModel {
   int id;
   String name;
   double price;
-  String brand;
+  int category;
+  int brand;
   String? url;
   int? vehModelId;
   String? modelName;
   String? vehicleBrandName;
+  String? partBrandName;
+  String? partCategoryName;
 
   PartModel({
     required this.id,
     required this.name,
+    required this.category,
     required this.price,
     required this.brand,
     this.url,
     this.vehModelId,
     this.modelName,
     this.vehicleBrandName,
+    this.partBrandName,
+    this.partCategoryName,
   });
 
   factory PartModel.fromJson(Map<String, dynamic> json) {
+    int parseId(dynamic val) {
+      if (val == null) return 0;
+      if (val is int) return val;
+      return int.tryParse(val.toString()) ?? 0;
+    }
+
     return PartModel(
       id: json['part_id'] as int,
       name: json['part_name'] as String,
       price: double.parse(json['part_price'].toString()),
-      brand: json['part_brand'] as String,
+      category: parseId(json['part_category_id'] ?? json['pc_id']),
+      brand: parseId(json['part_brand_id'] ?? json['pb_id']),
       url: json['part_url'] as String?,
       vehModelId: json['veh_model_id'] != null
           ? int.tryParse(json['veh_model_id'].toString())
           : null,
       modelName: json['model_name'] as String?,
       vehicleBrandName: json['vehicle_brand_name'] as String?,
+      partBrandName: json['part_brand_name'] as String?,
+      partCategoryName: json['part_category_name'] as String?,
     );
   }
 }

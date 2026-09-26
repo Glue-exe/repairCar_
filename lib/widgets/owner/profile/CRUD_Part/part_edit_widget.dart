@@ -21,7 +21,6 @@ class _PartEditWidgetState extends State<PartEditWidget> {
 
   late TextEditingController _partNameController;
   late TextEditingController _partPriceController;
-  late TextEditingController _partBrandController;
 
   XFile? _imageFile;
   String? _imageUrl;
@@ -30,6 +29,11 @@ class _PartEditWidgetState extends State<PartEditWidget> {
   int? _selectedModelId;
   bool _isLoadingModels = false;
 
+  List<Map<String, dynamic>> _partCategories = [];
+  int? _selectedCategoryId;
+  List<Map<String, dynamic>> _partBrands = [];
+  int? _selectedBrandId;
+
   @override
   void initState() {
     super.initState();
@@ -37,10 +41,13 @@ class _PartEditWidgetState extends State<PartEditWidget> {
     _partPriceController = TextEditingController(
       text: widget.part.price.toString(),
     );
-    _partBrandController = TextEditingController(text: widget.part.brand);
+    _selectedCategoryId = widget.part.category;
+    _selectedBrandId = widget.part.brand;
     _imageUrl = widget.part.url;
     _selectedModelId = widget.part.vehModelId;
     _fetchVehicleModels();
+    _fetchCategories();
+    _fetchPartBrands();
   }
 
   void _fetchVehicleModels() async {
@@ -66,11 +73,42 @@ class _PartEditWidgetState extends State<PartEditWidget> {
     }
   }
 
+  Future<void> _fetchCategories() async {
+    try {
+      final response = await AppAPI.get('/category');
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        if (data['isError'] == false && data['data'] != null) {
+          setState(() {
+            _partCategories = List<Map<String, dynamic>>.from(data['data']);
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching categories: $e');
+    }
+  }
+
+  Future<void> _fetchPartBrands() async {
+    try {
+      final response = await AppAPI.get('/brand');
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        if (data['isError'] == false && data['data'] != null) {
+          setState(() {
+            _partBrands = List<Map<String, dynamic>>.from(data['data']);
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching part brands: $e');
+    }
+  }
+
   @override
   void dispose() {
     _partNameController.dispose();
     _partPriceController.dispose();
-    _partBrandController.dispose();
     super.dispose();
   }
 
@@ -119,7 +157,8 @@ class _PartEditWidgetState extends State<PartEditWidget> {
           'part_id': widget.part.id.toString(),
           'part_name': _partNameController.text.trim(),
           'part_price': _partPriceController.text.trim(),
-          'part_brand': _partBrandController.text.trim(),
+          'part_category_id': _selectedCategoryId.toString(),
+          'part_brand_id': _selectedBrandId.toString(),
           'part_url': _imageUrl ?? '',
           if (_selectedModelId != null)
             'veh_model_id': _selectedModelId.toString(),
@@ -195,18 +234,61 @@ class _PartEditWidgetState extends State<PartEditWidget> {
               ),
               const SizedBox(height: 16),
 
-              // ยี่ห้อ
-              TextFormField(
-                controller: _partBrandController,
-                validator: _validateRequired,
+              // ยี่ห้ออะไหล่
+              DropdownButtonFormField<int>(
+                initialValue: _selectedBrandId,
                 decoration: const InputDecoration(
-                  labelText: 'ยี่ห้อ *',
-                  hintText: 'กรอกยี่ห้ออะไหล่',
+                  labelText: 'ยี่ห้ออะไหล่ *',
+                  hintText: 'เลือกยี่ห้ออะไหล่',
                   prefixIcon: Icon(Icons.branding_watermark_outlined),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12)),
                   ),
                 ),
+                items: _partBrands.map((item) {
+                  final id = item['pb_id'] ?? item['id'];
+                  final name = item['pb_name'] ?? item['name'] ?? '';
+                  return DropdownMenuItem<int>(
+                    value: id is int ? id : int.parse(id.toString()),
+                    child: Text(name),
+                  );
+                }).toList(),
+                onChanged: (val) {
+                  setState(() {
+                    _selectedBrandId = val;
+                  });
+                },
+                validator: (val) =>
+                    val == null ? 'กรุณาเลือกยี่ห้ออะไหล่' : null,
+              ),
+              const SizedBox(height: 16),
+
+              // หมวดหมู่อะไหล่
+              DropdownButtonFormField<int>(
+                initialValue: _selectedCategoryId,
+                decoration: const InputDecoration(
+                  labelText: 'หมวดหมู่อะไหล่ *',
+                  hintText: 'เลือกหมวดหมู่อะไหล่',
+                  prefixIcon: Icon(Icons.category_outlined),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                  ),
+                ),
+                items: _partCategories.map((item) {
+                  final id = item['pc_id'] ?? item['id'];
+                  final name = item['pc_name'] ?? item['name'] ?? '';
+                  return DropdownMenuItem<int>(
+                    value: id is int ? id : int.parse(id.toString()),
+                    child: Text(name),
+                  );
+                }).toList(),
+                onChanged: (val) {
+                  setState(() {
+                    _selectedCategoryId = val;
+                  });
+                },
+                validator: (val) =>
+                    val == null ? 'กรุณาเลือกหมวดหมู่อะไหล่' : null,
               ),
               const SizedBox(height: 16),
 
