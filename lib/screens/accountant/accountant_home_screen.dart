@@ -1,26 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:my_app/screens/accountant/navbar_accountant.dart';
 
-class AccountantHomeScreen extends StatefulWidget {
-  const AccountantHomeScreen({super.key});
+class AccountantHomeScreen extends StatelessWidget {
+  final int initialIndex;
+  const AccountantHomeScreen({super.key, this.initialIndex = 0});
 
-  @override
-  State<AccountantHomeScreen> createState() => _AccountantHomeScreenState();
-}
-
-class _AccountantHomeScreenState extends State<AccountantHomeScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Accountant Dashboard (พนักงานบัญชี)'),
-        backgroundColor: Colors.green,
-      ),
-      body: const Center(
-        child: Text(
-          'ยินดีต้อนรับ พนักงานบัญชี (Accountant)',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-      ),
-    );
+    return NavbarAccountant(initialIndex: initialIndex);
   }
 }
