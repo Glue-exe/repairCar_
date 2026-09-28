@@ -7,10 +7,12 @@ class EmployeeModel {
   String empPhone;
   String empCurrentSalary;
   int accId;
+  int accEmployeeId;
   String accUsername;
   int accRoleId;
-  String arName;
   int accStatusId;
+  String arName;
+  String asName;
 
   EmployeeModel({
     required this.empId,
@@ -21,10 +23,12 @@ class EmployeeModel {
     required this.empPhone,
     required this.empCurrentSalary,
     required this.accId,
+    required this.accEmployeeId,
     required this.accUsername,
     required this.accRoleId,
-    required this.arName,
     required this.accStatusId,
+    required this.arName,
+    required this.asName,
   });
 
   factory EmployeeModel.fromJson(Map<String, dynamic> json) {
@@ -37,10 +41,12 @@ class EmployeeModel {
       empPhone: json['emp_phone'] as String,
       empCurrentSalary: json['emp_current_salary'] as String,
       accId: json['acc_id'] as int,
+      accEmployeeId: json['acc_employee_id'] as int,
       accUsername: json['acc_username'] as String,
       accRoleId: json['acc_role_id'] as int,
-      arName: json['ar_name'] as String,
       accStatusId: json['acc_status_id'] as int,
+      arName: json['ar_name'] as String,
+      asName: json['as_name'] as String,
     );
   }
 }
@@ -66,3 +72,8 @@ class EmployeeResponse {
     );
   }
 }
+
+
+
+
+

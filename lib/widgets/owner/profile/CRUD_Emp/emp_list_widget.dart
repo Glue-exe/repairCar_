@@ -25,6 +25,8 @@ class _EmpListWidgetState extends State<EmpListWidget> {
 
   // สลับสถานะเปิด-ปิด
   Future<void> _toggleStatus(EmployeeModel item, bool isEnabled) async {
+    int previousStatus = item.accStatusId;
+
     setState(() {
       if (isEnabled == true) {
         item.accStatusId = 1; // 1 = ON
@@ -33,10 +35,24 @@ class _EmpListWidgetState extends State<EmpListWidget> {
       }
     });
 
-    await AppAPI.put('/employee/status', {
-      'emp_id': item.empId,
-      'acc_status_id': item.accStatusId,
-    });
+    try {
+      var response = await AppAPI.put('/employee/status', {
+        'emp_id': item.empId,
+        'acc_status_id': item.accStatusId,
+      });
+
+      var res = jsonDecode(response.body);
+      if (res['isError'] == true) {
+        setState(() {
+          item.accStatusId = previousStatus;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        item.accStatusId = previousStatus;
+      });
+      debugPrint(e.toString());
+    }
   }
 
   // ฟังก์ชันแสดง Dialog ยืนยันการลบ
