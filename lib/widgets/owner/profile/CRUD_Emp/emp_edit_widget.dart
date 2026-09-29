@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:my_app/models/employee_model.dart';
 import 'package:my_app/models/title_model.dart';
-import 'package:my_app/models/user_role_model.dart';
 import 'package:my_app/utils/app_api.dart';
 
 class EmpEditWidget extends StatefulWidget {
@@ -28,44 +27,8 @@ class _EmpEditWidgetState extends State<EmpEditWidget> {
   late TextEditingController _phoneController;
 
   int? _selectedTitle;
-  int? _selectedRole;
-  int? _selectedSalary;
-
-  final List<int> _salaryList = [
-    11500,
-    12000,
-    13000,
-    14000,
-    15000,
-    15500,
-    16000,
-    16500,
-    17000,
-    17500,
-    18000,
-    18500,
-    19000,
-    19500,
-    20000,
-    21000,
-    22000,
-    25000,
-    30000,
-    35000,
-    40000,
-    50000,
-    68000,
-  ];
-
-  String _formatNumber(int number) {
-    return number.toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]},',
-    );
-  }
 
   List<TitleModel> titleModelStore = [];
-  List<RoleModel> roleModelStore = [];
 
   @override
   void initState() {
@@ -74,8 +37,6 @@ class _EmpEditWidgetState extends State<EmpEditWidget> {
     _lastnameController = TextEditingController(text: widget.employee.empLastName);
     _phoneController = TextEditingController(text: widget.employee.empPhone);
     _selectedTitle = widget.employee.empTitleId;
-    _selectedRole = widget.employee.accRoleId;
-    _selectedSalary = double.tryParse(widget.employee.empCurrentSalary)?.toInt();
 
     _fetchData();
   }
@@ -88,29 +49,15 @@ class _EmpEditWidgetState extends State<EmpEditWidget> {
     super.dispose();
   }
 
-  // ดึงข้อมูลคำนำหน้าและตำแหน่ง
+  // ดึงข้อมูลคำนำหน้า
   void _fetchData() async {
-    var response = await Future.wait([
-      AppAPI.get('/title'),
-      AppAPI.get('/user_role'),
-    ]);
-
-    Map<String, dynamic> titleJson = jsonDecode(response[0].body);
+    var response = await AppAPI.get('/title');
+    Map<String, dynamic> titleJson = jsonDecode(response.body);
     TitleResponse titleResponse = TitleResponse.fromJson(titleJson);
-
-    Map<String, dynamic> roleJson = jsonDecode(response[1].body);
-    RoleResponse roleResponse = RoleResponse.fromJson(roleJson);
 
     if (mounted) {
       setState(() {
         titleModelStore = titleResponse.data;
-        // เลือกได้เฉพาะ พนักงานบัญชี (id: 2) และ ช่าง (id: 3) หรือตำแหน่งเดิมของผู้ใช้
-        roleModelStore = roleResponse.data
-            .where((item) =>
-                item.id == 2 ||
-                item.id == 3 ||
-                item.id == widget.employee.accRoleId)
-            .toList();
       });
     }
   }
@@ -161,11 +108,9 @@ class _EmpEditWidgetState extends State<EmpEditWidget> {
         Map<String, dynamic> data = {
           'emp_id': widget.employee.empId,
           'emp_title_id': _selectedTitle,
-          'emp_first_name': _firstnameController.text,
-          'emp_last_name': _lastnameController.text,
-          'emp_phone': _phoneController.text,
-          'acc_role_id': _selectedRole,
-          'emp_current_salary': _selectedSalary,
+          'emp_first_name': _firstnameController.text.trim(),
+          'emp_last_name': _lastnameController.text.trim(),
+          'emp_phone': _phoneController.text.trim(),
         };
 
         var response = await AppAPI.put('/employee', data);
@@ -212,9 +157,9 @@ class _EmpEditWidgetState extends State<EmpEditWidget> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // หัวข้อส่วนที่ 1: ข้อมูลส่วนตัว
+              // ข้อมูลพนักงาน
               const Text(
-                'ข้อมูลส่วนตัว',
+                'ข้อมูลพนักงาน',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -304,71 +249,6 @@ class _EmpEditWidgetState extends State<EmpEditWidget> {
                   ),
                 ),
               ),
-
-              const SizedBox(height: 24),
-              const Divider(),
-              const SizedBox(height: 16),
-
-              // หัวข้อส่วนที่ 2: ข้อมูลตำแหน่งงาน
-              const Text(
-                'ตำแหน่งงาน',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // ตำแหน่งงาน
-              DropdownButtonFormField<int>(
-                initialValue: _selectedRole,
-                validator: (value) => value == null ? 'กรุณาเลือกตำแหน่ง' : null,
-                decoration: const InputDecoration(
-                  labelText: 'ตำแหน่งพนักงาน *',
-                  prefixIcon: Icon(Icons.work_outline),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                  ),
-                ),
-                items: roleModelStore.map((RoleModel item) {
-                  return DropdownMenuItem<int>(
-                    value: item.id,
-                    child: Text(item.name),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedRole = value;
-                  });
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // เงินเดือน
-              DropdownButtonFormField<int>(
-                initialValue: _selectedSalary,
-                validator: (value) =>
-                    value == null ? 'กรุณาเลือกเงินเดือน' : null,
-                decoration: const InputDecoration(
-                  labelText: 'เงินเดือน *',
-                  prefixIcon: Icon(Icons.payments_outlined),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                  ),
-                ),
-                items: _salaryList.map((int salary) {
-                  return DropdownMenuItem<int>(
-                    value: salary,
-                    child: Text('${_formatNumber(salary)} บาท'),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedSalary = value;
-                  });
-                },
-              ),
-
               const SizedBox(height: 28),
 
               // ปุ่มบันทึกการแก้ไข

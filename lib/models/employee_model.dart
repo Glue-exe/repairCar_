@@ -6,11 +6,15 @@ class EmployeeModel {
   String empLastName;
   String empPhone;
   String empCurrentSalary;
+  String? deletedAt;
   int accId;
+  int accEmployeeId;
   String accUsername;
   int accRoleId;
+  bool isActive;
   String arName;
-  int accStatusId;
+
+  bool get isDeleted => deletedAt != null;
 
   EmployeeModel({
     required this.empId,
@@ -20,11 +24,13 @@ class EmployeeModel {
     required this.empLastName,
     required this.empPhone,
     required this.empCurrentSalary,
+    this.deletedAt,
     required this.accId,
+    required this.accEmployeeId,
     required this.accUsername,
     required this.accRoleId,
+    required this.isActive,
     required this.arName,
-    required this.accStatusId,
   });
 
   factory EmployeeModel.fromJson(Map<String, dynamic> json) {
@@ -36,11 +42,13 @@ class EmployeeModel {
       empLastName: json['emp_last_name'] as String,
       empPhone: json['emp_phone'] as String,
       empCurrentSalary: json['emp_current_salary'] as String,
+      deletedAt: json['deleted_at']?.toString(),
       accId: json['acc_id'] as int,
+      accEmployeeId: json['acc_employee_id'] as int,
       accUsername: json['acc_username'] as String,
       accRoleId: json['acc_role_id'] as int,
+      isActive: json['is_active'] as bool,
       arName: json['ar_name'] as String,
-      accStatusId: json['acc_status_id'] as int,
     );
   }
 }
@@ -66,3 +74,8 @@ class EmployeeResponse {
     );
   }
 }
+
+
+
+
+
