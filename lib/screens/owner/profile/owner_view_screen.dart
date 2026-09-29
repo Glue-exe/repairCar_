@@ -81,15 +81,14 @@ class _OwnerViewUserState extends State<OwnerViewUser> {
             tooltip: 'รีเฟรชข้อมูล',
             onPressed: _fetchData,
           ),
+          IconButton(
+            icon: const Icon(Icons.add),
+            tooltip: 'เพิ่มพนักงาน',
+            onPressed: _navigateToAddEmployee,
+          ),
         ],
       ),
       body: SafeArea(child: _buildBody()),
-      // ปุ่มเพิ่มพนักงานที่มุมขวาล่าง
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _navigateToAddEmployee,
-        icon: const Icon(Icons.add),
-        label: const Text('เพิ่มพนักงาน'),
-      ),
     );
   }
 
