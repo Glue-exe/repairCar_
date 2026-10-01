@@ -27,27 +27,27 @@ class _EmpListWidgetState extends State<EmpListWidget> {
 
   // สลับสถานะเปิด-ปิด
   Future<void> _toggleStatus(EmployeeModel item, bool isEnabled) async {
-    bool previousStatus = item.isActive;
+    bool previousStatus = item.accIsActive;
 
     setState(() {
-      item.isActive = isEnabled;
+      item.accIsActive = isEnabled;
     });
 
     try {
       var response = await AppAPI.put('/employee/status', {
         'emp_id': item.empId,
-        'is_active': isEnabled,
+        'acc_is_active': isEnabled,
       });
 
       var res = jsonDecode(response.body);
       if (res['isError'] == true) {
         setState(() {
-          item.isActive = previousStatus;
+          item.accIsActive = previousStatus;
         });
       }
     } catch (e) {
       setState(() {
-        item.isActive = previousStatus;
+        item.accIsActive = previousStatus;
       });
       debugPrint(e.toString());
     }
@@ -143,9 +143,9 @@ class _EmpListWidgetState extends State<EmpListWidget> {
       if (_selectedFilter == 'all') {
         matchesStatus = !emp.isDeleted;
       } else if (_selectedFilter == 'active') {
-        matchesStatus = !emp.isDeleted && emp.isActive;
+        matchesStatus = !emp.isDeleted && emp.accIsActive;
       } else if (_selectedFilter == 'inactive') {
-        matchesStatus = !emp.isDeleted && !emp.isActive;
+        matchesStatus = !emp.isDeleted && !emp.accIsActive;
       } else if (_selectedFilter == 'resigned') {
         matchesStatus = emp.isDeleted;
       }
@@ -267,7 +267,7 @@ class _EmpListWidgetState extends State<EmpListWidget> {
                   itemBuilder: (context, index) {
 
                     final item = filteredList[index];
-                    final bool isEnabled = item.isActive;
+                    final bool isEnabled = item.accIsActive;
                     final bool isResigned = item.isDeleted;
 
                     return Card(

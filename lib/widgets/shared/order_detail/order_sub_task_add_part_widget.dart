@@ -56,7 +56,7 @@ class _OrderSubTaskAddPartWidgetState extends State<OrderSubTaskAddPartWidget> {
       if (_compatibleParts.isNotEmpty) {
         _selectedPartId = _compatibleParts.first.id;
         _selectedPartName = _compatibleParts.first.name;
-        _selectedPartPrice = _compatibleParts.first.price;
+        _selectedPartPrice = _compatibleParts.first.partPrice;
       }
     });
   }
@@ -144,7 +144,7 @@ class _OrderSubTaskAddPartWidgetState extends State<OrderSubTaskAddPartWidget> {
               items: _compatibleParts.map((p) {
                 return DropdownMenuItem<int>(
                   value: p.id,
-                  child: Text('${p.name} (${p.brand}) - ${p.price.toStringAsFixed(2)} บาท'),
+                  child: Text('${p.name} (${p.brand}) - ${p.partPrice.toStringAsFixed(2)} บาท'),
                 );
               }).toList(),
               onChanged: (val) {
@@ -152,7 +152,7 @@ class _OrderSubTaskAddPartWidgetState extends State<OrderSubTaskAddPartWidget> {
                 setState(() {
                   _selectedPartId = val;
                   _selectedPartName = selected.name;
-                  _selectedPartPrice = selected.price;
+                  _selectedPartPrice = selected.partPrice;
                 });
               },
             ),

@@ -29,8 +29,9 @@ class _AppovalPartDetailWidgetState extends State<AppovalPartDetailWidget> {
 
     final res = jsonDecode(response.body);
     if (res['isError'] == false) {
-      if (!mounted) return;
-      Navigator.pop(context);
+      if (mounted == true) {
+        Navigator.pop(context);
+      }
     }
   }
 
@@ -43,11 +44,15 @@ class _AppovalPartDetailWidgetState extends State<AppovalPartDetailWidget> {
           content: Text(message),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context, false),
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
               child: const Text('ยกเลิก', style: TextStyle(color: Colors.grey)),
             ),
             ElevatedButton(
-              onPressed: () => Navigator.pop(context, true),
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
               child: const Text('ยืนยัน'),
             ),
           ],
@@ -55,19 +60,23 @@ class _AppovalPartDetailWidgetState extends State<AppovalPartDetailWidget> {
       },
     );
 
-    return result == true;
+    if (result == true) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
   void _disapprove() async {
     final confirm = await _showConfirm('ยืนยันการทำรายการ', 'คุณต้องการ "ไม่อนุมัติ" การขอเบิกอะไหล่นี้ใช่หรือไม่?');
-    if (confirm) {
+    if (confirm == true) {
       _postApproval(3); // 3 = ไม่อนุมัติ
     }
   }
 
   void _approve() async {
     final confirm = await _showConfirm('ยืนยันการทำรายการ', 'คุณต้องการ "อนุมัติ" การขอเบิกอะไหล่นี้ใช่หรือไม่?');
-    if (confirm) {
+    if (confirm == true) {
       _postApproval(2); // 2 = อนุมัติแล้ว
     }
   }
@@ -77,54 +86,108 @@ class _AppovalPartDetailWidgetState extends State<AppovalPartDetailWidget> {
     final Map<String, dynamic> json = jsonDecode(response.body);
     final match = OrderPoolItemModel.fromJson(json['data']);
 
-    if (!mounted) return;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => OrderDetailScreen(
-          order: OrderModel(
-            orderId: match.orderId,
-            vehicleId: match.vehicleId,
-            symptom: match.symptom,
-            orderStatusId: match.orderStatusId,
-            orderStatusName: match.orderStatusName,
-            createdAt: match.createdAt,
-            images: match.images,
-            technicians: match.technicians,
-            isAcceptedByMe: match.isAcceptedByMe,
-          ),
-          vehicle: VehicleSearchResultModel(
-            vId: match.vehicleId,
-            fullName: '${match.customerFirstName} ${match.customerLastName}',
-            cusPhone: match.customerPhone,
-            licensePlate: match.licensePlate,
-            modelName: match.modelName,
-            brandName: match.brandName,
-            year: match.year,
-            color: match.color,
+    if (mounted == true) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => OrderDetailScreen(
+            order: OrderModel(
+              orderId: match.orderId,
+              vehicleId: match.vehicleId,
+              symptom: match.symptom,
+              orderStatusId: match.orderStatusId,
+              orderStatusName: match.orderStatusName,
+              createdAt: match.createdAt,
+              images: match.images,
+              technicians: match.technicians,
+              isAcceptedByMe: match.isAcceptedByMe,
+            ),
+            vehicle: VehicleSearchResultModel(
+              vId: match.vehicleId,
+              fullName: '${match.customerFirstName} ${match.customerLastName}',
+              cusPhone: match.customerPhone,
+              licensePlate: match.licensePlate,
+              modelName: match.modelName,
+              brandName: match.brandName,
+              year: match.year,
+              color: match.color,
+            ),
           ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   String _statusText(int statusId) {
-    if (statusId == 1) return 'รออนุมัติ';
-    if (statusId == 2) return 'อนุมัติแล้ว';
-    if (statusId == 3) return 'ไม่อนุมัติ';
-    return 'ไม่ระบุ';
+    if (statusId == 1) {
+      return 'รออนุมัติ';
+    } else if (statusId == 2) {
+      return 'อนุมัติแล้ว';
+    } else if (statusId == 3) {
+      return 'ไม่อนุมัติ';
+    } else {
+      return 'ไม่ระบุ';
+    }
   }
 
   Color _statusColor(int statusId) {
-    if (statusId == 1) return Colors.orange;
-    if (statusId == 2) return Colors.green;
-    if (statusId == 3) return Colors.red;
-    return Colors.grey;
+    if (statusId == 1) {
+      return Colors.orange;
+    } else if (statusId == 2) {
+      return Colors.green;
+    } else if (statusId == 3) {
+      return Colors.red;
+    } else {
+      return Colors.grey;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final item = widget.item;
+
+    Widget actionButtons;
+    if (item.approvalStatusId == 1) {
+      actionButtons = Row(
+        children: [
+          Expanded(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: _disapprove,
+              child: const Text('ไม่อนุมัติ', style: TextStyle(color: Colors.white)),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              onPressed: _approve,
+              child: const Text('อนุมัติ', style: TextStyle(color: Colors.white)),
+            ),
+          ),
+        ],
+      );
+    } else if (item.approvalStatusId == 2) {
+      actionButtons = SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          onPressed: _disapprove,
+          child: const Text('เปลี่ยนเป็น "ไม่อนุมัติ"', style: TextStyle(color: Colors.white)),
+        ),
+      );
+    } else if (item.approvalStatusId == 3) {
+      actionButtons = SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+          onPressed: _approve,
+          child: const Text('เปลี่ยนเป็น "อนุมัติ"', style: TextStyle(color: Colors.white)),
+        ),
+      );
+    } else {
+      actionButtons = const SizedBox.shrink();
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -156,7 +219,9 @@ class _AppovalPartDetailWidgetState extends State<AppovalPartDetailWidget> {
             OutlinedButton.icon(
               icon: const Icon(Icons.assignment_outlined),
               label: Text('ดูรายละเอียดงานซ่อม (Order #${item.orderId})'),
-              onPressed: () => _openOrderDetail(item.orderId),
+              onPressed: () {
+                _openOrderDetail(item.orderId);
+              },
             ),
             const Divider(height: 32),
 
@@ -174,44 +239,7 @@ class _AppovalPartDetailWidgetState extends State<AppovalPartDetailWidget> {
             ),
             const Spacer(),
 
-            if (item.approvalStatusId == 1)
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                      onPressed: _disapprove,
-                      child: const Text('ไม่อนุมัติ', style: TextStyle(color: Colors.white)),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                      onPressed: _approve,
-                      child: const Text('อนุมัติ', style: TextStyle(color: Colors.white)),
-                    ),
-                  ),
-                ],
-              )
-            else if (item.approvalStatusId == 2)
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                  onPressed: _disapprove,
-                  child: const Text('เปลี่ยนเป็น "ไม่อนุมัติ"', style: TextStyle(color: Colors.white)),
-                ),
-              )
-            else if (item.approvalStatusId == 3)
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                  onPressed: _approve,
-                  child: const Text('เปลี่ยนเป็น "อนุมัติ"', style: TextStyle(color: Colors.white)),
-                ),
-              ),
+            actionButtons,
           ],
         ),
       ),

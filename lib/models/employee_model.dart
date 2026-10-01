@@ -11,7 +11,7 @@ class EmployeeModel {
   int accEmployeeId;
   String accUsername;
   int accRoleId;
-  bool isActive;
+  bool accIsActive;
   String arName;
 
   bool get isDeleted => deletedAt != null;
@@ -29,7 +29,7 @@ class EmployeeModel {
     required this.accEmployeeId,
     required this.accUsername,
     required this.accRoleId,
-    required this.isActive,
+    required this.accIsActive,
     required this.arName,
   });
 
@@ -47,7 +47,7 @@ class EmployeeModel {
       accEmployeeId: json['acc_employee_id'] as int,
       accUsername: json['acc_username'] as String,
       accRoleId: json['acc_role_id'] as int,
-      isActive: json['is_active'] as bool,
+      accIsActive: json['acc_is_active'] as bool,
       arName: json['ar_name'] as String,
     );
   }

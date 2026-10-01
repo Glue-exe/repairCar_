@@ -39,7 +39,7 @@ class _AppovalPartMainWidgetState extends State<AppovalPartMainWidget> {
       var jsonDisapproved = jsonDecode(resDisapproved.body);
       AppovalPartResponse disapprovedResponse = AppovalPartResponse.fromJson(jsonDisapproved);
 
-      if (mounted) {
+      if (mounted == true) {
         setState(() {
           _pendingList = pendingResponse.data;
           _approvedList = approvedResponse.data;
@@ -49,7 +49,7 @@ class _AppovalPartMainWidgetState extends State<AppovalPartMainWidget> {
       }
     } catch (e) {
       debugPrint("Error: $e");
-      if (mounted) {
+      if (mounted == true) {
         setState(() {
           _isLoading = false;
         });
@@ -58,113 +58,137 @@ class _AppovalPartMainWidgetState extends State<AppovalPartMainWidget> {
   }
 
   List<AppovalPartModel> get _currentList {
-    if (_selectedStatus == 1) return _pendingList;
-    if (_selectedStatus == 2) return _approvedList;
-    return _disapprovedList;
+    if (_selectedStatus == 1) {
+      return _pendingList;
+    } else if (_selectedStatus == 2) {
+      return _approvedList;
+    } else {
+      return _disapprovedList;
+    }
   }
 
   String get _emptyMessage {
-    if (_selectedStatus == 1) return "ไม่มีรายการอะไหล่ที่รออนุมัติ";
-    if (_selectedStatus == 2) return "ไม่มีรายการอะไหล่ที่อนุมัติแล้ว";
-    return "ไม่มีรายการอะไหล่ที่ไม่อนุมัติ";
+    if (_selectedStatus == 1) {
+      return "ไม่มีรายการอะไหล่ที่รออนุมัติ";
+    } else if (_selectedStatus == 2) {
+      return "ไม่มีรายการอะไหล่ที่อนุมัติแล้ว";
+    } else {
+      return "ไม่มีรายการอะไหล่ที่ไม่อนุมัติ";
+    }
   }
 
   Widget _buildButton(int status, String label, int count) {
-    bool isSelected = _selectedStatus == status;
+    bool isSelected = false;
+    if (_selectedStatus == status) {
+      isSelected = true;
+    } else {
+      isSelected = false;
+    }
+
+    Widget buttonWidget;
+    if (isSelected == true) {
+      buttonWidget = ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+        ),
+        onPressed: () {},
+        child: Text(
+          '$label ($count)',
+          style: const TextStyle(fontSize: 13),
+        ),
+      );
+    } else {
+      buttonWidget = OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+        ),
+        onPressed: () {
+          setState(() {
+            _selectedStatus = status;
+          });
+        },
+        child: Text(
+          '$label ($count)',
+          style: const TextStyle(fontSize: 13),
+        ),
+      );
+    }
 
     return Expanded(
-      child: isSelected
-          ? ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-              ),
-              onPressed: () {},
-              child: Text(
-                '$label ($count)',
-                style: const TextStyle(fontSize: 13),
-              ),
-            )
-          : OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-              ),
-              onPressed: () {
-                setState(() {
-                  _selectedStatus = status;
-                });
-              },
-              child: Text(
-                '$label ($count)',
-                style: const TextStyle(fontSize: 13),
-              ),
-            ),
+      child: buttonWidget,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
+    if (_isLoading == true) {
       return const Center(child: CircularProgressIndicator());
-    }
+    } else {
+      final currentItems = _currentList;
 
-    final currentItems = _currentList;
-
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              _buildButton(1, 'รออนุมัติ', _pendingList.length),
-              const SizedBox(width: 8),
-              _buildButton(2, 'อนุมัติแล้ว', _approvedList.length),
-              const SizedBox(width: 8),
-              _buildButton(3, 'ไม่อนุมัติ', _disapprovedList.length),
-            ],
+      Widget contentWidget;
+      if (currentItems.isEmpty == true) {
+        contentWidget = Center(
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Text(_emptyMessage),
           ),
-        ),
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: () async => _fetchData(),
-            child: currentItems.isEmpty
-                ? Center(
-                    child: SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      child: Text(_emptyMessage),
+        );
+      } else {
+        contentWidget = ListView.builder(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(8),
+          itemCount: currentItems.length,
+          itemBuilder: (context, index) {
+            final item = currentItems[index];
+
+            return Card(
+              child: ListTile(
+                leading: const Icon(Icons.build),
+                title: Text('${item.partName} x ${item.quantity}'),
+                subtitle: Text(
+                  'ทะเบียน: ${item.licensePlate}\nงาน: ${item.subTaskName}\nผู้ขอ: ${item.empFirstName} ${item.empLastName}',
+                ),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AppovalPartDetailWidget(item: item),
                     ),
-                  )
-                : ListView.builder(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(8),
-                    itemCount: currentItems.length,
-                    itemBuilder: (context, index) {
-                      final item = currentItems[index];
+                  );
+                  _fetchData();
+                },
+              ),
+            );
+          },
+        );
+      }
 
-                      return Card(
-                        child: ListTile(
-                          leading: const Icon(Icons.build),
-                          title: Text('${item.partName} x ${item.quantity}'),
-                          subtitle: Text(
-                            'ทะเบียน: ${item.licensePlate}\nงาน: ${item.subTaskName}\nผู้ขอ: ${item.empFirstName} ${item.empLastName}',
-                          ),
-                          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                          onTap: () async {
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    AppovalPartDetailWidget(item: item),
-                              ),
-                            );
-                            _fetchData();
-                          },
-                        ),
-                      );
-                    },
-                  ),
+      return Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                _buildButton(1, 'รออนุมัติ', _pendingList.length),
+                const SizedBox(width: 8),
+                _buildButton(2, 'อนุมัติแล้ว', _approvedList.length),
+                const SizedBox(width: 8),
+                _buildButton(3, 'ไม่อนุมัติ', _disapprovedList.length),
+              ],
+            ),
           ),
-        ),
-      ],
-    );
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                _fetchData();
+              },
+              child: contentWidget,
+            ),
+          ),
+        ],
+      );
+    }
   }
 }
