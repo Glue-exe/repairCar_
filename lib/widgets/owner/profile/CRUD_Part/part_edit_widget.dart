@@ -1,16 +1,21 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:my_app/models/part_model.dart';
 import 'package:my_app/utils/app_api.dart';
-import 'package:my_app/widgets/image_widget.dart';
+import 'package:my_app/widgets/owner/profile/part_shared_widgets/part_compatibility_section_widget.dart';
+import 'package:my_app/widgets/owner/profile/part_shared_widgets/part_general_info_section_widget.dart';
+import 'package:my_app/widgets/owner/profile/part_shared_widgets/part_image_section_widget.dart';
 
 class PartEditWidget extends StatefulWidget {
   final PartModel part;
   final VoidCallback? onRefresh;
 
-  const PartEditWidget({super.key, required this.part, this.onRefresh});
+  const PartEditWidget({
+    super.key,
+    required this.part,
+    this.onRefresh,
+  });
 
   @override
   State<PartEditWidget> createState() => _PartEditWidgetState();
@@ -19,6 +24,7 @@ class PartEditWidget extends StatefulWidget {
 class _PartEditWidgetState extends State<PartEditWidget> {
   final _formKey = GlobalKey<FormState>();
 
+  late TextEditingController _partCodeController;
   late TextEditingController _partNameController;
   late TextEditingController _partPriceController;
 
@@ -26,107 +32,145 @@ class _PartEditWidgetState extends State<PartEditWidget> {
   String? _imageUrl;
 
   List<Map<String, dynamic>> _vehicleModels = [];
-  int? _selectedModelId;
+  final List<SelectedVehicleModel> _selectedModels = [];
   bool _isLoadingModels = false;
 
   List<Map<String, dynamic>> _partCategories = [];
   int? _selectedCategoryId;
+
   List<Map<String, dynamic>> _partBrands = [];
   int? _selectedBrandId;
+
+  bool _isSaving = false;
+
+  final List<String> _unitOptions = [
+    'ชิ้น',
+    'ชุด',
+    'คู่',
+    'อัน',
+    'เส้น',
+    'ลิตร',
+    'แกลลอน',
+    'ขวด',
+    'กระป๋อง',
+    'หลอด',
+    'กล่อง',
+    'เมตร',
+  ];
+  String _selectedUnit = 'ชิ้น';
 
   @override
   void initState() {
     super.initState();
+    _partCodeController = TextEditingController(text: widget.part.partCode);
     _partNameController = TextEditingController(text: widget.part.name);
     _partPriceController = TextEditingController(
-      text: widget.part.price.toString(),
+      text: widget.part.partPrice.toStringAsFixed(2),
     );
+
+    if (widget.part.unit.trim().isNotEmpty) {
+      _selectedUnit = widget.part.unit.trim();
+      if (!_unitOptions.contains(_selectedUnit)) {
+        _unitOptions.add(_selectedUnit);
+      }
+    } else {
+      _selectedUnit = 'ชิ้น';
+    }
+
     _selectedCategoryId = widget.part.category;
     _selectedBrandId = widget.part.brand;
     _imageUrl = widget.part.url;
-    _selectedModelId = widget.part.vehModelId;
+
+    // เติมรุ่นรถเดิมที่เคยเลือกรองรับไว้
+    if (widget.part.compatibleModels.isNotEmpty) {
+      for (var compat in widget.part.compatibleModels) {
+        _selectedModels.add(SelectedVehicleModel.fromCompatible(compat));
+      }
+    } else if (widget.part.vehModelId != null) {
+      _selectedModels.add(
+        SelectedVehicleModel(
+          modelId: widget.part.vehModelId!,
+          modelName: widget.part.modelName ?? '',
+          brandName: widget.part.vehicleBrandName ?? '',
+          yearFrom: widget.part.yearFrom,
+          yearTo: widget.part.yearTo,
+        ),
+      );
+    }
+
     _fetchVehicleModels();
     _fetchCategories();
     _fetchPartBrands();
   }
 
-  void _fetchVehicleModels() async {
+  Future<List<Map<String, dynamic>>> _fetchDropdownData(String endpoint) async {
+    try {
+      final response = await AppAPI.get(endpoint);
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        if (data['isError'] == false && data['data'] != null && data['data'] is List) {
+          return List<Map<String, dynamic>>.from(data['data']);
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching $endpoint: $e');
+    }
+    return [];
+  }
+
+  Future<void> _fetchVehicleModels() async {
     setState(() {
       _isLoadingModels = true;
     });
-    try {
-      final response = await AppAPI.get('/vehicle_model');
-      final Map<String, dynamic> resJson = jsonDecode(response.body);
-      if (resJson['isError'] == false && resJson['data'] is List) {
-        setState(() {
-          _vehicleModels = List<Map<String, dynamic>>.from(resJson['data']);
-        });
-      }
-    } catch (e) {
-      debugPrint('Error fetching vehicle models: $e');
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoadingModels = false;
-        });
-      }
+    final list = await _fetchDropdownData('/vehicle_model');
+    if (mounted) {
+      setState(() {
+        _vehicleModels = list;
+        _isLoadingModels = false;
+
+        // เสริมชื่อรุ่น/ยี่ห้อให้ครบถ้วนในกรณีที่โหลดมาใหม่
+        for (int i = 0; i < _selectedModels.length; i++) {
+          _selectedModels[i] = _selectedModels[i].enriched(_vehicleModels);
+        }
+      });
     }
   }
 
   Future<void> _fetchCategories() async {
-    try {
-      final response = await AppAPI.get('/category');
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = jsonDecode(response.body);
-        if (data['isError'] == false && data['data'] != null) {
-          setState(() {
-            _partCategories = List<Map<String, dynamic>>.from(data['data']);
-          });
-        }
-      }
-    } catch (e) {
-      debugPrint('Error fetching categories: $e');
+    final list = await _fetchDropdownData('/category');
+    if (mounted) {
+      setState(() {
+        _partCategories = list;
+      });
     }
   }
 
   Future<void> _fetchPartBrands() async {
-    try {
-      final response = await AppAPI.get('/brand');
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = jsonDecode(response.body);
-        if (data['isError'] == false && data['data'] != null) {
-          setState(() {
-            _partBrands = List<Map<String, dynamic>>.from(data['data']);
-          });
-        }
-      }
-    } catch (e) {
-      debugPrint('Error fetching part brands: $e');
+    final list = await _fetchDropdownData('/brand');
+    if (mounted) {
+      setState(() {
+        _partBrands = list;
+      });
     }
   }
 
   @override
   void dispose() {
+    _partCodeController.dispose();
     _partNameController.dispose();
     _partPriceController.dispose();
     super.dispose();
   }
 
-  // ตรวจสอบข้อมูลบังคับกรอกทั่วไป
-  String? _validateRequired(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'กรุณากรอกข้อมูลให้ครบ';
-    }
-    return null;
-  }
-
-  // Alert ยืนยัน
   Future<bool> _showConfirmDialog(String title, String message) async {
-    bool? confirm = await showDialog<bool>(
+    final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(title),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
           content: Text(message),
           actions: [
             TextButton(
@@ -135,46 +179,118 @@ class _PartEditWidgetState extends State<PartEditWidget> {
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
               child: const Text('ยืนยัน'),
             ),
           ],
         );
       },
     );
-    return confirm == true;
+
+    return confirm ?? false;
   }
 
-  // บันทึกการแก้ไขข้อมูล
   void _saveData() async {
     if (_formKey.currentState!.validate()) {
-      bool confirm = await _showConfirmDialog(
+      for (var m in _selectedModels) {
+        if (m.isYearRangeInvalid) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'รุ่น ${m.displayName}: ปีสิ้นสุด (${m.yearTo}) ต้องไม่น้อยกว่าปีเริ่มต้น (${m.yearFrom})',
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+      }
+
+      final bool confirm = await _showConfirmDialog(
         'ยืนยันการแก้ไขข้อมูล',
         'คุณแน่ใจหรือไม่ว่าต้องการบันทึกการแก้ไขนี้?',
       );
 
       if (confirm) {
-        Map<String, String> fields = {
-          'part_id': widget.part.id.toString(),
-          'part_name': _partNameController.text.trim(),
-          'part_price': _partPriceController.text.trim(),
-          'part_category_id': _selectedCategoryId.toString(),
-          'part_brand_id': _selectedBrandId.toString(),
-          'part_url': _imageUrl ?? '',
-          if (_selectedModelId != null)
-            'veh_model_id': _selectedModelId.toString(),
-        };
+        setState(() {
+          _isSaving = true;
+        });
 
-        await AppAPI.putMultipart(
-          '/putPart',
-          fields: fields,
-          file: _imageFile,
-        );
+        try {
+          final Map<String, String> fields = {
+            'part_id': widget.part.id.toString(),
+            'part_code': _partCodeController.text.trim(),
+            'part_name': _partNameController.text.trim(),
+            'part_price': _partPriceController.text.trim(),
+            'unit': _selectedUnit.trim(),
+            'part_category_id': _selectedCategoryId?.toString() ?? '',
+            'part_brand_id': _selectedBrandId?.toString() ?? '',
+            'part_url': _imageUrl ?? '',
+            'veh_model_ids': jsonEncode(_selectedModels.map((m) => m.toJson()).toList()),
+          };
 
-        if (widget.onRefresh != null) {
-          widget.onRefresh!();
+          final response = await AppAPI.putMultipart(
+            '/putPart',
+            fields: fields,
+            file: _imageFile,
+          );
+
+          if (response.statusCode == 200) {
+            final Map<String, dynamic> resJson = jsonDecode(response.body);
+            if (resJson['isError'] == false) {
+              if (widget.onRefresh != null) {
+                widget.onRefresh!();
+              }
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('แก้ไขข้อมูลอะไหล่สำเร็จ'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+                Navigator.pop(context, true);
+              }
+            } else {
+              final errMsg = resJson['errorMessage']?.toString() ?? 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('บันทึกไม่สำเร็จ: $errMsg'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
+          } else {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('เซิร์ฟเวอร์ตอบกลับผิดพลาด (HTTP ${response.statusCode})'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('เกิดข้อผิดพลาดในการบันทึกข้อมูล: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        } finally {
+          if (mounted) {
+            setState(() {
+              _isSaving = false;
+            });
+          }
         }
-        if (!mounted) return;
-        Navigator.pop(context, true);
       }
     }
   }
@@ -182,193 +298,105 @@ class _PartEditWidgetState extends State<PartEditWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('แก้ไขข้อมูลอะไหล่'),
+        title: const Text(
+          'แก้ไขข้อมูลอะไหล่',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
+        elevation: 0,
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Center(
-                child: ImageWidget(
-                  imageFile: _imageFile,
-                  imageUrl: _imageUrl,
-                  label: 'แก้ไขรูปภาพอะไหล่',
-                  onImageSelected: (file) {
-                    setState(() {
-                      _imageFile = file;
-                    });
-                  },
-                  onImageRemoved: () {
-                    setState(() {
-                      _imageFile = null;
-                      _imageUrl = null;
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'ข้อมูลอะไหล่',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-
-              // ชื่ออะไหล่
-              TextFormField(
-                controller: _partNameController,
-                validator: _validateRequired,
-                decoration: const InputDecoration(
-                  labelText: 'ชื่ออะไหล่ *',
-                  hintText: 'กรอกชื่ออะไหล่',
-                  prefixIcon: Icon(Icons.build_outlined),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                  ),
-                ),
+              PartImageSectionWidget(
+                imageFile: _imageFile,
+                imageUrl: _imageUrl,
+                onImageSelected: (file) {
+                  setState(() {
+                    _imageFile = file;
+                  });
+                },
+                onImageRemoved: () {
+                  setState(() {
+                    _imageFile = null;
+                    _imageUrl = null;
+                  });
+                },
               ),
               const SizedBox(height: 16),
-
-              // ยี่ห้ออะไหล่
-              DropdownButtonFormField<int>(
-                initialValue: _selectedBrandId,
-                decoration: const InputDecoration(
-                  labelText: 'ยี่ห้ออะไหล่ *',
-                  hintText: 'เลือกยี่ห้ออะไหล่',
-                  prefixIcon: Icon(Icons.branding_watermark_outlined),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                  ),
-                ),
-                items: _partBrands.map((item) {
-                  final id = item['pb_id'] ?? item['id'];
-                  final name = item['pb_name'] ?? item['name'] ?? '';
-                  return DropdownMenuItem<int>(
-                    value: id is int ? id : int.parse(id.toString()),
-                    child: Text(name),
-                  );
-                }).toList(),
-                onChanged: (val) {
+              PartGeneralInfoSectionWidget(
+                partCodeController: _partCodeController,
+                partNameController: _partNameController,
+                partPriceController: _partPriceController,
+                partBrands: _partBrands,
+                selectedBrandId: _selectedBrandId,
+                onBrandChanged: (val) {
                   setState(() {
                     _selectedBrandId = val;
                   });
                 },
-                validator: (val) =>
-                    val == null ? 'กรุณาเลือกยี่ห้ออะไหล่' : null,
-              ),
-              const SizedBox(height: 16),
-
-              // หมวดหมู่อะไหล่
-              DropdownButtonFormField<int>(
-                initialValue: _selectedCategoryId,
-                decoration: const InputDecoration(
-                  labelText: 'หมวดหมู่อะไหล่ *',
-                  hintText: 'เลือกหมวดหมู่อะไหล่',
-                  prefixIcon: Icon(Icons.category_outlined),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                  ),
-                ),
-                items: _partCategories.map((item) {
-                  final id = item['pc_id'] ?? item['id'];
-                  final name = item['pc_name'] ?? item['name'] ?? '';
-                  return DropdownMenuItem<int>(
-                    value: id is int ? id : int.parse(id.toString()),
-                    child: Text(name),
-                  );
-                }).toList(),
-                onChanged: (val) {
+                partCategories: _partCategories,
+                selectedCategoryId: _selectedCategoryId,
+                onCategoryChanged: (val) {
                   setState(() {
                     _selectedCategoryId = val;
                   });
                 },
-                validator: (val) =>
-                    val == null ? 'กรุณาเลือกหมวดหมู่อะไหล่' : null,
+                unitOptions: _unitOptions,
+                selectedUnit: _selectedUnit,
+                onUnitChanged: (val) {
+                  setState(() {
+                    _selectedUnit = val;
+                  });
+                },
               ),
               const SizedBox(height: 16),
-
-              // รุ่นรถที่รองรับ
-              _isLoadingModels
-                  ? const Center(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 8.0),
-                        child: SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      ),
-                    )
-                  : DropdownButtonFormField<int>(
-                      initialValue: _selectedModelId,
-                      decoration: const InputDecoration(
-                        labelText: 'รุ่นรถที่รองรับ (Model) *',
-                        hintText: 'เลือกรุ่นรถที่รองรับ',
-                        prefixIcon: Icon(Icons.directions_car_outlined),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(12)),
-                        ),
-                      ),
-                      items: _vehicleModels.map((item) {
-                        final id = item['veh_model_id'] ?? item['id'];
-                        final brand = item['brand_name'] ?? '';
-                        final model = item['model_name'] ?? item['name'] ?? '';
-                        return DropdownMenuItem<int>(
-                          value: id is int ? id : int.parse(id.toString()),
-                          child: Text(
-                            brand.isNotEmpty ? '$brand - $model' : model,
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (val) {
-                        setState(() {
-                          _selectedModelId = val;
-                        });
-                      },
-                      validator: (val) =>
-                          val == null ? 'กรุณาเลือกรุ่นรถ' : null,
-                    ),
-              const SizedBox(height: 16),
-
-              // ราคา
-              TextFormField(
-                controller: _partPriceController,
-                validator: _validateRequired,
-                maxLength: 10,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                decoration: const InputDecoration(
-                  labelText: 'ราคา (บาท) *',
-                  hintText: 'กรอกราคาอะไหล่',
-                  counterText: '',
-                  prefixIcon: Icon(Icons.attach_money_outlined),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                  ),
-                ),
+              PartCompatibilitySectionWidget(
+                selectedModels: _selectedModels,
+                vehicleModels: _vehicleModels,
+                isLoadingModels: _isLoadingModels,
+                onChanged: (updatedList) {
+                  setState(() {
+                    _selectedModels.clear();
+                    _selectedModels.addAll(updatedList);
+                  });
+                },
               ),
-              const SizedBox(height: 28),
-
-              // ปุ่มบันทึกการแก้ไข
+              const SizedBox(height: 24),
               SizedBox(
-                height: 50,
+                height: 52,
                 child: ElevatedButton.icon(
-                  icon: const Icon(Icons.save_outlined),
-                  label: const Text(
-                    'บันทึกการแก้ไข',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  icon: _isSaving
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.save_outlined),
+                  label: Text(
+                    _isSaving ? 'กำลังบันทึกการแก้ไข...' : 'บันทึกการแก้ไขข้อมูล',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
+                    elevation: 2,
                   ),
-                  onPressed: _saveData,
+                  onPressed: _isSaving ? null : _saveData,
                 ),
               ),
               const SizedBox(height: 24),

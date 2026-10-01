@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_app/screens/auth/login_screen.dart';
-import 'package:my_app/screens/owner/owner_part_screen.dart';
+import 'package:my_app/screens/owner/profile/part/owner_part_screen.dart';
 import 'package:my_app/screens/owner/owner_vehicle_meta_screen.dart';
 import 'package:my_app/screens/owner/profile/owner_view_screen.dart';
 import 'package:my_app/screens/owner/profile/salaryIncrease/salary_history_screen.dart';
