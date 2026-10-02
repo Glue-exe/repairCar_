@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:my_app/utils/app_api.dart';
 import 'package:my_app/models/vehicle_search_phone_model.dart';
@@ -26,7 +27,8 @@ class _IntakecarSearchPhoneWidgetState
   }
 
   Future<void> _searchPhone() async {
-    final query = _searchPhoneController.text.trim();
+    final query =
+        _searchPhoneController.text.replaceAll(RegExp(r'\D'), '').trim();
 
     if (query.isEmpty) {
       setState(() {
@@ -85,11 +87,16 @@ class _IntakecarSearchPhoneWidgetState
               TextField(
                 controller: _searchPhoneController,
                 keyboardType: TextInputType.phone,
+                maxLength: 10,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                ],
                 decoration: const InputDecoration(
                   labelText: 'เบอร์โทรศัพท์',
                   hintText: 'กรอกเบอร์โทรศัพท์ลูกค้า',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.phone),
+                  counterText: '',
                 ),
               ),
               const SizedBox(height: 12),

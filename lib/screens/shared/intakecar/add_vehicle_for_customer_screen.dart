@@ -32,12 +32,12 @@ class _AddVehicleForCustomerScreenState
   List<VehicleModelModel> _modelList = [];
   int? _selectedModelId;
 
-  // ปีรถ (สร้าง List ปีย้อนหลัง 40 ปีอัตโนมัติ)
+  // ปีรถ (ปีย้อนหลัง 40 ปี)
   int? _selectedYear;
   final List<int> _yearList =
       List.generate(40, (index) => DateTime.now().year - index);
 
-  // สีรถ (List สีมาตรฐาน)
+  // สีรถ
   String? _selectedColor;
   final List<String> _colorList = [
     'ขาว',

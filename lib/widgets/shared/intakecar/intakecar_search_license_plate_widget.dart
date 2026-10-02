@@ -16,6 +16,7 @@ class _IntakecarSearchWidgetState extends State<IntakecarSearchWidget> {
 
   String _errorMessage = '';
   VehicleSearchResultModel? _vehicle;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -24,16 +25,18 @@ class _IntakecarSearchWidgetState extends State<IntakecarSearchWidget> {
   }
 
   Future<void> _searchVehicle() async {
-    final query = _searchController.text.trim();
+    final query = _searchController.text.replaceAll(RegExp(r'\s+'), '').trim();
 
     if (query.isEmpty) {
       setState(() {
         _vehicle = null;
+        _errorMessage = '';
       });
       return;
     }
 
     setState(() {
+      _isLoading = true;
       _errorMessage = '';
       _vehicle = null;
     });
@@ -45,23 +48,29 @@ class _IntakecarSearchWidgetState extends State<IntakecarSearchWidget> {
 
       final Map<String, dynamic> resJson = jsonDecode(response.body);
 
-      setState(() {
-        if (resJson['isError'] == false) {
-          final List<dynamic> dataList = resJson['data'];
-          if (dataList.isNotEmpty) {
-            _vehicle = VehicleSearchResultModel.fromJson(dataList[0]);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          if (resJson['isError'] == false) {
+            final List<dynamic> dataList = resJson['data'];
+            if (dataList.isNotEmpty) {
+              _vehicle = VehicleSearchResultModel.fromJson(dataList[0]);
+            } else {
+              _vehicle = null;
+              _errorMessage = 'ไม่พบข้อมูลทะเบียนรถนี้ในระบบ';
+            }
           } else {
-            _vehicle = null;
-            _errorMessage = 'ไม่พบข้อมูลทะเบียนรถนี้ในระบบ';
+            _errorMessage = resJson['errorMessage'];
           }
-        } else {
-          _errorMessage = resJson['errorMessage'];
-        }
-      });
+        });
+      }
     } catch (e) {
-      setState(() {
-        _errorMessage = 'ไม่สามารถเชื่อมต่อระบบได้';
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'ไม่สามารถเชื่อมต่อระบบได้';
+        });
+      }
     }
   }
 
@@ -91,8 +100,16 @@ class _IntakecarSearchWidgetState extends State<IntakecarSearchWidget> {
               ),
               const SizedBox(height: 12),
               ElevatedButton(
-                onPressed: _searchVehicle,
-                child: const Text('ค้นหา'),
+                onPressed: _isLoading ? null : _searchVehicle,
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text('ค้นหา'),
               ),
               if (_vehicle != null) ...[
                 const SizedBox(height: 16),

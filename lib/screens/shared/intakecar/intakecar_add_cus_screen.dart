@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_app/utils/app_api.dart';
 import 'package:my_app/models/title_model.dart';
 import 'package:my_app/models/vehicle_brand_model.dart';
@@ -14,6 +15,8 @@ class IntakecarAddCusScreen extends StatefulWidget {
 }
 
 class _IntakecarAddCusScreenState extends State<IntakecarAddCusScreen> {
+  int? _currentUserId;
+
   // ข้อมูลลูกค้า
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
@@ -78,6 +81,9 @@ class _IntakecarAddCusScreenState extends State<IntakecarAddCusScreen> {
 
   Future<void> _loadInitialData() async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      _currentUserId = prefs.getInt('user_id') ?? 1;
+
       // โหลดคำนำหน้าชื่อ
       final titleRes = await AppAPI.get('/title');
       final titleResponse = TitleResponse.fromJson(jsonDecode(titleRes.body));
@@ -105,6 +111,7 @@ class _IntakecarAddCusScreenState extends State<IntakecarAddCusScreen> {
         });
       }
     } catch (e) {
+      debugPrint("Error loading initial data: $e");
       setState(() {
         _errorMessage = 'ไม่สามารถโหลดข้อมูลเริ่มต้นได้';
       });
@@ -128,12 +135,17 @@ class _IntakecarAddCusScreenState extends State<IntakecarAddCusScreen> {
     }
 
     try {
+      if (_currentUserId == null) {
+        final prefs = await SharedPreferences.getInstance();
+        _currentUserId = prefs.getInt('user_id') ?? 1;
+      }
+
       final response = await AppAPI.post('/add_customer', {
         'cus_title_id': _selectedTitleId,
         'cus_first_name': _firstNameController.text.trim(),
         'cus_last_name': _lastNameController.text.trim(),
         'cus_phone': _phoneController.text.trim(),
-        'cus_created_by_account_id': 1,
+        'cus_created_by_account_id': _currentUserId ?? 1,
         'v_license_plate': _licensePlateController.text.trim(),
         'v_vehicle_model_id': _selectedModelId,
         'v_year': _selectedYear,
@@ -144,7 +156,7 @@ class _IntakecarAddCusScreenState extends State<IntakecarAddCusScreen> {
 
       if (resJson['isError'] == false) {
         if (mounted) {
-          Navigator.pop(context);
+          Navigator.pop(context, resJson['data']);
         }
       } else {
         setState(() {
