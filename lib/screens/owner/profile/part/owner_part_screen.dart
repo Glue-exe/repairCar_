@@ -15,10 +15,29 @@ class OwnerPartScreen extends StatefulWidget {
 class _OwnerPartScreenState extends State<OwnerPartScreen> {
   List<PartModel> partModelStore = [];
   List<PartModel> filteredParts = [];
+  List<Map<String, dynamic>> _partCategories = [];
+  int? _selectedCategoryId; // null = ทุกประเภทอะไหล่
   bool _isLoading = true;
   String? _errorMessage;
   final TextEditingController _searchController = TextEditingController();
 
+  // รายการหมวดหมู่ทั้งหมดสำหรับใส่ใน Select (ใช้จาก API หรือดึงจากรายการอะไหล่)
+  List<Map<String, dynamic>> get _availableCategories {
+    if (_partCategories.isNotEmpty) {
+      return _partCategories;
+    }
+    final Map<int, String> categoryMap = {};
+    for (var part in partModelStore) {
+      if (part.partCategoryName != null && part.partCategoryName!.trim().isNotEmpty) {
+        categoryMap[part.category] = part.partCategoryName!.trim();
+      }
+    }
+    return categoryMap.entries
+        .map((e) => {'pc_id': e.key, 'pc_name': e.value})
+        .toList();
+  }
+
+  // ดึงข้อมูลอะไหล่และประเภทอะไหล่จาก API
   void _fetchData() async {
     setState(() {
       _isLoading = true;
@@ -26,10 +45,26 @@ class _OwnerPartScreenState extends State<OwnerPartScreen> {
     });
 
     try {
-      var response = await AppAPI.get("/getPart");
+      // 1. ดึงข้อมูลอะไหล่
+      final response = await AppAPI.get("/getPart");
+
+      // 2. ดึงข้อมูลประเภทอะไหล่ (ดักจับแยก ไม่ให้กระทบการโหลดข้อมูลอะไหล่หลัก)
+      List<Map<String, dynamic>> categoriesList = [];
+      try {
+        final catRes = await AppAPI.get("/category");
+        if (catRes.statusCode == 200) {
+          final Map<String, dynamic> catJson = jsonDecode(catRes.body);
+          if (catJson['isError'] == false && catJson['data'] is List) {
+            categoriesList = List<Map<String, dynamic>>.from(catJson['data']);
+          }
+        }
+      } catch (e) {
+        debugPrint("Error fetching categories: $e");
+      }
+
       if (response.statusCode == 200) {
-        Map<String, dynamic> json = jsonDecode(response.body);
-        PartResponse partResponse = PartResponse.fromJson(json);
+        final Map<String, dynamic> json = jsonDecode(response.body);
+        final PartResponse partResponse = PartResponse.fromJson(json);
 
         if (mounted == false) {
           return;
@@ -50,7 +85,8 @@ class _OwnerPartScreenState extends State<OwnerPartScreen> {
         } else {
           setState(() {
             partModelStore = partResponse.data;
-            _filterParts(_searchController.text);
+            _partCategories = categoriesList;
+            _filterParts();
             _isLoading = false;
           });
         }
@@ -74,71 +110,50 @@ class _OwnerPartScreenState extends State<OwnerPartScreen> {
     }
   }
 
-  // ฟังก์ชันค้นหาอะไหล่ รองรับการค้นหาได้ทั้งหมด 7 อย่างในช่องค้นหาเดียว:
-  // 1. ชื่ออะไหล่ เช่น "ผ้าเบรกหน้า", "ไส้กรองน้ำมันเครื่อง"
-  // 2. รหัสอะไหล่ / เบอร์ OEM ข้างกล่อง เช่น "DB1436", "0986AF0029"
-  // 3. ยี่ห้ออะไหล่ เช่น "Bosch", "Brembo", "Castrol"
-  // 4. หมวดหมู่อะไหล่ เช่น "ระบบเบรก", "ของเหลวและสารหล่อลื่น"
-  // 5. ชื่อรุ่นรถยนต์ที่รองรับ เช่น "Vios", "Yaris", "Civic", "D-Max"
-  // 6. ยี่ห้อรถยนต์ เช่น "Toyota", "Honda", "Isuzu"
-  // 7. ช่วงปี ค.ศ. ของรุ่นรถที่รองรับ เช่น "2008", "2012" (ผ่าน compatibleModelsSummary)
-  void _filterParts(String query) {
-    String q = query.trim().toLowerCase();
-    setState(() {
-      if (q.isEmpty == true) {
-        filteredParts = List.from(partModelStore);
-      } else {
-        filteredParts = partModelStore.where((item) {
-          // 1. ค้นหาจากชื่ออะไหล่
-          final nameMatch = item.name.toLowerCase().contains(q);
+  // Logic กรองข้อมูลอะไหล่:
+  // 1. กรองตามประเภทอะไหล่ที่เลือกจาก Select (ถ้า _selectedCategoryId == null คือแสดงทุกประเภท)
+  // 2. กรองตามคำค้นหา 7 ด้าน (ชื่อ, รหัส, ยี่ห้ออะไหล่, หมวดหมู่, รุ่นรถ, ยี่ห้อรถ, ช่วงปี ค.ศ.)
+  void _filterParts([String? query]) {
+    final String q = (query ?? _searchController.text).trim().toLowerCase();
 
-          // 2. ค้นหาจากรหัสอะไหล่ / เบอร์ OEM
+    setState(() {
+      filteredParts = partModelStore.where((item) {
+        // เงื่อนไขที่ 1: กรองตามประเภทอะไหล่
+        final bool categoryMatch =
+            _selectedCategoryId == null || item.category == _selectedCategoryId;
+
+        // เงื่อนไขที่ 2: กรองตามคำค้นหาในช่องค้นหา (ถ้ามี)
+        bool queryMatch = true;
+        if (q.isNotEmpty) {
+          final nameMatch = item.name.toLowerCase().contains(q);
           final codeMatch = item.partCode.toLowerCase().contains(q);
 
-          // 3. ค้นหาจากยี่ห้ออะไหล่
-          String brandText = '';
-          if (item.partBrandName != null) {
-            brandText = item.partBrandName!;
-          }
+          final String brandText = item.partBrandName ?? '';
           final brandMatch = brandText.toLowerCase().contains(q);
 
-          // 4. ค้นหาจากหมวดหมู่อะไหล่
-          String categoryText = '';
-          if (item.partCategoryName != null) {
-            categoryText = item.partCategoryName!;
-          }
-          final categoryMatch = categoryText.toLowerCase().contains(q);
+          final String categoryText = item.partCategoryName ?? '';
+          final categoryMatchText = categoryText.toLowerCase().contains(q);
 
-          // 5. ค้นหาจากชื่อรุ่นรถ (รุ่นเดี่ยว)
-          String modelText = '';
-          if (item.modelName != null) {
-            modelText = item.modelName!;
-          }
+          final String modelText = item.modelName ?? '';
           final modelMatch = modelText.toLowerCase().contains(q);
 
-          // 6. ค้นหาจากยี่ห้อรถยนต์
-          String vehBrandText = '';
-          if (item.vehicleBrandName != null) {
-            vehBrandText = item.vehicleBrandName!;
-          }
+          final String vehBrandText = item.vehicleBrandName ?? '';
           final vehBrandMatch = vehBrandText.toLowerCase().contains(q);
 
-          // 7. ค้นหาจากรุ่นรถทั้งหมดและช่วงปี ค.ศ. ที่รองรับ
           final compatMatch = item.compatibleModelsSummary.toLowerCase().contains(q);
 
-          if (nameMatch == true ||
-              codeMatch == true ||
-              brandMatch == true ||
-              categoryMatch == true ||
-              modelMatch == true ||
-              vehBrandMatch == true ||
-              compatMatch == true) {
-            return true;
-          } else {
-            return false;
-          }
-        }).toList();
-      }
+          queryMatch = nameMatch ||
+              codeMatch ||
+              brandMatch ||
+              categoryMatchText ||
+              modelMatch ||
+              vehBrandMatch ||
+              compatMatch;
+        }
+
+        // ต้องผ่านทั้งเงื่อนไขประเภทอะไหล่และเงื่อนไขคำค้นหา
+        return categoryMatch && queryMatch;
+      }).toList();
     });
   }
 
@@ -160,32 +175,36 @@ class _OwnerPartScreenState extends State<OwnerPartScreen> {
     Widget? suffixIconWidget;
     if (_searchController.text.isNotEmpty == true) {
       suffixIconWidget = IconButton(
-        icon: const Icon(Icons.clear, size: 22),
+        icon: const Icon(Icons.clear, size: 20),
+        tooltip: 'ล้างคำค้นหา',
         onPressed: () {
           _searchController.clear();
-          _filterParts('');
+          _filterParts();
         },
       );
     } else {
       suffixIconWidget = null;
     }
 
-    // กำหนดข้อความแสดงสถานะการค้นหาข้างแถบสรุป (ขนาดใหญ่ ชัดเจน)
-    Widget searchResultTextWidget;
-    if (_searchController.text.isNotEmpty == true) {
-      searchResultTextWidget = Text(
-        'ผลการค้นหา "${_searchController.text}"',
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: Colors.teal.shade800,
+    // กำหนดข้อความแสดงคำค้นหาข้างแถบสรุป (ป้องกันการล้นจอด้วย Expanded และ TextOverflow.ellipsis)
+    Widget searchResultTextWidget = const SizedBox.shrink();
+    if (_searchController.text.trim().isNotEmpty) {
+      searchResultTextWidget = Expanded(
+        child: Text(
+          'ค้นหา: "${_searchController.text.trim()}"',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.end,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: Theme.of(context).colorScheme.primary,
+          ),
         ),
       );
-    } else {
-      searchResultTextWidget = const SizedBox.shrink();
     }
 
-    // กำหนดเนื้อหาหลักของหน้าจอแบบแยกกรณีชัดเจน พร้อมขนาดตัวอักษรและปุ่มขนาดใหญ่
+    // กำหนดเนื้อหาหลักของหน้าจอแบบแยกกรณีชัดเจน
     Widget mainContent;
     if (_isLoading == true) {
       mainContent = const Center(
@@ -198,36 +217,33 @@ class _OwnerPartScreenState extends State<OwnerPartScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 54, color: Colors.red),
-              const SizedBox(height: 14),
+              const Icon(
+                Icons.error_outline,
+                size: 56,
+                color: Colors.redAccent,
+              ),
+              const SizedBox(height: 16),
               Text(
                 _errorMessage!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.red,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: const TextStyle(fontSize: 16),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 20),
               ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-                ),
-                onPressed: () {
-                  _fetchData();
-                },
-                icon: const Icon(Icons.refresh, size: 20),
-                label: const Text('ลองใหม่อีกครั้ง', style: TextStyle(fontSize: 15)),
+                onPressed: _fetchData,
+                icon: const Icon(Icons.refresh),
+                label: const Text('ลองใหม่อีกครั้ง'),
               ),
             ],
           ),
         ),
       );
     } else if (filteredParts.isEmpty == true) {
+      final bool hasActiveFilter =
+          _searchController.text.trim().isNotEmpty || _selectedCategoryId != null;
       String emptyText;
-      if (_searchController.text.isNotEmpty == true) {
-        emptyText = 'ไม่พบอะไหล่ที่ตรงกับคำค้นหา';
+      if (hasActiveFilter) {
+        emptyText = 'ไม่พบอะไหล่ที่ตรงกับเงื่อนไขที่เลือก';
       } else {
         emptyText = 'ยังไม่มีข้อมูลอะไหล่ในระบบ';
       }
@@ -240,30 +256,39 @@ class _OwnerPartScreenState extends State<OwnerPartScreen> {
             const SizedBox(height: 14),
             Text(
               emptyText,
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey.shade700,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
               ),
             ),
             const SizedBox(height: 18),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+            if (hasActiveFilter)
+              OutlinedButton.icon(
+                onPressed: () {
+                  _searchController.clear();
+                  setState(() {
+                    _selectedCategoryId = null;
+                  });
+                  _filterParts();
+                },
+                icon: const Icon(Icons.filter_alt_off),
+                label: const Text('ล้างการค้นหาและตัวกรอง'),
+              )
+            else
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) {
+                        return PartAddScreen(onRefresh: _fetchData);
+                      },
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.add),
+                label: const Text('เพิ่มอะไหล่ใหม่'),
               ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return PartAddScreen(onRefresh: _fetchData);
-                    },
-                  ),
-                );
-              },
-              icon: const Icon(Icons.add, size: 22),
-              label: const Text('เพิ่มอะไหล่ใหม่', style: TextStyle(fontSize: 16)),
-            ),
           ],
         ),
       );
@@ -280,17 +305,17 @@ class _OwnerPartScreenState extends State<OwnerPartScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text(
-          'ข้อมูลอะไหล่',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-        ),
+        title: const Text('ข้อมูลอะไหล่'),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.add, size: 26),
+            icon: const Icon(Icons.refresh),
+            tooltip: 'รีเฟรชข้อมูล',
+            onPressed: _fetchData,
+          ),
+          IconButton(
+            icon: const Icon(Icons.add),
             tooltip: 'เพิ่มอะไหล่',
             onPressed: () {
               Navigator.push(
@@ -303,19 +328,12 @@ class _OwnerPartScreenState extends State<OwnerPartScreen> {
               );
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.refresh, size: 26),
-            tooltip: 'รีเฟรช',
-            onPressed: () {
-              _fetchData();
-            },
-          ),
         ],
       ),
       body: SafeArea(
         child: Column(
           children: [
-            // กล่องค้นหา (ปรับขนาดช่องและฟอนต์ให้ใหญ่ขึ้น 16px อ่านง่าย สบายตา)
+            // 1. กล่องค้นหา (Search Box)
             Container(
               padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
               child: TextField(
@@ -343,21 +361,60 @@ class _OwnerPartScreenState extends State<OwnerPartScreen> {
               ),
             ),
 
-            // แถบสรุปจำนวน (ตัวหนังสือใหญ่ ชัดเจน 14.5px)
+            // 2. แถบตัวกรองประเภทอะไหล่ (Category Filter) แบบ ChoiceChip เหมือนของ emp
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+              child: Row(
+                children: [
+                  ChoiceChip(
+                    label: const Text('ทุกประเภท'),
+                    selected: _selectedCategoryId == null,
+                    onSelected: (_) {
+                      setState(() {
+                        _selectedCategoryId = null;
+                      });
+                      _filterParts();
+                    },
+                  ),
+                  ..._availableCategories.map((cat) {
+                    final int catId = cat['pc_id'] as int;
+                    final String catName = (cat['pc_name'] ?? '').toString();
+                    return Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: ChoiceChip(
+                        label: Text(catName),
+                        selected: _selectedCategoryId == catId,
+                        onSelected: (bool selected) {
+                          setState(() {
+                            _selectedCategoryId = selected ? catId : null;
+                          });
+                          _filterParts();
+                        },
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+
+            // 3. แถบสรุปจำนวนรายการ
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               child: Row(
                 children: [
                   Text(
-                    'รายการอะไหล่ทั้งหมด (${filteredParts.length} รายการ)',
+                    'รายการอะไหล่ (${filteredParts.length} รายการ)',
                     style: TextStyle(
-                      fontSize: 14.5,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: Colors.grey.shade800,
                     ),
                   ),
-                  const Spacer(),
-                  searchResultTextWidget,
+                  if (_searchController.text.trim().isNotEmpty) ...[
+                    const SizedBox(width: 8),
+                    searchResultTextWidget,
+                  ],
                 ],
               ),
             ),

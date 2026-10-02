@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:my_app/screens/owner/dashboard/owner_dash_board_screen.dart';
 import 'package:my_app/screens/owner/part/owner_appoval_part_sreen.dart';
 import 'package:my_app/screens/shared/orderpool/order_pool_screen.dart';
-import 'package:my_app/screens/owner/profile/owner_profile_screen.dart';
+import 'package:my_app/screens/owner/profile/emp/owner_profile_screen.dart';
 import 'package:my_app/screens/shared/intakecar/intakecar_screen.dart';
 
 class NavbarOwner extends StatefulWidget {

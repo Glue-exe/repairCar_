@@ -112,209 +112,196 @@ class PartCompatibilitySectionWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final years = _availableYears;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+    return Card(
+      elevation: 0.5,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: Colors.grey.shade300, width: 0.8),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.directions_car_outlined,
-                      size: 18,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'รุ่นรถและช่วงปีที่รองรับ',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
-              if (selectedModels.isNotEmpty) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: Colors.teal.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.teal.shade200),
-                  ),
-                  child: Text(
-                    '${selectedModels.length} รุ่น',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.teal.shade800,
-                    ),
-                  ),
-                ),
-                OutlinedButton.icon(
-                  onPressed: () => _handleSelectModels(context),
-                  icon: const Icon(Icons.add, size: 16),
-                  label: const Text('เลือกรุ่นรถ', style: TextStyle(fontSize: 12)),
-                  style: OutlinedButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-          const SizedBox(height: 14),
-
-          if (selectedModels.isEmpty)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Colors.grey.shade200,
-                  style: BorderStyle.solid,
-                ),
-              ),
-              child: Center(
-                child: Column(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      Icons.all_inclusive,
-                      size: 36,
-                      color: Colors.amber.shade700,
+                      Icons.directions_car_outlined,
+                      size: 20,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'อะไหล่ทั่วไป',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
+                    const SizedBox(width: 8),
                     Text(
-                      'ถ้าเป็นอะไหล่ทั่วไปไม่จำเป็นต้องเลือกรุ่นที่รองรับ',
+                      'รุ่นรถและช่วงปีที่รองรับ',
                       style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 12),
-                    ElevatedButton.icon(
-                      onPressed: () => _handleSelectModels(context),
-                      icon: const Icon(Icons.add, size: 16),
-                      label: const Text('ระบุรุ่นรถเฉพาะ (ถ้ามี)'),
-                      style: ElevatedButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                   ],
                 ),
-              ),
-            )
-          else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: selectedModels.length,
-              separatorBuilder: (context, index) {
-                return const SizedBox(height: 10);
-              },
-              itemBuilder: (context, index) {
-                final modelItem = selectedModels[index];
-                final isInvalidYear = modelItem.isYearRangeInvalid;
-
-                return Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: isInvalidYear
-                        ? Colors.red.shade50.withValues(alpha: 0.3)
-                        : Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isInvalidYear
-                          ? Colors.red.shade300
-                          : Colors.grey.shade300,
-                      width: isInvalidYear ? 1.5 : 1.0,
+                if (selectedModels.isNotEmpty) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.teal.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.teal.shade200),
+                    ),
+                    child: Text(
+                      '${selectedModels.length} รุ่น',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.teal.shade800,
+                      ),
                     ),
                   ),
+                  OutlinedButton.icon(
+                    onPressed: () => _handleSelectModels(context),
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text('เลือกรุ่นรถ', style: TextStyle(fontSize: 12)),
+                    style: OutlinedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const Divider(height: 20),
+
+            if (selectedModels.isEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.grey.shade200,
+                    style: BorderStyle.solid,
+                  ),
+                ),
+                child: Center(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: isInvalidYear
-                                  ? Colors.red.shade50
-                                  : Colors.teal.shade50,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.directions_car,
-                              size: 16,
-                              color: isInvalidYear
-                                  ? Colors.red.shade700
-                                  : Colors.teal.shade700,
-                            ),
+                      const Icon(
+                        Icons.all_inclusive,
+                        size: 36,
+                        color: Colors.teal,
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'อะไหล่ทั่วไป',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'ถ้าเป็นอะไหล่ทั่วไปไม่จำเป็นต้องเลือกรุ่นที่รองรับ',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton.icon(
+                        onPressed: () => _handleSelectModels(context),
+                        icon: const Icon(Icons.add, size: 16),
+                        label: const Text('ระบุรุ่นรถเฉพาะ (ถ้ามี)'),
+                        style: ElevatedButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              modelItem.displayName,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: selectedModels.length,
+                separatorBuilder: (context, index) {
+                  return const SizedBox(height: 10);
+                },
+                itemBuilder: (context, index) {
+                  final modelItem = selectedModels[index];
+                  final isInvalidYear = modelItem.isYearRangeInvalid;
+
+                  return Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isInvalidYear
+                          ? Colors.red.shade50.withValues(alpha: 0.3)
+                          : Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isInvalidYear
+                            ? Colors.red.shade300
+                            : Colors.grey.shade300,
+                        width: isInvalidYear ? 1.5 : 1.0,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: isInvalidYear
+                                    ? Colors.red.shade50
+                                    : Colors.teal.shade50,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.directions_car,
+                                size: 16,
+                                color: isInvalidYear
+                                    ? Colors.redAccent
+                                    : Colors.teal,
                               ),
                             ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.close, size: 18),
-                            color: Colors.red.shade400,
-                            tooltip: 'ลบรุ่นนี้',
-                            visualDensity: VisualDensity.compact,
-                            onPressed: () {
-                              _removeModel(index);
-                            },
-                          ),
-                        ],
-                      ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                modelItem.displayName,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close, size: 18),
+                              color: Colors.redAccent,
+                              tooltip: 'ลบรุ่นนี้',
+                              visualDensity: VisualDensity.compact,
+                              onPressed: () {
+                                _removeModel(index);
+                              },
+                            ),
+                          ],
+                        ),
                       const SizedBox(height: 8),
                       const Text(
                         'ช่วงปีที่รองรับเฉพาะรุ่นนี้:',
@@ -443,7 +430,8 @@ class PartCompatibilitySectionWidget extends StatelessWidget {
             ),
         ],
       ),
-    );
+    ),
+  );
   }
 }
 
@@ -547,7 +535,7 @@ class _PartVehicleSelectDialogState extends State<PartVehicleSelectDialog> {
               style: const TextStyle(fontSize: 14),
             ),
             value: isChecked,
-            activeColor: Theme.of(context).primaryColor,
+            activeColor: Theme.of(context).colorScheme.primary,
             controlAffinity: ListTileControlAffinity.leading,
             onChanged: (bool? checked) {
               setState(() {

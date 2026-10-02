@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:my_app/widgets/owner/part/appoval_part_main_widget.dart';
+import 'package:my_app/widgets/owner/appoval_part/appoval_part_main_widget.dart';
 
 class OwnerAppovalPartSreen extends StatefulWidget {
   const OwnerAppovalPartSreen({super.key});

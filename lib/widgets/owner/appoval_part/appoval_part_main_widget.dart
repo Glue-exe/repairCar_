@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:my_app/models/appoval_part_model.dart';
 import 'package:my_app/utils/app_api.dart';
-import 'package:my_app/widgets/owner/part/appoval_part_detail_widget.dart';
+import 'package:my_app/widgets/owner/appoval_part/appoval_part_detail_widget.dart';
 
 class AppovalPartMainWidget extends StatefulWidget {
   const AppovalPartMainWidget({super.key});
