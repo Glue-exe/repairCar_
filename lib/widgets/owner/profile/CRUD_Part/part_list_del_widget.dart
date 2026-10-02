@@ -36,7 +36,7 @@ class _PartListWidgetState extends State<PartListWidget> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(message, style: const TextStyle(fontSize: 14)),
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.redAccent,
           ),
         );
       }
@@ -73,39 +73,15 @@ class _PartListWidgetState extends State<PartListWidget> {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       itemCount: widget.partModelStore.length,
       itemBuilder: (context, index) {
         PartModel item = widget.partModelStore[index];
         final bool isActive = item.partIsActive;
 
-        // สถานะ isActive (Active vs Inactive)
-        final statusLabel = isActive ? 'เปิดใช้งาน' : 'ปิดใช้งาน';
-        final statusBgColor = isActive ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2);
-        final statusTextColor = isActive ? const Color(0xFF15803D) : const Color(0xFFB91C1C);
-        final statusDotColor = isActive ? const Color(0xFF16A34A) : const Color(0xFFDC2626);
-        final cardBorderColor = isActive ? const Color(0xFFE2E8F0) : const Color(0xFFCBD5E1);
-        final titleColor = isActive ? const Color(0xFF0F172A) : const Color(0xFF64748B);
-        final priceColor = isActive ? const Color(0xFF0F766E) : const Color(0xFF94A3B8);
-
-        return Container(
+        return Card(
           key: ValueKey(item.id),
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: cardBorderColor,
-              width: 1.0,
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x08000000),
-                blurRadius: 10,
-                offset: Offset(0, 3),
-              ),
-            ],
-          ),
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Column(
@@ -116,7 +92,7 @@ class _PartListWidgetState extends State<PartListWidget> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // รูปภาพอะไหล่ (ขนาด 72x72)
-                    _buildPartImage(item),
+                    _buildPartImage(item, isActive),
                     const SizedBox(width: 12),
 
                     // ข้อมูลหลัก: หมวดหมู่, ชื่อ, รหัสอะไหล่, ยี่ห้อ
@@ -131,59 +107,48 @@ class _PartListWidgetState extends State<PartListWidget> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF1F5F9), // slate-100
+                                    color: Colors.grey.shade100,
                                     borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                                    border: Border.all(color: Colors.grey.shade300),
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const Icon(
+                                      Icon(
                                         Icons.category_rounded,
                                         size: 11,
-                                        color: Color(0xFF64748B),
+                                        color: Colors.grey.shade600,
                                       ),
                                       const SizedBox(width: 4),
                                       Text(
                                         item.partCategoryName!,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 11.5,
                                           fontWeight: FontWeight.w600,
-                                          color: Color(0xFF475569),
+                                          color: Colors.grey.shade700,
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
                               const Spacer(),
-                              // ปุ่มแก้ไขดีไซน์ปุ่มกลม 
-                              Material(
-                                color: const Color(0xFFEFF6FF), // blue-50
-                                shape: const CircleBorder(),
-                                child: InkWell(
-                                  customBorder: const CircleBorder(),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) {
-                                          return PartEditWidget(
-                                            part: item,
-                                            onRefresh: widget.onRefresh,
-                                          );
-                                        },
-                                      ),
-                                    );
-                                  },
-                                  child: const Padding(
-                                    padding: EdgeInsets.all(7),
-                                    child: Icon(
-                                      Icons.edit_outlined,
-                                      size: 16,
-                                      color: Color(0xFF2563EB), // blue-600
+                              // ปุ่มแก้ไขไอคอนสีฟ้าตามแบบ emp_list_widget
+                              IconButton(
+                                icon: const Icon(Icons.edit, color: Colors.blueAccent),
+                                tooltip: 'แก้ไขข้อมูลอะไหล่',
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) {
+                                        return PartEditWidget(
+                                          part: item,
+                                          onRefresh: widget.onRefresh,
+                                        );
+                                      },
                                     ),
-                                  ),
-                                ),
+                                  );
+                                },
                               ),
                             ],
                           ),
@@ -195,7 +160,7 @@ class _PartListWidgetState extends State<PartListWidget> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: titleColor,
+                              color: isActive ? null : Colors.grey,
                               height: 1.25,
                             ),
                             maxLines: 2,
@@ -214,26 +179,28 @@ class _PartListWidgetState extends State<PartListWidget> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF0FDFA), // teal-50
+                                    color: isActive ? Colors.teal.shade50 : Colors.grey.shade100,
                                     borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(color: const Color(0xFFCCFBF1)), // teal-100
+                                    border: Border.all(
+                                      color: isActive ? Colors.teal.shade200 : Colors.grey.shade300,
+                                    ),
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const Icon(
+                                      Icon(
                                         Icons.qr_code_2_rounded,
                                         size: 13,
-                                        color: Color(0xFF0F766E),
+                                        color: isActive ? Colors.teal : Colors.grey,
                                       ),
                                       const SizedBox(width: 4),
                                       Text(
                                         item.partCode,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 12.5,
                                           fontWeight: FontWeight.bold,
                                           letterSpacing: 0.3,
-                                          color: Color(0xFF0F766E),
+                                          color: isActive ? Colors.teal.shade800 : Colors.grey,
                                         ),
                                       ),
                                     ],
@@ -248,15 +215,15 @@ class _PartListWidgetState extends State<PartListWidget> {
                                     const Icon(
                                       Icons.verified_rounded,
                                       size: 14,
-                                      color: Color(0xFF4F46E5), // indigo-600
+                                      color: Colors.blueAccent,
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
                                       item.partBrandName!,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
-                                        color: Color(0xFF334155),
+                                        color: isActive ? Colors.grey.shade800 : Colors.grey,
                                       ),
                                     ),
                                   ],
@@ -276,28 +243,28 @@ class _PartListWidgetState extends State<PartListWidget> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC), // slate-50
+                    color: Colors.grey.shade50,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFF1F5F9)),
+                    border: Border.all(color: Colors.grey.shade200),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Padding(
-                        padding: EdgeInsets.only(top: 2),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
                         child: Icon(
                           Icons.directions_car_filled_rounded,
                           size: 15,
-                          color: Color(0xFF64748B),
+                          color: Colors.grey.shade600,
                         ),
                       ),
                       const SizedBox(width: 6),
-                      const Text(
+                      Text(
                         'รุ่นที่รองรับ: ',
                         style: TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF475569),
+                          color: Colors.grey.shade700,
                         ),
                       ),
                       Expanded(
@@ -308,97 +275,60 @@ class _PartListWidgetState extends State<PartListWidget> {
                 ),
 
                 const SizedBox(height: 10),
-                const Divider(height: 1, thickness: 0.8, color: Color(0xFFF1F5F9)),
-                const SizedBox(height: 10),
 
-                // ================= 3. ส่วนล่าง: ราคา และ ปุ่มสลับสถานะเปิด-ปิด =================
+                // ================= 3. ส่วนราคา =================
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      '฿',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: isActive ? Colors.teal : Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                    Text(
+                      item.partPrice.toStringAsFixed(2),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: isActive ? Colors.teal : Colors.grey,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '/ ${item.unit}',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+
+                // ================= 4. เส้นคั่นและแถบสถานะเปิด-ปิดตามแบบ emp_list_widget =================
+                const Divider(),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // ราคาอะไหล่
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        Text(
-                          '฿',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: priceColor,
-                          ),
-                        ),
-                        const SizedBox(width: 2),
-                        Text(
-                          item.partPrice.toStringAsFixed(2),
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            color: priceColor,
-                            letterSpacing: -0.3,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '/ ${item.unit}',
-                          style: const TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF64748B),
-                          ),
-                        ),
-                      ],
+                    Text(
+                      isActive ? 'สถานะ: เปิดใช้งาน' : 'สถานะ: ปิดใช้งาน',
+                      style: TextStyle(
+                        color: isActive ? Colors.green : Colors.red,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-
-                    // ป้ายสถานะ
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
-                          decoration: BoxDecoration(
-                            color: statusBgColor,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 6,
-                                height: 6,
-                                decoration: BoxDecoration(
-                                  color: statusDotColor,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                statusLabel,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: statusTextColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Transform.scale(
-                          scale: 0.85,
-                          child: Switch(
-                            value: isActive,
-                            activeThumbColor: const Color(0xFF16A34A),
-                            activeTrackColor: const Color(0xFFBBF7D0),
-                            inactiveThumbColor: Colors.white,
-                            inactiveTrackColor: const Color(0xFFCBD5E1),
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            onChanged: (bool value) {
-                              _toggleStatus(item, value);
-                            },
-                          ),
-                        ),
-                      ],
+                    Switch(
+                      value: isActive,
+                      activeThumbColor: Colors.green,
+                      onChanged: (bool value) {
+                        _toggleStatus(item, value);
+                      },
                     ),
                   ],
                 ),
@@ -411,7 +341,7 @@ class _PartListWidgetState extends State<PartListWidget> {
   }
 
   // รูปภาพอะไหล่ขนาด 72x72
-  Widget _buildPartImage(PartModel item) {
+  Widget _buildPartImage(PartModel item, bool isActive) {
     if (item.url != null && item.url!.trim().isNotEmpty == true) {
       String imagePath = item.url!.trim();
       String fullUrl = '';
@@ -426,42 +356,44 @@ class _PartListWidgetState extends State<PartListWidget> {
       }
 
       return ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         child: Container(
           width: 72,
           height: 72,
           decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-            borderRadius: BorderRadius.circular(12),
+            color: Colors.grey.shade100,
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(10),
           ),
           child: Image.network(
             fullUrl,
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) {
-              return _buildFallbackImage();
+              return _buildFallbackImage(isActive);
             },
           ),
         ),
       );
     } else {
-      return _buildFallbackImage();
+      return _buildFallbackImage(isActive);
     }
   }
 
-  Widget _buildFallbackImage() {
+  Widget _buildFallbackImage(bool isActive) {
     return Container(
       width: 72,
       height: 72,
       decoration: BoxDecoration(
-        color: const Color(0xFFF0FDFA), // teal-50
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFCCFBF1)), // teal-100
+        color: isActive ? Colors.teal.shade50 : Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isActive ? Colors.teal.shade200 : Colors.grey.shade300,
+        ),
       ),
-      child: const Center(
+      child: Center(
         child: Icon(
-          Icons.build_circle_rounded,
-          color: Color(0xFF0F766E), // teal-700
+          Icons.build_circle_outlined,
+          color: isActive ? Colors.teal : Colors.grey,
           size: 32,
         ),
       ),
@@ -480,21 +412,14 @@ class _PartListWidgetState extends State<PartListWidget> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x05000000),
-                  blurRadius: 3,
-                  offset: Offset(0, 1),
-                ),
-              ],
+              border: Border.all(color: Colors.grey.shade300),
             ),
             child: Text(
               m.displayText,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF1E293B),
+                color: Colors.grey.shade800,
               ),
             ),
           );
@@ -503,15 +428,15 @@ class _PartListWidgetState extends State<PartListWidget> {
     } else {
       return Row(
         mainAxisSize: MainAxisSize.min,
-        children: const [
-          Icon(Icons.all_inclusive_rounded, size: 14, color: Color(0xFF64748B)),
-          SizedBox(width: 4),
+        children: [
+          Icon(Icons.all_inclusive_rounded, size: 14, color: Colors.grey.shade600),
+          const SizedBox(width: 4),
           Text(
             'ใช้ได้ทั่วไป',
             style: TextStyle(
               fontSize: 12.5,
               fontWeight: FontWeight.w500,
-              color: Color(0xFF64748B),
+              color: Colors.grey.shade600,
             ),
           ),
         ],

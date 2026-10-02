@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:my_app/models/part_model.dart';
 import 'package:my_app/utils/app_api.dart';
-import 'package:my_app/widgets/owner/profile/part_shared_widgets/part_image_section_widget.dart';
-import 'package:my_app/widgets/owner/profile/part_shared_widgets/part_general_info_section_widget.dart';
-import 'package:my_app/widgets/owner/profile/part_shared_widgets/part_compatibility_section_widget.dart';
+import 'package:my_app/widgets/owner/profile/CRUD_Part/part_shared_widgets/part_image_section_widget.dart';
+import 'package:my_app/widgets/owner/profile/CRUD_Part/part_shared_widgets/part_general_info_section_widget.dart';
+import 'package:my_app/widgets/owner/profile/CRUD_Part/part_shared_widgets/part_compatibility_section_widget.dart';
 
 class PartAddScreen extends StatefulWidget {
   final VoidCallback? onRefresh;
@@ -117,10 +117,7 @@ class _PartAddScreenState extends State<PartAddScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+          title: Text(title),
           content: Text(message),
           actions: [
             TextButton(
@@ -129,12 +126,7 @@ class _PartAddScreenState extends State<PartAddScreen> {
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
-              style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text('ยืนยัน'),
+              child: const Text('ตกลง'),
             ),
           ],
         );
@@ -154,7 +146,7 @@ class _PartAddScreenState extends State<PartAddScreen> {
               content: Text(
                 'รุ่น ${m.displayName}: ปีสิ้นสุด (${m.yearTo}) ต้องไม่น้อยกว่าปีเริ่มต้น (${m.yearFrom})',
               ),
-              backgroundColor: Colors.red,
+              backgroundColor: Colors.redAccent,
             ),
           );
           return;
@@ -210,7 +202,7 @@ class _PartAddScreenState extends State<PartAddScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('บันทึกไม่สำเร็จ: $errMsg'),
-                    backgroundColor: Colors.red,
+                    backgroundColor: Colors.redAccent,
                   ),
                 );
               }
@@ -220,7 +212,7 @@ class _PartAddScreenState extends State<PartAddScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text('เซิร์ฟเวอร์ตอบกลับผิดพลาด (HTTP ${response.statusCode})'),
-                  backgroundColor: Colors.red,
+                  backgroundColor: Colors.redAccent,
                 ),
               );
             }
@@ -230,7 +222,7 @@ class _PartAddScreenState extends State<PartAddScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('เกิดข้อผิดพลาดในการบันทึกข้อมูล: $e'),
-                backgroundColor: Colors.red,
+                backgroundColor: Colors.redAccent,
               ),
             );
           }
@@ -248,15 +240,9 @@ class _PartAddScreenState extends State<PartAddScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text(
-          'เพิ่มข้อมูลอะไหล่',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: const Text('เพิ่มข้อมูลอะไหล่'),
         centerTitle: true,
-        elevation: 0,
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -356,6 +342,8 @@ class _PartAddScreenState extends State<PartAddScreen> {
           ),
         ),
         style: ElevatedButton.styleFrom(
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          foregroundColor: Theme.of(context).colorScheme.onPrimary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
