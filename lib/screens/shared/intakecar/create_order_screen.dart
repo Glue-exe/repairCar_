@@ -38,7 +38,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
   Future<void> _loadCurrentUserId() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      _currentUserId = prefs.getInt('user_id') ?? 1;
+      _currentUserId = prefs.getInt('user_id');
     });
   }
 
@@ -86,6 +86,17 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
       return;
     }
 
+    if (_currentUserId == null) {
+      final prefs = await SharedPreferences.getInstance();
+      _currentUserId = prefs.getInt('user_id');
+      if (_currentUserId == null) {
+        setState(() {
+          _errorMessage = 'ไม่พบข้อมูลผู้ใช้งาน กรุณาเข้าสู่ระบบใหม่';
+        });
+        return;
+      }
+    }
+
     try {
       List<String> images = [];
       if (_imageFile != null) {
@@ -98,8 +109,8 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
         'o_symptom': symptom,
         'o_priority_id': _priorityId,
         'o_order_status_id': 1,
-        'o_created_by_account_id': _currentUserId ?? 1,
-        'images': images, // ส่งรายการรูปภาพไปยัง TABLE order_image
+        'o_created_by_account_id': _currentUserId!,
+        'images': images,
       });
 
       final Map<String, dynamic> resJson = jsonDecode(response.body);

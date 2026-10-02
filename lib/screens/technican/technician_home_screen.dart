@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_app/config/app_color.dart';
 import 'package:my_app/screens/shared/orderpool/order_pool_screen.dart';
-import 'package:my_app/screens/shared/intakecar/intakecar_screen.dart';
+import 'package:my_app/screens/shared/intakecar/intakecar_main_screen.dart';
 
 class TechnicianHomeScreen extends StatefulWidget {
   const TechnicianHomeScreen({super.key});

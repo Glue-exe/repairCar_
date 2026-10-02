@@ -25,13 +25,22 @@ class _IntakecarAddCusWidgetState extends State<IntakecarAddCusWidget> {
               ),
               const SizedBox(height: 12),
               ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
+                onPressed: () async {
+                  final result = await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => const IntakecarAddCusScreen(),
                     ),
                   );
+
+                  if (result != null && context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('ลงทะเบียนลูกค้าและรถยนต์สำเร็จ'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
                 },
                 icon: const Icon(Icons.person_add),
                 label: const Text('ลงทะเบียนลูกค้าและรถใหม่'),

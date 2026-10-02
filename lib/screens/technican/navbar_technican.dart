@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_app/screens/shared/orderpool/order_pool_screen.dart';
-import 'package:my_app/screens/shared/intakecar/intakecar_screen.dart';
+import 'package:my_app/screens/shared/intakecar/intakecar_main_screen.dart';
 import 'package:my_app/screens/technican/profile_technican_screen.dart';
 
 class NavbarTechnican extends StatefulWidget {

@@ -108,11 +108,6 @@ class _OwnerCustomerVehiclesScreenState
         title: const Text('รายการรถของลูกค้า'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_circle_outline),
-            tooltip: 'เพิ่มรถคันใหม่',
-            onPressed: _navigateToAddVehicle,
-          ),
-          IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'รีเฟรช',
             onPressed: _isRefreshing ? null : _refreshVehicles,
