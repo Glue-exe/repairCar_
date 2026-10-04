@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:my_app/config/app_config.dart';
 import 'package:my_app/models/order_model.dart';
 import 'package:my_app/models/vehicle_search_license_plate_model.dart';
 import 'package:my_app/screens/shared/order_detail/order_detail_screen.dart';
@@ -90,64 +89,25 @@ class VehicleDetailOrdersWidget extends StatelessWidget {
                     },
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            leading: const Icon(Icons.build, color: Colors.blueGrey),
-                            title: Text('อาการ: ${order.symptom}'),
-                            subtitle: Text('วันที่: ${_formatThaiDate(order.createdAt)}'),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  child: Text(
-                                    order.orderStatusName,
-                                    style: TextStyle(fontSize: 16),
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                const Icon(Icons.chevron_right, color: Colors.grey),
-                              ],
-                            ),
-                          ),
-                          // แสดงรูปถ่าย
-                          if (order.images.isNotEmpty) ...[
-                            const SizedBox(height: 6),
-                            SizedBox(
-                              height: 65,
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: order.images.length,
-                                itemBuilder: (context, imgIdx) {
-                                  final imgUrl =
-                                      "${AppConfig.apiBaseUri.replaceAll('/api', '')}${order.images[imgIdx]}";
-                                  return Container(
-                                    margin: const EdgeInsets.only(right: 8),
-                                    width: 65,
-                                    height: 65,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(6),
-                                      border: Border.all(color: Colors.grey.shade300),
-                                    ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(6),
-                                      child: Image.network(
-                                        imgUrl,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) =>
-                                            const Icon(Icons.broken_image, color: Colors.grey),
-                                      ),
-                                    ),
-                                  );
-                                },
+                      child: ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.build, color: Colors.blueGrey),
+                        title: Text('อาการ: ${order.symptom}'),
+                        subtitle: Text('วันที่: ${_formatThaiDate(order.createdAt)}'),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              child: Text(
+                                order.orderStatusName,
+                                style: const TextStyle(fontSize: 16),
                               ),
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(width: 4),
+                            const Icon(Icons.chevron_right, color: Colors.grey),
                           ],
-                        ],
+                        ),
                       ),
                     ),
                   );

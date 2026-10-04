@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_app/config/app_config.dart';
 
 class OrderImagesWidget extends StatelessWidget {
   final List<String> images;
@@ -10,6 +11,7 @@ class OrderImagesWidget extends StatelessWidget {
 
   // แสดงรูปภาพขนาดเต็มเมื่อกดที่รูป
   void _showFullImage(BuildContext context, String imageUrl) {
+    final resolvedUrl = AppConfig.getImageUrl(imageUrl);
     showDialog(
       context: context,
       builder: (context) {
@@ -17,9 +19,35 @@ class OrderImagesWidget extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Image.network(
-                imageUrl,
-                fit: BoxFit.contain,
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                child: Image.network(
+                  resolvedUrl,
+                  fit: BoxFit.contain,
+                  loadingBuilder: (context, child, progress) {
+                    if (progress == null) return child;
+                    return const Padding(
+                      padding: EdgeInsets.all(40.0),
+                      child: Center(
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      padding: const EdgeInsets.all(40.0),
+                      color: Colors.grey[200],
+                      child: const Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                          SizedBox(height: 8),
+                          Text('ไม่สามารถโหลดรูปภาพได้', style: TextStyle(color: Colors.grey)),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
               TextButton(
                 onPressed: () {
@@ -75,10 +103,11 @@ class OrderImagesWidget extends StatelessWidget {
                   itemCount: images.length,
                   separatorBuilder: (context, index) => const SizedBox(width: 8),
                   itemBuilder: (context, index) {
-                    final imageUrl = images[index];
+                    final rawPath = images[index];
+                    final imageUrl = AppConfig.getImageUrl(rawPath);
 
                     return GestureDetector(
-                      onTap: () => _showFullImage(context, imageUrl),
+                      onTap: () => _showFullImage(context, rawPath),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: Image.network(
@@ -86,6 +115,21 @@ class OrderImagesWidget extends StatelessWidget {
                           width: 100,
                           height: 100,
                           fit: BoxFit.cover,
+                          loadingBuilder: (context, child, progress) {
+                            if (progress == null) return child;
+                            return Container(
+                              width: 100,
+                              height: 100,
+                              color: Colors.grey[100],
+                              child: const Center(
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                              ),
+                            );
+                          },
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
                               width: 100,
