@@ -76,12 +76,7 @@ class _ImageWidgetState extends State<ImageWidget> {
   Future<void> _pickImage(BuildContext context, ImageSource source) async {
     try {
       final picker = ImagePicker();
-      final pickedFile = await picker.pickImage(
-        source: source,
-        maxWidth: 1024,
-        maxHeight: 1024,
-        imageQuality: 85,
-      );
+      final pickedFile = await picker.pickImage(source: source);
 
       if (pickedFile != null) {
         final bytes = await pickedFile.readAsBytes();

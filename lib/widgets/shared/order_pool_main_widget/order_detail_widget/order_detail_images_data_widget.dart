@@ -69,12 +69,7 @@ class _OrderDetailImagesDataWidgetState
   Future<void> _pickImage(ImageSource source) async {
     try {
       final picker = ImagePicker();
-      final pickedFile = await picker.pickImage(
-        source: source,
-        maxWidth: 1024,
-        maxHeight: 1024,
-        imageQuality: 85,
-      );
+      final pickedFile = await picker.pickImage(source: source);
 
       if (pickedFile == null) return;
       await _uploadImage(pickedFile);

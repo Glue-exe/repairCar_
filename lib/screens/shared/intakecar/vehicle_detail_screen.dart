@@ -35,9 +35,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     final vehicleId = widget.vehicle.vId;
 
     try {
-      final response = await AppAPI.post('/vehicle_orders', {
-        'vehicle_id': vehicleId,
-      });
+      final response = await AppAPI.get('/order3/vehicle_order_history/$vehicleId');
 
       final Map<String, dynamic> resJson = jsonDecode(response.body);
       final orderRes = OrderResponse.fromJson(resJson);

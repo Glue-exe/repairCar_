@@ -183,12 +183,7 @@ class _OrderDetailInvoice2DataWidgetState
 
     try {
       final picker = ImagePicker();
-      final picked = await picker.pickImage(
-        source: source,
-        maxWidth: 1024,
-        maxHeight: 1024,
-        imageQuality: 85,
-      );
+      final picked = await picker.pickImage(source: source);
       if (picked == null) return;
 
       setState(() {
