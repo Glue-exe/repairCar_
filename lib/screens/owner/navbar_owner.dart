@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:my_app/screens/owner/dashboard/owner_dash_board_screen.dart';
-import 'package:my_app/screens/owner/part/owner_appoval_part_sreen.dart';
-import 'package:my_app/screens/shared/orderpool/order_pool_screen.dart';
-import 'package:my_app/screens/owner/profile/emp/owner_profile_screen.dart';
+import 'package:my_app/screens/owner/part/part_approval_screen.dart';
+import 'package:my_app/screens/shared/order_pool_main_screen/order_pool_main_screen.dart';
+import 'package:my_app/screens/owner/profile/owner_profile_screen.dart';
 import 'package:my_app/screens/shared/intakecar/intakecar_main_screen.dart';
 
 class NavbarOwner extends StatefulWidget {
@@ -30,16 +30,16 @@ class _NavbarOwnerState extends State<NavbarOwner> {
 
   final List<Widget> _pages = [
     OwnerHomeScreen(),
-    OrderPoolScreen(),
+    OrderPoolMainScreen(),
     IntakecarScreen(),
-    OwnerAppovalPartSreen(),
+    PartApprovalScreen(),
     OwnerProfileScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_selectedIndex],
+      body: IndexedStack(index: _selectedIndex, children: _pages),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _navigateBottomBar,
@@ -54,7 +54,10 @@ class _NavbarOwnerState extends State<NavbarOwner> {
             icon: Icon(Icons.directions_car),
             label: 'รับรถ',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.build), label: 'อนุมัติอะไหล่'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.build),
+            label: 'อนุมัติอะไหล่',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'โปรไฟล์'),
         ],
       ),

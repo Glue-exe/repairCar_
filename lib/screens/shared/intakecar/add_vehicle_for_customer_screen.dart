@@ -60,7 +60,7 @@ class _AddVehicleForCustomerScreenState
     if (_selectedBrandId == null) {
       return [];
     } else {
-      return _modelList.where((m) => m.brandId == _selectedBrandId).toList();
+      return _modelList.where((m) => m.vmBrandId == _selectedBrandId).toList();
     }
   }
 
@@ -221,8 +221,8 @@ class _AddVehicleForCustomerScreenState
                           isExpanded: true,
                           items: _brandList.map((item) {
                             return DropdownMenuItem<int>(
-                              value: item.id,
-                              child: Text(item.name),
+                              value: item.vbId,
+                              child: Text(item.vbName),
                             );
                           }).toList(),
                           onChanged: (value) {
@@ -250,8 +250,8 @@ class _AddVehicleForCustomerScreenState
                           isExpanded: true,
                           items: _filteredModels.map((item) {
                             return DropdownMenuItem<int>(
-                              value: item.id,
-                              child: Text(item.name),
+                              value: item.vmId,
+                              child: Text(item.vmName),
                             );
                           }).toList(),
                           onChanged: (value) {

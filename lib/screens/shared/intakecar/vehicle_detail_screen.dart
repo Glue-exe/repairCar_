@@ -84,7 +84,6 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             VehicleDetailOrdersWidget(
               orderList: _orderList,
               isLoading: _isLoadingOrders,
-              vehicle: vehicle,
             ),
             const SizedBox(height: 24),
 

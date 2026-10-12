@@ -31,19 +31,32 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
   }
 
   Future<void> _fetchDashboardData() async {
-    final resSummary = await AppAPI.get("/dashboard/summary");
-    final summaryJson = jsonDecode(resSummary.body);
+    try {
+      final resSummary = await AppAPI.get("/dashboard/summary");
+      final resHistory = await AppAPI.get("/income/monthly_history");
 
-    final resHistory = await AppAPI.get("/income/monthly_history");
-    final historyJson = jsonDecode(resHistory.body);
+      if (!mounted) return;
 
-    setState(() {
-      _summary = DashboardSummaryModel.fromJson(summaryJson['data']);
-      _monthlyIncomes = (historyJson['data'] as List)
-          .map((item) => MonthlyIncomeModel.fromJson(item as Map<String, dynamic>))
-          .toList();
-      _isLoading = false;
-    });
+      final summaryJson = jsonDecode(resSummary.body);
+      final historyJson = jsonDecode(resHistory.body);
+
+      setState(() {
+        if (summaryJson != null && summaryJson['data'] != null) {
+          _summary = DashboardSummaryModel.fromJson(summaryJson['data']);
+        }
+        if (historyJson != null && historyJson['data'] != null && historyJson['data'] is List) {
+          _monthlyIncomes = (historyJson['data'] as List)
+              .map((item) => MonthlyIncomeModel.fromJson(item as Map<String, dynamic>))
+              .toList();
+        }
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override

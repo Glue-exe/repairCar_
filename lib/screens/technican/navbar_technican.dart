@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:my_app/screens/shared/orderpool/order_pool_screen.dart';
+import 'package:my_app/screens/shared/order_pool_main_screen/order_pool_main_screen.dart';
 import 'package:my_app/screens/shared/intakecar/intakecar_main_screen.dart';
 import 'package:my_app/screens/technican/profile_technican_screen.dart';
 
@@ -27,7 +27,7 @@ class _NavbarTechnicanState extends State<NavbarTechnican> {
   }
 
   final List<Widget> _pages = [
-    OrderPoolScreen(),
+    OrderPoolMainScreen(),
     IntakecarScreen(),
     ProfileTechnicanScreen(),
   ];
@@ -35,7 +35,10 @@ class _NavbarTechnicanState extends State<NavbarTechnican> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_selectedIndex],
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _navigateBottomBar,

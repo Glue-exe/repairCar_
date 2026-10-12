@@ -34,12 +34,12 @@ class RequestPartModel {
       statusId: json['status_id'] as int,
       statusName: json['status_name'] as String,
       requestedByAccountId: json['requested_by_account_id'] as int,
-      requesterName: json['requester_name'] as String,
+      requesterName: json['requester_name'] as String? ?? '',
       requestedAt: json['requested_at'].toString(),
       partId: json['part_id'] as int,
       partName: json['part_name'] as String,
-      partPrice: double.parse(json['part_price'].toString()),
-      partBrand: json['part_brand'] as String,
+      partPrice: double.tryParse(json['part_price']?.toString() ?? '') ?? 0,
+      partBrand: json['part_brand'] as String? ?? '',
       quantity: json['quantity'] as int,
     );
   }
@@ -62,7 +62,9 @@ class RequestPartResponse {
     return RequestPartResponse(
       isError: json['isError'] as bool,
       data: (json['data'] as List)
-          .map((item) => RequestPartModel.fromJson(item as Map<String, dynamic>))
+          .map(
+            (item) => RequestPartModel.fromJson(item as Map<String, dynamic>),
+          )
           .toList(),
       errorMessage: json['errorMessage'] as String,
     );

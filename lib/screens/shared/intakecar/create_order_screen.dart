@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_app/utils/app_api.dart';
 import 'package:my_app/models/vehicle_search_license_plate_model.dart';
 import 'package:my_app/models/priority_model.dart';
@@ -26,20 +25,11 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
   List<PriorityModel> _priorityList = [];
   XFile? _imageFile;
   String _errorMessage = '';
-  int? _currentUserId;
 
   @override
   void initState() {
     super.initState();
-    _loadCurrentUserId();
     _getPriorities();
-  }
-
-  Future<void> _loadCurrentUserId() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _currentUserId = prefs.getInt('user_id');
-    });
   }
 
   Future<void> _getPriorities() async {
@@ -86,32 +76,16 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
       return;
     }
 
-    if (_currentUserId == null) {
-      final prefs = await SharedPreferences.getInstance();
-      _currentUserId = prefs.getInt('user_id');
-      if (_currentUserId == null) {
-        setState(() {
-          _errorMessage = 'ไม่พบข้อมูลผู้ใช้งาน กรุณาเข้าสู่ระบบใหม่';
-        });
-        return;
-      }
-    }
-
     try {
-      List<String> images = [];
-      if (_imageFile != null) {
-        final bytes = await _imageFile!.readAsBytes();
-        images.add(base64Encode(bytes));
-      }
-
-      final response = await AppAPI.post('/create_order', {
-        'o_vehicle_id': widget.vehicle.vId,
-        'o_symptom': symptom,
-        'o_priority_id': _priorityId,
-        'o_order_status_id': 1,
-        'o_created_by_account_id': _currentUserId!,
-        'images': images,
-      });
+      final response = await AppAPI.postMultipart(
+        '/order3/create',
+        fields: {
+          'o_vehicle_id': widget.vehicle.vId.toString(),
+          'o_symptom': symptom,
+          'o_priority_id': _priorityId.toString(),
+        },
+        file: _imageFile,
+      );
 
       final Map<String, dynamic> resJson = jsonDecode(response.body);
 

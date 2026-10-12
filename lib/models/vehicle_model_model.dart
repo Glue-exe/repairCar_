@@ -1,22 +1,22 @@
 class VehicleModelModel {
-  int id;
-  String name;
-  int brandId;
-  String brandName;
+  int vmId;
+  String vmName;
+  int vmBrandId;
+  String vbName;
 
   VehicleModelModel({
-    required this.id,
-    required this.name,
-    required this.brandId,
-    required this.brandName,
+    required this.vmId,
+    required this.vmName,
+    required this.vmBrandId,
+    required this.vbName,
   });
 
   factory VehicleModelModel.fromJson(Map<String, dynamic> json) {
     return VehicleModelModel(
-      id: json['id'] as int,
-      name: json['name'] as String,
-      brandId: json['brand_id'] as int,
-      brandName: json['brand_name'] as String,
+      vmId: json['vm_id'] as int,
+      vmName: json['vm_name'] as String,
+      vmBrandId: json['vm_brand_id'] as int,
+      vbName: json['vb_name'] as String,
     );
   }
 }

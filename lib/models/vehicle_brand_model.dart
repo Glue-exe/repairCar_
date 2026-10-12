@@ -1,16 +1,16 @@
 class VehicleBrandModel {
-  int id;
-  String name;
+  int vbId;
+  String vbName;
 
   VehicleBrandModel({
-    required this.id,
-    required this.name,
+    required this.vbId,
+    required this.vbName,
   });
 
   factory VehicleBrandModel.fromJson(Map<String, dynamic> json) {
     return VehicleBrandModel(
-      id: json['id'] as int,
-      name: json['name'] as String,
+      vbId: json['vb_id'] as int,
+      vbName: json['vb_name'] as String,
     );
   }
 }

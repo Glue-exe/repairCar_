@@ -1,18 +1,18 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:my_app/models/order_model.dart';
-import 'package:my_app/models/vehicle_search_license_plate_model.dart';
-import 'package:my_app/screens/shared/order_detail/order_detail_screen.dart';
+import 'package:my_app/models/order_pool_main_model.dart';
+import 'package:my_app/screens/shared/order_pool_main_screen/order_detail_screen/order_detail_screen2.dart';
+import 'package:my_app/utils/app_api.dart';
 
 class VehicleDetailOrdersWidget extends StatelessWidget {
   final List<OrderModel> orderList;
   final bool isLoading;
-  final VehicleSearchResultModel vehicle;
 
   const VehicleDetailOrdersWidget({
     super.key,
     required this.orderList,
     required this.isLoading,
-    required this.vehicle,
   });
 
   String _formatThaiDate(String dateStr) {
@@ -26,6 +26,45 @@ class VehicleDetailOrdersWidget extends StatelessWidget {
       return '$day/$month/$thaiYear $hour:$minute น.';
     } catch (e) {
       return dateStr;
+    }
+  }
+
+  // เปิดหน้ารายละเอียดใบสั่งซ่อมด้วยหน้าจอใหม่ (ศูนย์รวมงานซ่อม)
+  // ดึงข้อมูลใบสั่งซ่อมนั้นใหม่จากเซิร์ฟเวอร์ เพื่อให้ได้สิทธิ์ accept_by_me ล่าสุด
+  Future<void> _openOrderDetail(BuildContext context, OrderModel order) async {
+    try {
+      final response = await AppAPI.get('/order3/${order.orderId}');
+      final json = jsonDecode(response.body);
+      final res = OrderPoolMainResponse.fromJson(json);
+
+      if (!context.mounted) return;
+
+      if (res.isError || res.data.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              res.errorMessage.isNotEmpty
+                  ? res.errorMessage
+                  : 'ไม่พบข้อมูลใบสั่งซ่อม',
+            ),
+          ),
+        );
+        return;
+      }
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => OrderDetailScreen(order: res.data.first),
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์'),
+        ),
+      );
     }
   }
 
@@ -76,17 +115,7 @@ class VehicleDetailOrdersWidget extends StatelessWidget {
                   final order = orderList[index];
                   return InkWell(
                     borderRadius: BorderRadius.circular(8),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => OrderDetailScreen(
-                            order: order,
-                            vehicle: vehicle,
-                          ),
-                        ),
-                      );
-                    },
+                    onTap: () => _openOrderDetail(context, order),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4.0),
                       child: ListTile(

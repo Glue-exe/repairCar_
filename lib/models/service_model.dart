@@ -1,25 +1,28 @@
 class ServiceModel {
   int id;
   String name;
-  String detail;
+  String? detail;
   double laborCost;
-  String serviceUrl;
+  String? serviceUrl;
+  bool isActive;
 
   ServiceModel({
     required this.id,
     required this.name,
-    required this.detail,
+    this.detail,
     required this.laborCost,
-    required this.serviceUrl,
+    this.serviceUrl,
+    required this.isActive,
   });
 
   factory ServiceModel.fromJson(Map<String, dynamic> json) {
     return ServiceModel(
       id: json['id'] as int,
       name: json['name'] as String,
-      detail: json['detail'] as String,
+      detail: json['detail'] as String?,
       laborCost: double.parse(json['labor_cost'].toString()),
-      serviceUrl: json['service_url'] as String,
+      serviceUrl: json['service_url'] as String?,
+      isActive: json['is_active'] as bool,
     );
   }
 }

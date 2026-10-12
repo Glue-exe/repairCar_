@@ -343,17 +343,7 @@ class _PartListWidgetState extends State<PartListWidget> {
   // รูปภาพอะไหล่ขนาด 72x72
   Widget _buildPartImage(PartModel item, bool isActive) {
     if (item.url != null && item.url!.trim().isNotEmpty == true) {
-      String imagePath = item.url!.trim();
-      String fullUrl = '';
-      if (imagePath.startsWith('http://') == true || imagePath.startsWith('https://') == true) {
-        fullUrl = imagePath;
-      } else {
-        String cleanPath = imagePath;
-        if (cleanPath.startsWith('/') == true) {
-          cleanPath = cleanPath.substring(1);
-        }
-        fullUrl = '${AppConfig.imageBaseUri}/$cleanPath';
-      }
+      final fullUrl = AppConfig.getImageUrl(item.url);
 
       return ClipRRect(
         borderRadius: BorderRadius.circular(10),

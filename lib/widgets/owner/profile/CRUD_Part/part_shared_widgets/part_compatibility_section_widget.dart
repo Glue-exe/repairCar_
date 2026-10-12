@@ -53,14 +53,14 @@ class PartCompatibilitySectionWidget extends StatelessWidget {
           // หากเป็นรุ่นใหม่ ให้ค้นหาชื่อแบรนด์และรุ่นจาก vehicleModels
           Map<String, dynamic> found = {};
           for (var vm in vehicleModels) {
-            final vmId = vm['veh_model_id'] as int;
+            final vmId = vm['vm_id'] as int;
             if (vmId == id) {
               found = vm;
               break;
             }
           }
-          final brand = (found['brand_name'] ?? '').toString();
-          final model = (found['model_name'] ?? '').toString();
+          final brand = (found['vb_name'] ?? '').toString();
+          final model = (found['vm_name'] ?? '').toString();
           updatedList.add(
             SelectedVehicleModel(
               modelId: id,
@@ -488,8 +488,8 @@ class _PartVehicleSelectDialogState extends State<PartVehicleSelectDialog> {
     } else {
       final q = _searchKeyword.trim().toLowerCase();
       for (var item in widget.vehicleModels) {
-        final brand = (item['brand_name'] ?? '').toString().toLowerCase();
-        final model = (item['model_name'] ?? '').toString().toLowerCase();
+        final brand = (item['vb_name'] ?? '').toString().toLowerCase();
+        final model = (item['vm_name'] ?? '').toString().toLowerCase();
         final full = '$brand $model';
         if (brand.contains(q) || model.contains(q) || full.contains(q)) {
           filteredList.add(item);
@@ -521,10 +521,10 @@ class _PartVehicleSelectDialogState extends State<PartVehicleSelectDialog> {
         itemCount: filteredList.length,
         itemBuilder: (context, index) {
           final item = filteredList[index];
-          final idInt = item['veh_model_id'] as int;
+          final idInt = item['vm_id'] as int;
 
-          final brand = (item['brand_name'] ?? '').toString();
-          final model = (item['model_name'] ?? '').toString();
+          final brand = (item['vb_name'] ?? '').toString();
+          final model = (item['vm_name'] ?? '').toString();
           final displayName = brand.isNotEmpty ? '$brand - $model' : model;
           final isChecked = _tempSelectedIds.contains(idInt);
 

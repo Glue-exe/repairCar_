@@ -42,7 +42,7 @@ class _IntakecarSearchWidgetState extends State<IntakecarSearchWidget> {
     });
 
     try {
-      final response = await AppAPI.post('/vehicle_search_licensePlate', {
+      final response = await AppAPI.post('/vehicle_search_license_plate', {
         'v_license_plate': query,
       });
 

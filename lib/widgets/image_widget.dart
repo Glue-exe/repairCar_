@@ -73,27 +73,6 @@ class _ImageWidgetState extends State<ImageWidget> {
     }
   }
 
-  // แปลง imageUrl ให้เป็น Full URL ที่ถูกต้อง
-  String? _resolveImageUrl(String? url) {
-    if (url == null || url.trim().isEmpty) return null;
-    final trimmed = url.trim();
-    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-      return trimmed;
-    }
-
-    final base = AppConfig.imageBaseUri.endsWith('/')
-        ? AppConfig.imageBaseUri.substring(0, AppConfig.imageBaseUri.length - 1)
-        : AppConfig.imageBaseUri;
-
-    // ถ้า url มี /images/ หรือ / นำหน้า
-    if (trimmed.startsWith('/images/')) {
-      final cleaned = trimmed.replaceFirst('/images/', '');
-      return '$base/$cleaned';
-    }
-    final relative = trimmed.startsWith('/') ? trimmed.substring(1) : trimmed;
-    return '$base/$relative';
-  }
-
   Future<void> _pickImage(BuildContext context, ImageSource source) async {
     try {
       final picker = ImagePicker();
@@ -179,8 +158,8 @@ class _ImageWidgetState extends State<ImageWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final fullUrl = _resolveImageUrl(widget.imageUrl);
-    final hasImage = _previewBytes != null || fullUrl != null;
+    final fullUrl = AppConfig.getImageUrl(widget.imageUrl);
+    final hasImage = _previewBytes != null || fullUrl.isNotEmpty;
 
     Widget imageContent;
 
@@ -192,7 +171,7 @@ class _ImageWidgetState extends State<ImageWidget> {
         height: widget.height,
         fit: widget.fit,
       );
-    } else if (fullUrl != null) {
+    } else if (fullUrl.isNotEmpty) {
       // 2. แสดงรูปเดิมจากเซิร์ฟเวอร์
       imageContent = Image.network(
         fullUrl,

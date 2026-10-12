@@ -191,11 +191,11 @@ class SelectedVehicleModel extends CompatibleVehicleModel {
       return this;
     }
     for (var vm in vehicleModels) {
-      if (vm['veh_model_id'] == modelId) {
+      if (vm['vm_id'] == modelId) {
         return SelectedVehicleModel(
           modelId: modelId,
-          modelName: modelName.isNotEmpty ? modelName : (vm['model_name'] ?? '').toString(),
-          brandName: brandName.isNotEmpty ? brandName : (vm['brand_name'] ?? '').toString(),
+          modelName: modelName.isNotEmpty ? modelName : (vm['vm_name'] ?? '').toString(),
+          brandName: brandName.isNotEmpty ? brandName : (vm['vb_name'] ?? '').toString(),
           yearFrom: yearFrom,
           yearTo: yearTo,
         );
@@ -207,10 +207,7 @@ class SelectedVehicleModel extends CompatibleVehicleModel {
   Map<String, dynamic> toJson() {
     return {
       'model_id': modelId,
-      'vpc_vehicle_model_id': modelId,
-      'year_from': yearFrom,
       'vpc_year_from': yearFrom,
-      'year_to': yearTo,
       'vpc_year_to': yearTo,
     };
   }
