@@ -1,9 +1,14 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:my_app/models/dashboard_summary_model.dart';
-import 'package:my_app/models/monthly_income_model.dart';
+import 'package:intl/intl.dart';
+import 'package:my_app/config/app_color.dart';
+import 'package:my_app/models/owner_dashboard_model.dart';
 import 'package:my_app/utils/app_api.dart';
-import 'package:my_app/widgets/owner/dashboard/income_chart_widget.dart';
+import 'package:my_app/widgets/owner/dashboard/dashboard_kpi_card_widget.dart';
+import 'package:my_app/widgets/owner/dashboard/dashboard_labor_parts_chart_widget.dart';
+import 'package:my_app/widgets/owner/dashboard/dashboard_range_selector_widget.dart';
+import 'package:my_app/widgets/owner/dashboard/dashboard_trend_chart_widget.dart';
 
 class OwnerHomeScreen extends StatefulWidget {
   const OwnerHomeScreen({super.key});
@@ -13,50 +18,58 @@ class OwnerHomeScreen extends StatefulWidget {
 }
 
 class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
-  DashboardSummaryModel _summary = DashboardSummaryModel(
-    monthlyIncome: 0.0,
-    unpaidTotal: 0.0,
-    vehiclesThisMonth: 0,
-    activeJobsCount: 0,
-    pendingApprovalsCount: 0,
-  );
+  // ค่าเริ่มต้น = เดือนนี้
+  String _range = 'month';
 
-  List<MonthlyIncomeModel> _monthlyIncomes = [];
+  OwnerDashboardModel? _dashboard;
   bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _fetchDashboardData();
+    _fetchDashboard();
   }
 
-  Future<void> _fetchDashboardData() async {
+  Future<void> _fetchDashboard() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
     try {
-      final resSummary = await AppAPI.get("/dashboard/summary");
-      final resHistory = await AppAPI.get("/income/monthly_history");
+      final response = await AppAPI.get('/dashboard/summary?range=$_range');
+      final resJson = jsonDecode(response.body);
 
       if (!mounted) return;
 
-      final summaryJson = jsonDecode(resSummary.body);
-      final historyJson = jsonDecode(resHistory.body);
+      if (resJson['isError'] == true) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = resJson['errorMessage'] as String? ?? 'เกิดข้อผิดพลาด';
+        });
+        return;
+      }
 
       setState(() {
-        if (summaryJson != null && summaryJson['data'] != null) {
-          _summary = DashboardSummaryModel.fromJson(summaryJson['data']);
-        }
-        if (historyJson != null && historyJson['data'] != null && historyJson['data'] is List) {
-          _monthlyIncomes = (historyJson['data'] as List)
-              .map((item) => MonthlyIncomeModel.fromJson(item as Map<String, dynamic>))
-              .toList();
-        }
+        _dashboard = OwnerDashboardModel.fromJson(resJson['data']);
         _isLoading = false;
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
+        _errorMessage = 'ไม่สามารถโหลดข้อมูล Dashboard ได้';
       });
     }
+  }
+
+  void _onRangeChanged(String range) {
+    if (range == _range) return;
+    setState(() {
+      _range = range;
+    });
+    _fetchDashboard();
   }
 
   @override
@@ -67,107 +80,114 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // แถวที่ 1
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('รายได้เดือนนี้ (ชำระแล้ว)', style: TextStyle(fontSize: 13, color: Colors.grey)),
-                                const SizedBox(height: 8),
-                                Text('${_summary.monthlyIncome} ฿', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('ยอดค้างชำระ', style: TextStyle(fontSize: 13, color: Colors.grey)),
-                                const SizedBox(height: 8),
-                                Text('${_summary.unpaidTotal} ฿', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
+          : _errorMessage != null
+              ? _buildErrorView()
+              : RefreshIndicator(
+                  onRefresh: _fetchDashboard,
+                  child: _buildBody(),
+                ),
+    );
+  }
 
-                  // แถวที่ 2
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('งานที่กำลังซ่อม', style: TextStyle(fontSize: 13, color: Colors.grey)),
-                                const SizedBox(height: 8),
-                                Text('${_summary.activeJobsCount} งาน', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('รถเข้าซ่อมเดือนนี้', style: TextStyle(fontSize: 13, color: Colors.grey)),
-                                const SizedBox(height: 8),
-                                Text('${_summary.vehiclesThisMonth} คัน', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
+  Widget _buildErrorView() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: AppColors.danger),
+            const SizedBox(height: 12),
+            Text(
+              _errorMessage ?? 'เกิดข้อผิดพลาด',
+              textAlign: TextAlign.center,
+              style: AppTextStyles.body,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _fetchDashboard,
+              child: const Text('ลองอีกครั้ง'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-                  // แถวที่ 3 (การ์ดยาว)
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('อะไหล่รออนุมัติสั่งซื้อ', style: TextStyle(fontSize: 13, color: Colors.grey)),
-                          Text('${_summary.pendingApprovalsCount} รายการ', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.purple)),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+  Widget _buildBody() {
+    final dashboard = _dashboard;
+    if (dashboard == null) {
+      return const Center(child: Text('ไม่พบข้อมูล'));
+    }
 
-                  // กราฟรายได้
-                  IncomeChartWidget(incomeList: _monthlyIncomes),
-                ],
+    final currencyFormatter = NumberFormat('#,##0');
+
+    return ListView(
+      padding: const EdgeInsets.all(16.0),
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        // เปลี่ยนช่วงเวลา = โหลดใหม่ทั้งหน้า
+        DashboardRangeSelectorWidget(
+          range: _range,
+          onRangeChanged: _onRangeChanged,
+        ),
+        const SizedBox(height: 16),
+
+        // แถว KPI 1: เงิน
+        Row(
+          children: [
+            Expanded(
+              child: DashboardKpiCardWidget(
+                label: 'รายได้ (รับเงินแล้ว)',
+                value: '${currencyFormatter.format(dashboard.income)} ฿',
+                valueColor: AppColors.success,
               ),
             ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: DashboardKpiCardWidget(
+                label: 'ยอดค้างชำระ',
+                value: '${currencyFormatter.format(dashboard.unpaidTotal)} ฿',
+                valueColor: AppColors.danger,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+
+        // แถว KPI 2: งาน
+        Row(
+          children: [
+            Expanded(
+              child: DashboardKpiCardWidget(
+                label: 'รถเข้าซ่อม',
+                value: '${dashboard.vehiclesInRange} คัน',
+                valueColor: AppColors.info,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: DashboardKpiCardWidget(
+                label: 'งานกำลังซ่อม',
+                value: '${dashboard.activeRepairs} งาน',
+                valueColor: AppColors.warning,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // กราฟแนวโน้มรายได้ (ปี = รายเดือน ช่วงอื่น = รายวัน)
+        DashboardTrendChartWidget(trend: dashboard.trend),
+        const SizedBox(height: 8),
+
+        // ค่าแรง vs ค่าอะไหล่
+        DashboardLaborPartsChartWidget(
+          laborTotal: dashboard.laborTotal,
+          partsTotal: dashboard.partsTotal,
+        ),
+        const SizedBox(height: 16),
+      ],
     );
   }
 }
