@@ -2,7 +2,15 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:my_app/config/app_color.dart';
-import 'package:my_app/models/owner_dashboard_model.dart';
+
+// [dead code] คลาสย่อยของไฟล์นี้ — เดิม import จาก owner_dashboard_model.dart
+// (ตัด trend ออกจากโมเดลจริงแล้ว จึงนิยามไว้ในไฟล์นี้ให้ยังคอมไพล์ได้)
+class DashboardTrendItemModel {
+  String period;
+  double total;
+
+  DashboardTrendItemModel({required this.period, required this.total});
+}
 
 // กราฟแท่งรายได้ — วาดเฉพาะจุดที่มีเงินเข้า (ยอด 0 ตัดออก: ช่องว่างทิ้งไว้กราฟจะโล่ง แท่งบาง)
 // ≤ 10 แท่ง: เต็มความกว้าง ป้ายครบ · > 10 แท่ง: กว้างคงที่ เลื่อนแนวนอนได้

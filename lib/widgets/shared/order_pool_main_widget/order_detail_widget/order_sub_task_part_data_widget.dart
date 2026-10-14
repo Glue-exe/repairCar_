@@ -9,7 +9,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
-// การ์ดแสดงรายการเบิกอะไหล่ของงานซ่อมย่อย (1 ใบเบิก มีได้หลายรายการ)
+// แสดงรายการเบิกอะไหล่ของงานซ่อมย่อย 
 class OrderSubTaskPartDataWidget extends StatefulWidget {
   final int subTaskId;
   final String subTaskName;
@@ -35,6 +35,7 @@ class _OrderSubTaskPartDataWidgetState
 
   List<RequestPartModel> _requests = [];
   bool _loading = true;
+  bool _saving = false;
 
   @override
   void initState() {
@@ -73,7 +74,7 @@ class _OrderSubTaskPartDataWidgetState
     }
   }
 
-  // รวมแถวที่เป็นใบเบิกเดียวกัน (group by rp_id)
+  // รวมแถวที่เป็นใบเบิกเดียวกัน
   List<_PartGroup> get _groups {
     final map = <int, _PartGroup>{};
     for (final request in _requests) {
@@ -85,6 +86,9 @@ class _OrderSubTaskPartDataWidgetState
           statusName: request.statusName,
           requesterName: request.requesterName,
           requestedAt: request.requestedAt,
+          canCancel: request.canCancel,
+          cancelledAt: request.cancelledAt,
+          cancelledByName: request.cancelledByName,
         ),
       );
       group.items.add(request);
@@ -112,7 +116,77 @@ class _OrderSubTaskPartDataWidgetState
     ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
   }
 
-  // พิมพ์ใบเบิกเป็น PDF (เปิดได้เฉพาะใบที่อนุมัติแล้ว)
+  String _cancelledText(_PartGroup group) {
+    final date = _formatThaiDate(group.cancelledAt ?? '');
+    final text = 'ยกเลิกโดย ${group.cancelledByName ?? '-'}';
+    if (date.isEmpty) return text;
+    return '$text · $date';
+  }
+
+  // ยกเลิกใบเบิกของตัวเอง
+  Future<void> _cancelRequest(_PartGroup group) async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('ยืนยันการยกเลิกใบเบิก'),
+          content: Text(
+            'ต้องการยกเลิกใบเบิก #${group.id} หรือไม่?\nใบเดิมจะถูกเก็บเป็นประวัติ',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('ไม่ยกเลิก'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.danger,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('ยืนยันการยกเลิก'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm != true) return;
+
+    setState(() {
+      _saving = true;
+    });
+
+    try {
+      final response = await AppAPI.post('/request_part/cancel', {
+        'request_part_id': group.id,
+      });
+      final json = jsonDecode(response.body);
+
+      if (!mounted) return;
+
+      if (json['isError'] == true) {
+        _showMessage(
+          json['errorMessage'] ?? 'ยกเลิกใบเบิกไม่สำเร็จ',
+          AppColors.danger,
+        );
+        return;
+      }
+
+      _showMessage('ยกเลิกใบเบิกเรียบร้อยแล้ว', AppColors.success);
+      _loadRequests();
+    } catch (_) {
+      _showMessage('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', AppColors.danger);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _saving = false;
+        });
+      }
+    }
+  }
+
+  // พิมพ์ใบเบิกเป็น PDF
   Future<void> _printPdf(_PartGroup group) async {
     final pdf = pw.Document();
     final thaiFont = await PdfGoogleFonts.kanitRegular();
@@ -276,6 +350,14 @@ class _OrderSubTaskPartDataWidgetState
               color: AppColors.textMuted,
             ),
           ),
+          if (group.statusId == ReqPartStatusId.cancelled)
+            Text(
+              _cancelledText(group),
+              style: const TextStyle(
+                fontSize: AppFontSizes.body,
+                color: AppColors.danger,
+              ),
+            ),
           const Divider(height: 18),
 
           for (final item in group.items)
@@ -315,6 +397,29 @@ class _OrderSubTaskPartDataWidgetState
               ),
             ),
           ),
+          if (group.canCancel) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: OutlinedButton(
+                onPressed: _saving ? null : () => _cancelRequest(group),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.danger,
+                  side: const BorderSide(color: AppColors.danger),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text(
+                  'ยกเลิกใบเบิก',
+                  style: TextStyle(
+                    fontSize: AppFontSizes.button,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -401,13 +506,16 @@ class _OrderSubTaskPartDataWidgetState
   }
 }
 
-// ใบเบิก 1 ใบ (รวมรายการอะไหล่ที่อยู่ใต้ rp_id เดียวกัน)
+// ใบเบิก 1 ใบ
 class _PartGroup {
   final int id;
   final int statusId;
   final String statusName;
   final String requesterName;
   final String requestedAt;
+  final bool canCancel;
+  final String? cancelledAt;
+  final String? cancelledByName;
   final List<RequestPartModel> items = [];
 
   _PartGroup({
@@ -416,6 +524,9 @@ class _PartGroup {
     required this.statusName,
     required this.requesterName,
     required this.requestedAt,
+    required this.canCancel,
+    this.cancelledAt,
+    this.cancelledByName,
   });
 
   double get total => items.fold(0, (sum, item) => sum + item.totalPrice);

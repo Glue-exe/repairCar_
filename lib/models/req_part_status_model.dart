@@ -1,4 +1,3 @@
-// สถานะของใบเบิกอะไหล่ (ตาราง req_part_status)
 class ReqPartStatusModel {
   int id;
   String name;
@@ -16,10 +15,9 @@ class ReqPartStatusModel {
   }
 }
 
-// รหัสสถานะที่ระบบอ้างอิงเชิงพฤติกรรม (ชื่อจริงดึงจาก /req_part_status ทุกครั้งที่แสดงผล)
-// ตรงกับตาราง req_part_status ใน create_table_v2.sql
 class ReqPartStatusId {
   static const int pending = 1;
   static const int approved = 2;
   static const int rejected = 3;
+  static const int cancelled = 4;
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_app/config/app_color.dart';
 
-// ตัวเลือกช่วงเวลา — value ต้องตรงกับ backend: today/week/month/year (ค่าไม่รู้จัก backend จะ fallback เป็น month)
+// ตัวเลือกช่วงเวลาของโซน 
 class DashboardRangeSelectorWidget extends StatelessWidget {
   final String range;
   final ValueChanged<String> onRangeChanged;
@@ -19,48 +19,48 @@ class DashboardRangeSelectorWidget extends StatelessWidget {
     'year': 'ปีนี้',
   };
 
+  static const TextStyle _textStyle = TextStyle(
+    fontSize: AppFontSizes.body,
+    fontFamily: 'Kanit',
+    color: AppColors.textDark,
+  );
+
   @override
   Widget build(BuildContext context) {
     final entries = _rangeLabels.entries.toList();
 
-    return Row(
-      children: [
-        const Text(
-          'ช่วงเวลา',
-          style: AppTextStyles.bodyMuted,
+    return SizedBox(
+      width: 150,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.border),
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: range,
-                isExpanded: true,
-                icon: const Icon(Icons.keyboard_arrow_down),
-                items: entries
-                    .map(
-                      (entry) => DropdownMenuItem<String>(
-                        value: entry.key,
-                        child: Text(entry.value),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    onRangeChanged(value);
-                  }
-                },
-              ),
-            ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: range,
+            isExpanded: true,
+            icon: const Icon(Icons.keyboard_arrow_down),
+            style: _textStyle,
+            dropdownColor: AppColors.card,
+            items: entries
+                .map(
+                  (entry) => DropdownMenuItem<String>(
+                    value: entry.key,
+                    child: Text(entry.value, style: _textStyle),
+                  ),
+                )
+                .toList(),
+            onChanged: (value) {
+              if (value != null) {
+                onRangeChanged(value);
+              }
+            },
           ),
         ),
-      ],
+      ),
     );
   }
 }

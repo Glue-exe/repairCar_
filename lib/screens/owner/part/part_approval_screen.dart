@@ -17,7 +17,7 @@ class PartApprovalScreen extends StatefulWidget {
 class _PartApprovalScreenState extends State<PartApprovalScreen> {
   int _status = ReqPartStatusId.pending;
 
-  // หน้าอนุมัติใช้แค่ 3 สถานะนี้ โดยดึงชื่อจริงจาก /req_part_status
+  // แท็บสถานะดึงจาก /req_part_status ทั้งหมด (สถานะใหม่โผล่อัตโนมัติ)
   List<ReqPartStatusModel> _statuses = [];
   List<Map<String, dynamic>> _rows = [];
   bool _loading = true;
@@ -44,27 +44,14 @@ class _PartApprovalScreenState extends State<PartApprovalScreen> {
       if (!mounted) return;
 
       if (json['isError'] == false && json['data'] != null) {
+        // ใช้ทุกสถานะจากตาราง req_part_status (server เรียงตาม rps_id ให้แล้ว)
+        // → สถานะใหม่โผล่เป็นแท็บอัตโนมัติ ไม่ต้องแก้โค้ด
         final all = (json['data'] as List)
             .map((e) => ReqPartStatusModel.fromJson(e))
             .toList();
 
-        // เรียงตามลำดับแท็บที่ต้องการ แล้วหยิบเฉพาะที่มีจริงในตาราง
-        final approvalIds = [
-          ReqPartStatusId.pending,
-          ReqPartStatusId.approved,
-          ReqPartStatusId.rejected,
-        ];
-        final approvalStatuses = <ReqPartStatusModel>[];
-        for (final id in approvalIds) {
-          for (final status in all) {
-            if (status.id == id) {
-              approvalStatuses.add(status);
-            }
-          }
-        }
-
         setState(() {
-          _statuses = approvalStatuses;
+          _statuses = all;
         });
       } else {
         setState(() {
@@ -143,6 +130,7 @@ class _PartApprovalScreenState extends State<PartApprovalScreen> {
               : AppColors.inputBackground,
           foregroundColor: selected ? Colors.white : AppColors.textDark,
           elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
         ),
         onPressed: _loading
             ? null
@@ -159,7 +147,7 @@ class _PartApprovalScreenState extends State<PartApprovalScreen> {
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.center,
           style: const TextStyle(
-            fontSize: AppFontSizes.button,
+            fontSize: AppFontSizes.badge,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -167,7 +155,7 @@ class _PartApprovalScreenState extends State<PartApprovalScreen> {
     );
   }
 
-  // แถวแท็บสถานะ (รออนุมัติ / อนุมัติแล้ว / ปฏิเสธ)
+  // แถวแท็บสถานะ — ดึงจากตาราง req_part_status ทั้งหมด
   Widget _buildStatusTabs() {
     if (_loadingStatuses) {
       return const SizedBox(
@@ -199,7 +187,7 @@ class _PartApprovalScreenState extends State<PartApprovalScreen> {
     return Row(
       children: [
         for (int i = 0; i < _statuses.length; i++) ...[
-          if (i > 0) const SizedBox(width: 8),
+          if (i > 0) const SizedBox(width: 6),
           _statusButton(_statuses[i].id, _statuses[i].name),
         ],
       ],

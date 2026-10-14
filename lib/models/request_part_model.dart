@@ -11,6 +11,9 @@ class RequestPartModel {
   double partPrice;
   String partBrand;
   int quantity;
+  bool canCancel;
+  String? cancelledAt;
+  String? cancelledByName;
 
   RequestPartModel({
     required this.id,
@@ -25,6 +28,9 @@ class RequestPartModel {
     required this.partPrice,
     required this.partBrand,
     required this.quantity,
+    required this.canCancel,
+    this.cancelledAt,
+    this.cancelledByName,
   });
 
   factory RequestPartModel.fromJson(Map<String, dynamic> json) {
@@ -41,6 +47,9 @@ class RequestPartModel {
       partPrice: double.tryParse(json['part_price']?.toString() ?? '') ?? 0,
       partBrand: json['part_brand'] as String? ?? '',
       quantity: json['quantity'] as int,
+      canCancel: json['can_cancel'] as bool,
+      cancelledAt: json['cancelled_at'] as String?,
+      cancelledByName: json['cancelled_by_name'] as String?,
     );
   }
 

@@ -11,14 +11,16 @@ import 'package:my_app/widgets/shared/order_pool_main_widget/order_detail_widget
 import 'package:my_app/widgets/shared/order_pool_main_widget/order_detail_widget/order_sub_task_part_data_widget.dart';
 import 'package:my_app/widgets/shared/order_pool_main_widget/order_detail_widget/order_sub_task_technician_data_widget.dart';
 
-// หน้ารายละเอียดงานซ่อมย่อย (กดเข้ามาจากการ์ดงานซ่อมย่อย)
+// หน้ารายละเอียดงานซ่อมย่อย
 class OrderSubTaskDetailScreen extends StatefulWidget {
   final SubTaskModel subTask;
+  final bool isOrderAccepted;
   final ValueChanged<int>? onOrderStatusChanged;
 
   const OrderSubTaskDetailScreen({
     super.key,
     required this.subTask,
+    required this.isOrderAccepted,
     this.onOrderStatusChanged,
   });
 
@@ -28,11 +30,8 @@ class OrderSubTaskDetailScreen extends StatefulWidget {
 }
 
 class _OrderSubTaskDetailScreenState extends State<OrderSubTaskDetailScreen> {
-  // รับงานซ่อมย่อยนี้แล้วหรือยัง (อัปเดตเมื่อกดรับ/ยกเลิก)
   late bool _accepted;
   late List<OrderTechnicianItemModel> _technicians;
-
-  // สถานะงานย่อย (เปลี่ยนได้เมื่อกดรับงานย่อยนี้แล้ว)
   late int _statusId;
   late String _statusName;
   List<SubTaskStatusModel> _statuses = [];
@@ -51,7 +50,7 @@ class _OrderSubTaskDetailScreenState extends State<OrderSubTaskDetailScreen> {
     _loadStatuses();
   }
 
-  // รับ/ยกเลิกแล้ว → ดึงงานย่อยนี้ใหม่ ให้รายชื่อช่างอัปเดตทันที
+  // รับ/ยกเลิกแล้ว
   Future<void> _reloadSubTask() async {
     try {
       final response = await AppAPI.get(
@@ -134,7 +133,7 @@ class _OrderSubTaskDetailScreenState extends State<OrderSubTaskDetailScreen> {
       });
       _showMessage('เปลี่ยนสถานะเรียบร้อยแล้ว', AppColors.success);
 
-      // เปลี่ยนเป็น "กำลังทำ" → Order หลักขยับเป็น "กำลังซ่อม" ด้วย
+      // เมื่อเปลี่ยนเป็น กำลังทำ Order หลักขยับเป็น กำลังซ่อม
       if (newStatusId == 2) {
         widget.onOrderStatusChanged?.call(newStatusId);
       }
@@ -281,7 +280,7 @@ class _OrderSubTaskDetailScreenState extends State<OrderSubTaskDetailScreen> {
               const SizedBox(height: 12),
             ],
 
-            // กดรับงานย่อยนี้แล้ว → เปลี่ยนสถานะได้
+            // กดรับงานย่อยนี้แล้ว เปลี่ยนสถานะได้
             if (_accepted)
               _buildStatusField()
             else
@@ -327,7 +326,7 @@ class _OrderSubTaskDetailScreenState extends State<OrderSubTaskDetailScreen> {
       ),
     );
 
-    // เพิ่มสำเร็จ → ให้การ์ดรายการเบิกโหลดใหม่
+    // เพิ่มสำเร็จ ให้การ์ดรายการเบิกโหลดใหม่
     if (added == true) {
       setState(() {
         _partReloadToken++;
@@ -356,7 +355,7 @@ class _OrderSubTaskDetailScreenState extends State<OrderSubTaskDetailScreen> {
           padding: const EdgeInsets.all(16.0),
           child: OrderSubTaskButtonWidget(
             subTaskId: widget.subTask.id,
-            orderId: widget.subTask.orderId,
+            isOrderAccepted: widget.isOrderAccepted,
             isMySubTask: _accepted,
             onChanged: () {
               // อัปเดตสถานะทันที แล้วค่อยดึงข้อมูลจริงมาทับ

@@ -3,17 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:my_app/config/app_color.dart';
 import 'package:my_app/utils/app_api.dart';
 
-// ปุ่มกดรับ/ยกเลิกรับงานซ่อมย่อย
 class OrderSubTaskButtonWidget extends StatefulWidget {
   final int subTaskId;
-  final int orderId;
+
+  final bool isOrderAccepted;
   final bool isMySubTask;
   final VoidCallback? onChanged;
 
   const OrderSubTaskButtonWidget({
     super.key,
     required this.subTaskId,
-    required this.orderId,
+    required this.isOrderAccepted,
     required this.isMySubTask,
     this.onChanged,
   });
@@ -44,7 +44,7 @@ class _OrderSubTaskButtonWidgetState extends State<OrderSubTaskButtonWidget> {
     }
   }
 
-  // กดรับงาน -> ถามยืนยัน -> รับงาน
+  // กดรับงาน
   Future<void> _handleAccept() async {
     final bool? confirm = await showDialog<bool>(
       context: context,
@@ -73,7 +73,7 @@ class _OrderSubTaskButtonWidgetState extends State<OrderSubTaskButtonWidget> {
     }
   }
 
-  // กดยกเลิก -> ถามยืนยัน -> ยกเลิกรับงาน
+  // กดยกเลิก
   Future<void> _handleCancel() async {
     final bool? confirm = await showDialog<bool>(
       context: context,
@@ -110,7 +110,6 @@ class _OrderSubTaskButtonWidgetState extends State<OrderSubTaskButtonWidget> {
     try {
       final response = await AppAPI.post(path, {
         'sub_task_id': widget.subTaskId,
-        'order_id': widget.orderId,
       });
       final json = jsonDecode(response.body);
 
@@ -206,6 +205,33 @@ class _OrderSubTaskButtonWidgetState extends State<OrderSubTaskButtonWidget> {
             ),
           ),
         ],
+      );
+    }
+
+    // ยังไม่กดรับ Order หลักจะรับงานย่อยไม่ได้
+    if (!widget.isOrderAccepted) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        decoration: BoxDecoration(
+          color: AppColors.inputBackground,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.info_outline, color: AppColors.textMuted, size: 20),
+            SizedBox(width: 8),
+            Text(
+              'โปรดกดรับงานซ่อมนี้ก่อน',
+              style: TextStyle(
+                fontSize: AppFontSizes.body,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textMuted,
+              ),
+            ),
+          ],
+        ),
       );
     }
 

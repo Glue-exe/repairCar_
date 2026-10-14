@@ -123,6 +123,9 @@ class _PartApprovalListWidgetState extends State<PartApprovalListWidget> {
     } else if (statusId == ReqPartStatusId.rejected) {
       bg = AppColors.dangerBg;
       fg = AppColors.dangerText;
+    } else if (statusId == ReqPartStatusId.cancelled) {
+      bg = AppColors.disabledBg;
+      fg = AppColors.textMuted;
     }
 
     return Container(
@@ -160,7 +163,7 @@ class _PartApprovalListWidgetState extends State<PartApprovalListWidget> {
     return parts.where((part) => part.isNotEmpty).join(' · ');
   }
 
-  // แถว label/value: label ขนาด caption กว้างคงที่ไม่ขึ้นบรรทัดใหม่ ส่วน value กินที่เหลือและตัดคำเมื่อเกิน 2 บรรทัด
+  // แถว label/value
   Widget _infoRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -198,7 +201,7 @@ class _PartApprovalListWidgetState extends State<PartApprovalListWidget> {
     );
   }
 
-  // ชื่ออะไหล่ + ยี่ห้อ (แสดงยี่ห้อเฉพาะเมื่อมีค่า)
+  // ชื่ออะไหล่ + ยี่ห้อ
   String _partLabel(ApprovalRequestPartModel item) {
     final brand = item.partBrand;
     if (brand != null && brand.trim().isNotEmpty) {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:my_app/screens/owner/dashboard/owner_dash_board_screen.dart';
+import 'package:my_app/screens/owner/dashboard/owner_dashboard_screen.dart';
 import 'package:my_app/screens/owner/part/part_approval_screen.dart';
 import 'package:my_app/screens/shared/order_pool_main_screen/order_pool_main_screen.dart';
 import 'package:my_app/screens/owner/profile/owner_profile_screen.dart';
@@ -29,7 +29,7 @@ class _NavbarOwnerState extends State<NavbarOwner> {
   }
 
   final List<Widget> _pages = [
-    OwnerHomeScreen(),
+    OwnerDashboardScreen(),
     OrderPoolMainScreen(),
     IntakecarScreen(),
     PartApprovalScreen(),

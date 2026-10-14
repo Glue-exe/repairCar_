@@ -69,7 +69,7 @@ class _OrderDetailSubTaskDataWidgetState
     }
   }
 
-  // เปิดหน้าเพิ่มรายการซ่อม (เลือกจากบริการ) แล้วโหลดใหม่เมื่อเพิ่มสำเร็จ
+  // เปิดหน้าเพิ่มรายการซ่อม (เลือกจากบริการ)
   Future<void> _openAddServiceSubTask() async {
     final bool? addResult = await Navigator.push<bool>(
       context,
@@ -84,7 +84,7 @@ class _OrderDetailSubTaskDataWidgetState
     }
   }
 
-  // เปิดหน้าเพิ่มรายการซ่อม (เลือกจากหมวดซ่อมตามส่วนของรถ) แล้วโหลดใหม่เมื่อเพิ่มสำเร็จ
+  // เปิดหน้าเพิ่มรายการซ่อม (เลือกจากหมวดซ่อมตามส่วนของรถ)
   Future<void> _openAddRepairSubTask() async {
     final bool? addResult = await Navigator.push<bool>(
       context,
@@ -99,15 +99,15 @@ class _OrderDetailSubTaskDataWidgetState
     }
   }
 
-  // เปิดหน้ารายละเอียดงานย่อย แล้วโหลดใหม่เมื่อกลับ
+  // เปิดหน้ารายละเอียดงานย่อย
   Future<void> _openSubTaskDetail(SubTaskModel item) async {
     await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => OrderSubTaskDetailScreen(
           subTask: item,
+          isOrderAccepted: widget.order.acceptByMe,
           onOrderStatusChanged: (statusId) {
-            // งานย่อยเปลี่ยนเป็น "กำลังทำ" → Order หลักขยับตาม แจ้งหน้าจอแม่ให้ rebuild
             widget.order.oOrderStatusId = statusId;
             widget.onOrderChanged?.call();
           },
