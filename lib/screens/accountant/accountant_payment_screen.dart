@@ -16,6 +16,8 @@ class AccountantPaymentScreen extends StatefulWidget {
 
 class _AccountantPaymentScreenState extends State<AccountantPaymentScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
   bool _isLoading = false;
   String _errorMessage = '';
 
@@ -37,6 +39,7 @@ class _AccountantPaymentScreenState extends State<AccountantPaymentScreen> with 
   @override
   void dispose() {
     _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -83,8 +86,38 @@ class _AccountantPaymentScreenState extends State<AccountantPaymentScreen> with 
     }
   }
 
+  // ฟังก์ชันกรองรายการงานตามคำค้นหา
+  List<AccountantOrderItemModel> _filterOrders(List<AccountantOrderItemModel> orders) {
+    final query = _searchQuery.trim().toLowerCase();
+    if (query.isEmpty) return orders;
+
+    final queryClean = query.replaceAll(' ', '');
+
+    return orders.where((order) {
+      final plate = order.licensePlate.toLowerCase();
+      final plateClean = plate.replaceAll(' ', '');
+      final carTitle = order.carTitle.toLowerCase();
+      final customerName = order.customerFullName.toLowerCase();
+      final customerPhone = order.customerPhone.replaceAll(' ', '');
+      final orderId = order.orderId.toString();
+      final symptom = order.symptom.toLowerCase();
+
+      return plate.contains(query) ||
+          plateClean.contains(queryClean) ||
+          carTitle.contains(query) ||
+          customerName.contains(query) ||
+          customerPhone.contains(queryClean) ||
+          orderId == query ||
+          orderId == queryClean.replaceAll('#', '').replaceAll('งาน', '') ||
+          symptom.contains(query);
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final filteredPending = _filterOrders(_pendingOrders);
+    final filteredPaid = _filterOrders(_paidOrders);
+
     return Scaffold(
       backgroundColor: Colors.teal.shade50,
       appBar: AppBar(
@@ -99,8 +132,8 @@ class _AccountantPaymentScreenState extends State<AccountantPaymentScreen> with 
           unselectedLabelColor: AppColors.textMuted,
           labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, fontFamily: 'Kanit'),
           tabs: [
-            Tab(text: 'รอชำระ (${_pendingOrders.length})'),
-            Tab(text: 'ชำระส่งมอบแล้ว (${_paidOrders.length})'),
+            Tab(text: 'รอชำระ (${filteredPending.length})'),
+            Tab(text: 'ชำระส่งมอบแล้ว (${filteredPaid.length})'),
           ],
         ),
       ),
@@ -120,13 +153,75 @@ class _AccountantPaymentScreenState extends State<AccountantPaymentScreen> with 
                     ],
                   ),
                 )
-              : TabBarView(
-                  controller: _tabController,
+              : Column(
                   children: [
-                    _buildOrderListView(orders: _pendingOrders, isPaidTab: false),
-                    _buildOrderListView(orders: _paidOrders, isPaidTab: true),
+                    _buildSearchBox(),
+                    Expanded(
+                      child: TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _buildOrderListView(
+                            orders: filteredPending,
+                            isPaidTab: false,
+                          ),
+                          _buildOrderListView(
+                            orders: filteredPaid,
+                            isPaidTab: true,
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
+    );
+  }
+
+  // ส่วนกล่องค้นหา (Search Box)
+  Widget _buildSearchBox() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+      child: TextField(
+        controller: _searchController,
+        onChanged: (val) {
+          setState(() {
+            _searchQuery = val;
+          });
+        },
+        style: const TextStyle(fontSize: 15),
+        decoration: InputDecoration(
+          hintText: 'ค้นหาทะเบียนรถ, ยี่ห้อ, รุ่น, ลูกค้า หรือรหัสงาน...',
+          hintStyle: const TextStyle(fontSize: 14, color: AppColors.textMuted),
+          prefixIcon: const Icon(Icons.search, size: 22, color: AppColors.primaryGreen),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear, size: 20, color: Colors.grey),
+                  tooltip: 'ล้างคำค้นหา',
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {
+                      _searchQuery = '';
+                    });
+                  },
+                )
+              : null,
+          filled: true,
+          fillColor: Colors.white,
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.teal.shade200, width: 0.8),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.teal.shade200, width: 0.8),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppColors.primaryGreen, width: 1.5),
+          ),
+        ),
+      ),
     );
   }
 
@@ -137,17 +232,47 @@ class _AccountantPaymentScreenState extends State<AccountantPaymentScreen> with 
     final currencyFormatter = NumberFormat('#,##0.00');
 
     if (orders.isEmpty) {
+      final hasSearch = _searchQuery.trim().isNotEmpty;
       return RefreshIndicator(
         onRefresh: _fetchOrders,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
             SizedBox(
-              height: MediaQuery.of(context).size.height * 0.5,
+              height: MediaQuery.of(context).size.height * 0.45,
               child: Center(
-                child: Text(
-                  isPaidTab ? 'ไม่มีรายการงานที่ชำระส่งมอบแล้ว' : 'ไม่มีรายการงานที่รอชำระ',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      hasSearch ? Icons.search_off_rounded : Icons.receipt_long_rounded,
+                      size: 56,
+                      color: Colors.grey.shade400,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      hasSearch
+                          ? 'ไม่พบข้อมูลรถที่ตรงกับ "$_searchQuery"'
+                          : (isPaidTab ? 'ไม่มีรายการงานที่ชำระส่งมอบแล้ว' : 'ไม่มีรายการงานที่รอชำระ'),
+                      style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+                    ),
+                    if (hasSearch) ...[
+                      const SizedBox(height: 10),
+                      TextButton.icon(
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.primaryGreen,
+                        ),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {
+                            _searchQuery = '';
+                          });
+                        },
+                        icon: const Icon(Icons.clear, size: 18),
+                        label: const Text('ล้างคำค้นหา'),
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ),
@@ -159,7 +284,7 @@ class _AccountantPaymentScreenState extends State<AccountantPaymentScreen> with 
     return RefreshIndicator(
       onRefresh: _fetchOrders,
       child: ListView.builder(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         itemCount: orders.length,
         itemBuilder: (context, index) {
           final order = orders[index];
@@ -180,14 +305,18 @@ class _AccountantPaymentScreenState extends State<AccountantPaymentScreen> with 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        '${order.licensePlate} (${order.carTitle})',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textDark,
+                      Expanded(
+                        child: Text(
+                          '${order.licensePlate} (${order.carTitle})',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textDark,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      const SizedBox(width: 8),
                       Text(
                         'งาน #${order.orderId}',
                         style: const TextStyle(fontSize: 13, color: AppColors.textMuted),
