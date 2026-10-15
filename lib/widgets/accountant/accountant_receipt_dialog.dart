@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:my_app/config/app_color.dart';
+import 'package:my_app/config/app_config.dart';
 import 'package:my_app/models/accountant_model.dart';
 
 class AccountantReceiptDialog extends StatelessWidget {
@@ -211,6 +212,77 @@ class AccountantReceiptDialog extends StatelessWidget {
                   ),
                 ],
               ),
+
+              // หลักฐานการชำระเงิน (ถ้ามีสลิป)
+              if (order.invoiceImageUrl != null && order.invoiceImageUrl!.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: const [
+                              Icon(Icons.image_outlined, size: 16, color: AppColors.primaryGreen),
+                              SizedBox(width: 6),
+                              Text(
+                                'หลักฐานการโอนเงิน (สลิป)',
+                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            'แตะเพื่อดูรูปใหญ่',
+                            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      GestureDetector(
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (ctx) => Dialog(
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: Image.network(
+                                  AppConfig.getImageUrl(order.invoiceImageUrl),
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            AppConfig.getImageUrl(order.invoiceImageUrl),
+                            height: 150,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              height: 60,
+                              color: Colors.grey.shade200,
+                              alignment: Alignment.center,
+                              child: const Text('ไม่สามารถโหลดภาพสลิปได้', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
 
               const SizedBox(height: 20),
 
