@@ -36,6 +36,7 @@ class _OrderSubTaskDetailScreenState extends State<OrderSubTaskDetailScreen> {
   late String _statusName;
   List<SubTaskStatusModel> _statuses = [];
   bool _saving = false;
+  bool _deleting = false;
   int _partReloadToken = 0;
 
   @override
@@ -143,6 +144,69 @@ class _OrderSubTaskDetailScreenState extends State<OrderSubTaskDetailScreen> {
       if (mounted) {
         setState(() {
           _saving = false;
+        });
+      }
+    }
+  }
+
+  // ยืนยันก่อนลบงานซ่อมย่อย
+  Future<void> _confirmDelete() async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('ยืนยันการลบงานซ่อมย่อย'),
+          content: Text('คุณต้องการลบ "${widget.subTask.name}" ใช่หรือไม่?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('ยกเลิก'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('ยืนยันลบ'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm == true) {
+      await _deleteSubTask();
+    }
+  }
+
+  // ลบงานซ่อมย่อย (เซิร์ฟเวอร์เช็ค: รับงานย่อยแล้ว · สถานะรอดำเนินการ · ยังไม่มีใบเบิก)
+  Future<void> _deleteSubTask() async {
+    setState(() {
+      _deleting = true;
+    });
+
+    try {
+      final response = await AppAPI.post('/sub_task/delete', {
+        'sub_task_id': widget.subTask.id,
+      });
+      final json = jsonDecode(response.body);
+
+      if (!mounted) return;
+
+      if (json['isError'] == true) {
+        _showMessage(
+          json['errorMessage'] ?? 'ลบงานซ่อมย่อยไม่สำเร็จ',
+          AppColors.danger,
+        );
+        return;
+      }
+
+      _showMessage('ลบงานซ่อมย่อยเรียบร้อยแล้ว', AppColors.success);
+      // ตัวแม่โหลดรายการงานย่อยใหม่เองอยู่แล้ว จึงไม่ต้องส่งค่ากลับ
+      Navigator.pop(context);
+    } catch (_) {
+      _showMessage('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', AppColors.danger);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _deleting = false;
         });
       }
     }
@@ -349,6 +413,15 @@ class _OrderSubTaskDetailScreenState extends State<OrderSubTaskDetailScreen> {
         ),
         backgroundColor: Colors.white,
         elevation: 0.5,
+        actions: [
+          // ลบได้เฉพาะงานย่อยที่ตัวเองกดรับแล้วและยังรอดำเนินการ
+          if (_accepted && _statusId == 1)
+            IconButton(
+              onPressed: _deleting ? null : _confirmDelete,
+              icon: const Icon(Icons.delete_outline, color: AppColors.danger),
+              tooltip: 'ลบงานซ่อมย่อย',
+            ),
+        ],
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
