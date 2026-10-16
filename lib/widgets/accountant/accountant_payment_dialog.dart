@@ -33,7 +33,7 @@ class _AccountantPaymentDialogState extends State<AccountantPaymentDialog> {
   bool _isLoadingQr = false;
   XFile? _slipImageFile;
 
-  final List<Map<String, dynamic>> _paymentMethods = [
+  List<Map<String, dynamic>> _paymentMethods = [
     {
       'id': 1,
       'name': 'เงินสด (Cash)',
@@ -52,6 +52,34 @@ class _AccountantPaymentDialogState extends State<AccountantPaymentDialog> {
   void initState() {
     super.initState();
     _fetchShopQr();
+    _fetchPaymentMethods();
+  }
+
+  Future<void> _fetchPaymentMethods() async {
+    try {
+      final response = await AppAPI.get('/accountant/payment_methods');
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        if (json['isError'] == false && json['data'] != null) {
+          final list = json['data'] as List;
+          if (list.isNotEmpty && mounted) {
+            setState(() {
+              _paymentMethods = list.map((item) {
+                final id = item['id'] as int;
+                final name = item['name'] as String;
+                final isTransfer = id == 2;
+                return {
+                  'id': id,
+                  'name': name,
+                  'icon': isTransfer ? Icons.account_balance_rounded : Icons.payments_rounded,
+                  'color': isTransfer ? Colors.blue : Colors.green,
+                };
+              }).toList();
+            });
+          }
+        }
+      }
+    } catch (_) {}
   }
 
   Future<void> _fetchShopQr() async {
@@ -199,9 +227,6 @@ class _AccountantPaymentDialogState extends State<AccountantPaymentDialog> {
       final Map<String, String> fields = {
         'order_id': widget.order.orderId.toString(),
         'payment_method_id': _selectedMethodId.toString(),
-        'parts_total': widget.order.partsTotal.toString(),
-        'labor_total': widget.order.laborTotal.toString(),
-        'total': widget.order.totalAmount.toString(),
       };
 
       dynamic response;
@@ -217,9 +242,6 @@ class _AccountantPaymentDialogState extends State<AccountantPaymentDialog> {
         response = await AppAPI.post('/accountant/pay', {
           'order_id': widget.order.orderId,
           'payment_method_id': _selectedMethodId,
-          'parts_total': widget.order.partsTotal,
-          'labor_total': widget.order.laborTotal,
-          'total': widget.order.totalAmount,
         });
       }
 
