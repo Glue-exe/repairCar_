@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:my_app/config/app_color.dart';
 import 'package:my_app/models/accountant_model.dart';
@@ -55,6 +56,8 @@ class _AccountantPaymentScreenState extends State<AccountantPaymentScreen> with 
         AppAPI.get('/accountant/orders?type=paid'),
       ]);
 
+      if (!mounted) return;
+
       if (responses[0].statusCode == 200) {
         final pendingJson = jsonDecode(responses[0].body);
         final pendingRes = AccountantOrdersResponse.fromJson(pendingJson);
@@ -71,15 +74,13 @@ class _AccountantPaymentScreenState extends State<AccountantPaymentScreen> with 
         }
       }
 
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      setState(() {
+        _isLoading = false;
+      });
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'เกิดข้อผิดพลาดในการโหลดข้อมูล: $e';
+          _errorMessage = 'เกิดข้อผิดพลาดในการโหลดข้อมูล กรุณาลองใหม่อีกครั้ง';
           _isLoading = false;
         });
       }
@@ -113,46 +114,59 @@ class _AccountantPaymentScreenState extends State<AccountantPaymentScreen> with 
     }).toList();
   }
 
+  String _formatPaidDate(String? paidAtStr) {
+    if (paidAtStr == null || paidAtStr.isEmpty) return '-';
+    try {
+      final dt = DateTime.parse(paidAtStr).toLocal();
+      const thaiMonths = [
+        '', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
+        'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'
+      ];
+      final minuteStr = dt.minute.toString().padLeft(2, '0');
+      final hourStr = dt.hour.toString().padLeft(2, '0');
+      return '${dt.day} ${thaiMonths[dt.month]} ${dt.year + 543}, $hourStr:$minuteStr น.';
+    } catch (_) {
+      return paidAtStr;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final filteredPending = _filterOrders(_pendingOrders);
     final filteredPaid = _filterOrders(_paidOrders);
 
     return Scaffold(
-      backgroundColor: Colors.teal.shade50,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('ชำระเงิน'),
+        title: const Text(
+          'ชำระเงิน',
+          style: TextStyle(
+            color: AppColors.textDark,
+            fontSize: AppFontSizes.appBar,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         centerTitle: true,
-        backgroundColor: Colors.teal.shade50,
-        elevation: 0,
+        backgroundColor: Colors.white,
+        elevation: 0.5,
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: AppColors.primaryGreen,
+          indicatorWeight: 3,
           labelColor: AppColors.primaryGreen,
           unselectedLabelColor: AppColors.textMuted,
-          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, fontFamily: 'Kanit'),
+          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 14),
           tabs: [
-            Tab(text: 'รอชำระ (${filteredPending.length})'),
-            Tab(text: 'ชำระส่งมอบแล้ว (${filteredPaid.length})'),
+            Tab(text: 'รอชำระ (${_pendingOrders.length})'),
+            Tab(text: 'ชำระส่งมอบแล้ว (${_paidOrders.length})'),
           ],
         ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primaryGreen))
           : _errorMessage.isNotEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(_errorMessage, style: const TextStyle(color: Colors.red)),
-                      const SizedBox(height: 10),
-                      ElevatedButton(
-                        onPressed: _fetchOrders,
-                        child: const Text('ลองใหม่อีกครั้ง'),
-                      ),
-                    ],
-                  ),
-                )
+              ? _buildErrorView()
               : Column(
                   children: [
                     _buildSearchBox(),
@@ -179,7 +193,8 @@ class _AccountantPaymentScreenState extends State<AccountantPaymentScreen> with 
   // ส่วนกล่องค้นหา (Search Box)
   Widget _buildSearchBox() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       child: TextField(
         controller: _searchController,
         onChanged: (val) {
@@ -187,14 +202,14 @@ class _AccountantPaymentScreenState extends State<AccountantPaymentScreen> with 
             _searchQuery = val;
           });
         },
-        style: const TextStyle(fontSize: 15),
+        style: const TextStyle(fontSize: 14, color: AppColors.textDark),
         decoration: InputDecoration(
           hintText: 'ค้นหาทะเบียนรถ, ยี่ห้อ, รุ่น, ลูกค้า หรือรหัสงาน...',
-          hintStyle: const TextStyle(fontSize: 14, color: AppColors.textMuted),
-          prefixIcon: const Icon(Icons.search, size: 22, color: AppColors.primaryGreen),
+          hintStyle: const TextStyle(fontSize: 13, color: AppColors.textMuted),
+          prefixIcon: const Icon(Icons.search_rounded, size: 20, color: AppColors.primaryGreen),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
-                  icon: const Icon(Icons.clear, size: 20, color: Colors.grey),
+                  icon: const Icon(Icons.clear, size: 18, color: Colors.grey),
                   tooltip: 'ล้างคำค้นหา',
                   onPressed: () {
                     _searchController.clear();
@@ -205,19 +220,19 @@ class _AccountantPaymentScreenState extends State<AccountantPaymentScreen> with 
                 )
               : null,
           filled: true,
-          fillColor: Colors.white,
+          fillColor: AppColors.inputBackground,
           isDense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.teal.shade200, width: 0.8),
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide.none,
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.teal.shade200, width: 0.8),
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide.none,
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             borderSide: const BorderSide(color: AppColors.primaryGreen, width: 1.5),
           ),
         ),
@@ -235,44 +250,77 @@ class _AccountantPaymentScreenState extends State<AccountantPaymentScreen> with 
       final hasSearch = _searchQuery.trim().isNotEmpty;
       return RefreshIndicator(
         onRefresh: _fetchOrders,
+        color: AppColors.primaryGreen,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
             SizedBox(
-              height: MediaQuery.of(context).size.height * 0.45,
+              height: MediaQuery.of(context).size.height * 0.5,
               child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      hasSearch ? Icons.search_off_rounded : Icons.receipt_long_rounded,
-                      size: 56,
-                      color: Colors.grey.shade400,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      hasSearch
-                          ? 'ไม่พบข้อมูลรถที่ตรงกับ "$_searchQuery"'
-                          : (isPaidTab ? 'ไม่มีรายการงานที่ชำระส่งมอบแล้ว' : 'ไม่มีรายการงานที่รอชำระ'),
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
-                    ),
-                    if (hasSearch) ...[
-                      const SizedBox(height: 10),
-                      TextButton.icon(
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppColors.primaryGreen,
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: hasSearch ? Colors.orange.shade50 : (isPaidTab ? AppColors.successBg : AppColors.infoBg),
+                          shape: BoxShape.circle,
                         ),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() {
-                            _searchQuery = '';
-                          });
-                        },
-                        icon: const Icon(Icons.clear, size: 18),
-                        label: const Text('ล้างคำค้นหา'),
+                        child: Icon(
+                          hasSearch
+                              ? Icons.search_off_rounded
+                              : (isPaidTab ? Icons.receipt_long_rounded : Icons.task_alt_rounded),
+                          size: 42,
+                          color: hasSearch
+                              ? Colors.orange.shade700
+                              : (isPaidTab ? AppColors.success : AppColors.info),
+                        ),
                       ),
+                      const SizedBox(height: 14),
+                      Text(
+                        hasSearch
+                            ? 'ไม่พบข้อมูลรถที่ตรงกับ "$_searchQuery"'
+                            : (isPaidTab ? 'ไม่มีรายการงานที่ชำระส่งมอบแล้ว' : 'ไม่มีรายการงานที่รอชำระ'),
+                        style: const TextStyle(
+                          color: AppColors.textDark,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        hasSearch
+                            ? 'ลองตรวจสอบคำสะกด หรือค้นหาด้วยเลขทะเบียนรถ'
+                            : (isPaidTab ? 'เมื่อรับชำระเงิน ประวัติจะปรากฏที่นี่' : 'รถทุกคันชำระเงินเรียบร้อยแล้ว'),
+                        style: const TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 13,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      if (hasSearch) ...[
+                        const SizedBox(height: 14),
+                        OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.primaryGreen,
+                            side: const BorderSide(color: AppColors.primaryGreen),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() {
+                              _searchQuery = '';
+                            });
+                          },
+                          icon: const Icon(Icons.clear, size: 16),
+                          label: const Text('ล้างคำค้นหา'),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -283,65 +331,189 @@ class _AccountantPaymentScreenState extends State<AccountantPaymentScreen> with 
 
     return RefreshIndicator(
       onRefresh: _fetchOrders,
+      color: AppColors.primaryGreen,
       child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         itemCount: orders.length,
         itemBuilder: (context, index) {
           final order = orders[index];
 
+          // ป้ายสถานะสำหรับแท็บรอชำระ (สถานะงานซ่อม)
+          final bool isRepairFinished = order.orderStatusId == 3;
+          final Color repairStatusBg = isRepairFinished ? AppColors.successBg : AppColors.infoBg;
+          final Color repairStatusTextColor = isRepairFinished ? AppColors.successText : AppColors.infoText;
+          final String repairStatusLabel = order.orderStatusName.isNotEmpty ? order.orderStatusName : 'กำลังดำเนินการ';
+
           return Card(
-            elevation: 2,
+            elevation: 1.5,
             margin: const EdgeInsets.symmetric(vertical: 6),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
+              side: const BorderSide(color: AppColors.border, width: 0.8),
             ),
             color: Colors.white,
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(14.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ทะเบียนรถ และ รุ่น
+                  // ทะเบียนรถ + ป้ายสถานะ + รหัสงาน
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  order.licensePlate,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textDark,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+
+                                // ถ้าเป็นแท็บรอชำระ แสดงสถานะซ่อม / ถ้าชำระแล้ว แสดงช่องทางจ่ายเงิน
+                                if (!isPaidTab)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: repairStatusBg,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      repairStatusLabel,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: repairStatusTextColor,
+                                      ),
+                                    ),
+                                  )
+                                else
+                                  _buildPaymentMethodBadge(order),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              order.carTitle,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: AppColors.textMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppColors.inputBackground,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
                         child: Text(
-                          '${order.licensePlate} (${order.carTitle})',
+                          'งาน #${order.orderId}',
                           style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textDark,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textMuted,
                           ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // ลูกค้า และ เบอร์โทร (แตะคัดลอกเบอร์ได้สะดวก)
+                  Row(
+                    children: [
+                      const Icon(Icons.person_outline, size: 15, color: AppColors.textMuted),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          order.customerFullName,
+                          style: const TextStyle(fontSize: 13, color: AppColors.textDark, fontWeight: FontWeight.w500),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        'งาน #${order.orderId}',
-                        style: const TextStyle(fontSize: 13, color: AppColors.textMuted),
+                      InkWell(
+                        onTap: () {
+                          Clipboard.setData(ClipboardData(text: order.customerPhone));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('คัดลอกเบอร์โทร ${order.customerPhone} แล้ว'),
+                              duration: const Duration(seconds: 1),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(6),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.phone_outlined, size: 14, color: AppColors.primaryGreen),
+                              const SizedBox(width: 4),
+                              Text(
+                                order.customerPhone,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.primaryGreen,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
 
-                  // ลูกค้า
-                  Text(
-                    'ลูกค้า: ${order.customerFullName}  เบอร์โทร: ${order.customerPhone}',
-                    style: const TextStyle(fontSize: 13, color: Colors.black87),
-                  ),
+                  // อาการเสีย
                   if (order.symptom.isNotEmpty) ...[
                     const SizedBox(height: 4),
-                    Text(
-                      'อาการ: ${order.symptom}',
-                      style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.build_circle_outlined, size: 14, color: AppColors.textMuted),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            'อาการ: ${order.symptom}',
+                            style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
-                  const Divider(height: 18),
 
-                  // ยอดเงินและปุ่ม
+                  // ถ้าชำระแล้ว แสดงวันเวลาที่ชำระ
+                  if (isPaidTab && order.paidAt != null) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const Icon(Icons.access_time_rounded, size: 14, color: AppColors.textMuted),
+                        const SizedBox(width: 4),
+                        Text(
+                          'ชำระเมื่อ: ${_formatPaidDate(order.paidAt)}',
+                          style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                        ),
+                      ],
+                    ),
+                  ],
+
+                  const Divider(height: 18, color: AppColors.divider),
+
+                  // ยอดเงินและปุ่ม Action
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -349,25 +521,35 @@ class _AccountantPaymentScreenState extends State<AccountantPaymentScreen> with 
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'ค่าแรง: ฿${currencyFormatter.format(order.laborTotal)}  ค่าอะไหล่: ฿${currencyFormatter.format(order.partsTotal)}',
+                            'ค่าแรง ฿${currencyFormatter.format(order.laborTotal)} · ค่าอะไหล่ ฿${currencyFormatter.format(order.partsTotal)}',
                             style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
                           ),
                           const SizedBox(height: 2),
-                          Text(
-                            'ยอดสุทธิ: ฿${currencyFormatter.format(order.totalAmount)}',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: isPaidTab ? Colors.green.shade800 : Colors.amber.shade900,
-                            ),
+                          Row(
+                            children: [
+                              const Text(
+                                'ยอดสุทธิ: ',
+                                style: TextStyle(fontSize: 13, color: AppColors.textDark),
+                              ),
+                              Text(
+                                '฿${currencyFormatter.format(order.totalAmount)}',
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.bold,
+                                  color: isPaidTab ? AppColors.success : Colors.amber.shade900,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
                       if (!isPaidTab)
-                        ElevatedButton(
+                        ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primaryGreen,
                             foregroundColor: Colors.white,
+                            elevation: 1,
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
@@ -381,13 +563,18 @@ class _AccountantPaymentScreenState extends State<AccountantPaymentScreen> with 
                               ),
                             );
                           },
-                          child: const Text('รับชำระเงิน'),
+                          icon: const Icon(Icons.payments_rounded, size: 17),
+                          label: const Text(
+                            'รับชำระเงิน',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
                         )
                       else
-                        OutlinedButton(
+                        OutlinedButton.icon(
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppColors.primaryGreen,
                             side: const BorderSide(color: AppColors.primaryGreen),
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
@@ -398,7 +585,11 @@ class _AccountantPaymentScreenState extends State<AccountantPaymentScreen> with 
                               builder: (ctx) => AccountantReceiptDialog(order: order),
                             );
                           },
-                          child: const Text('ดูใบเสร็จ'),
+                          icon: const Icon(Icons.receipt_long_rounded, size: 17),
+                          label: const Text(
+                            'ดูใบเสร็จ',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
                         ),
                     ],
                   ),
@@ -407,6 +598,70 @@ class _AccountantPaymentScreenState extends State<AccountantPaymentScreen> with 
             ),
           );
         },
+      ),
+    );
+  }
+
+  // ป้ายแสดงวิธีชำระเงิน (เงินสด vs โอนเงิน)
+  Widget _buildPaymentMethodBadge(AccountantOrderItemModel order) {
+    final isTransfer = order.paymentMethodId == 2 ||
+        (order.paymentMethodName != null && order.paymentMethodName!.contains('โอน'));
+    final label = isTransfer ? 'โอนเงิน' : 'เงินสด';
+    final icon = isTransfer ? Icons.account_balance_rounded : Icons.payments_rounded;
+    final bgColor = isTransfer ? AppColors.infoBg : AppColors.successBg;
+    final textColor = isTransfer ? AppColors.infoText : AppColors.successText;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: textColor),
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: textColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorView() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.cloud_off_rounded, size: 48, color: AppColors.danger),
+            const SizedBox(height: 12),
+            Text(
+              _errorMessage,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 14, color: AppColors.textDark),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryGreen,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: _fetchOrders,
+              icon: const Icon(Icons.refresh, size: 18),
+              label: const Text('ลองใหม่อีกครั้ง'),
+            ),
+          ],
+        ),
       ),
     );
   }
