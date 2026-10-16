@@ -1,17 +1,63 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:my_app/config/app_color.dart';
 import 'package:my_app/config/app_config.dart';
 import 'package:my_app/models/accountant_model.dart';
+import 'package:my_app/utils/app_api.dart';
 
-class AccountantReceiptDialog extends StatelessWidget {
+class AccountantReceiptDialog extends StatefulWidget {
   final AccountantOrderItemModel order;
 
   const AccountantReceiptDialog({super.key, required this.order});
 
   @override
+  State<AccountantReceiptDialog> createState() => _AccountantReceiptDialogState();
+}
+
+class _AccountantReceiptDialogState extends State<AccountantReceiptDialog> {
+  bool _isLoadingLines = false;
+  List<Map<String, dynamic>> _invoiceLines = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchInvoiceLines();
+  }
+
+  Future<void> _fetchInvoiceLines() async {
+    setState(() {
+      _isLoadingLines = true;
+    });
+
+    try {
+      final res = await AppAPI.get('/invoice2/${widget.order.orderId}');
+      if (res.statusCode == 200) {
+        final j = jsonDecode(res.body);
+        if (j['isError'] == false && j['data'] != null) {
+          final rawLines = j['data']['lines'] as List? ?? [];
+          if (mounted) {
+            setState(() {
+              _invoiceLines = rawLines.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+              _isLoadingLines = false;
+            });
+            return;
+          }
+        }
+      }
+    } catch (_) {}
+
+    if (mounted) {
+      setState(() {
+        _isLoadingLines = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final currencyFormatter = NumberFormat('#,##0.00');
+    final order = widget.order;
 
     String formattedPaidDate = '-';
     if (order.paidAt != null && order.paidAt!.isNotEmpty) {
@@ -26,7 +72,7 @@ class AccountantReceiptDialog extends StatelessWidget {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 450),
+        constraints: const BoxConstraints(maxWidth: 480),
         padding: const EdgeInsets.all(24.0),
         child: SingleChildScrollView(
           child: Column(
@@ -76,10 +122,14 @@ class AccountantReceiptDialog extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'เลขที่ใบเสร็จ: INV-${(order.invoiceId ?? order.orderId).toString().padLeft(6, '0')}',
-                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                  Expanded(
+                    child: Text(
+                      'เลขที่ใบเสร็จ: INV-${(order.invoiceId ?? order.orderId).toString().padLeft(6, '0')}',
+                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
+                  const SizedBox(width: 8),
                   Text(
                     'งานซ่อม #${order.orderId}',
                     style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
@@ -91,9 +141,14 @@ class AccountantReceiptDialog extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('วันเวลาที่ชำระ:', style: TextStyle(fontSize: 13, color: AppColors.textMuted)),
-                  Text(
-                    formattedPaidDate,
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      formattedPaidDate,
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                      textAlign: TextAlign.end,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),
@@ -112,7 +167,15 @@ class AccountantReceiptDialog extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text('ลูกค้า:', style: TextStyle(fontSize: 13, color: AppColors.textMuted)),
-                        Text(order.customerFullName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            order.customerFullName,
+                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                            textAlign: TextAlign.end,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 4),
@@ -120,7 +183,15 @@ class AccountantReceiptDialog extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text('เบอร์โทรศัพท์:', style: TextStyle(fontSize: 13, color: AppColors.textMuted)),
-                        Text(order.customerPhone, style: const TextStyle(fontSize: 13)),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            order.customerPhone,
+                            style: const TextStyle(fontSize: 13),
+                            textAlign: TextAlign.end,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 4),
@@ -128,9 +199,14 @@ class AccountantReceiptDialog extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text('ทะเบียนรถ:', style: TextStyle(fontSize: 13, color: AppColors.textMuted)),
-                        Text(
-                          '${order.licensePlate} (${order.carTitle})',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '${order.licensePlate} (${order.carTitle})',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                            textAlign: TextAlign.end,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                     ),
@@ -139,28 +215,14 @@ class AccountantReceiptDialog extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // ตารางค่าบริการ
+              // ตารางค่าบริการและรายการย่อย
               const Text(
-                'รายการชำระเงิน',
+                'รายการค่าบริการและอะไหล่',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
               const SizedBox(height: 8),
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('1. ค่าแรงงานบริการ/ช่าง', style: TextStyle(fontSize: 14)),
-                  Text('฿${currencyFormatter.format(order.laborTotal)}', style: const TextStyle(fontSize: 14)),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('2. ค่าอะไหล่และอุปกรณ์', style: TextStyle(fontSize: 14)),
-                  Text('฿${currencyFormatter.format(order.partsTotal)}', style: const TextStyle(fontSize: 14)),
-                ],
-              ),
+              _buildLineItemsSection(currencyFormatter),
               const Divider(height: 20),
 
               Row(
@@ -307,6 +369,129 @@ class AccountantReceiptDialog extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildLineItemsSection(NumberFormat currencyFormatter) {
+    if (_isLoadingLines) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 12.0),
+        child: Center(
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryGreen),
+          ),
+        ),
+      );
+    }
+
+    if (_invoiceLines.isEmpty) {
+      // แสดงสรุป 2 บรรทัด (ค่าแรงรวม และ ค่าอะไหล่รวม)
+      return Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('1. ค่าแรงงานบริการ/ช่าง', style: TextStyle(fontSize: 13)),
+              Text('฿${currencyFormatter.format(widget.order.laborTotal)}', style: const TextStyle(fontSize: 13)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('2. ค่าอะไหล่และอุปกรณ์', style: TextStyle(fontSize: 13)),
+              Text('฿${currencyFormatter.format(widget.order.partsTotal)}', style: const TextStyle(fontSize: 13)),
+            ],
+          ),
+        ],
+      );
+    }
+
+    // แสดงตารางรายการละเอียด (Itemized Lines)
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: const Row(
+            children: [
+              Expanded(flex: 5, child: Text('รายการ', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
+              Expanded(flex: 2, child: Text('จำนวน', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
+              Expanded(flex: 3, child: Text('รวม (฿)', textAlign: TextAlign.right, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+        ..._invoiceLines.map((line) {
+          final isLabor = line['type'] == 'labor';
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 5,
+                  child: Row(
+                    children: [
+                      Icon(
+                        isLabor ? Icons.build_outlined : Icons.settings_outlined,
+                        size: 13,
+                        color: isLabor ? Colors.blue : Colors.orange,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          line['name'] ?? '-',
+                          style: const TextStyle(fontSize: 12),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    '${line['quantity'] ?? 1} ${line['unit'] ?? (isLabor ? 'งาน' : 'ชิ้น')}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                  ),
+                ),
+                Expanded(
+                  flex: 3,
+                  child: Text(
+                    currencyFormatter.format((line['total'] ?? 0) as num),
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+        const SizedBox(height: 6),
+        const Divider(height: 12, color: AppColors.divider),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('รวมค่าแรงบริการ:', style: TextStyle(fontSize: 12, color: AppColors.textMuted)),
+            Text('฿${currencyFormatter.format(widget.order.laborTotal)}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('รวมค่าอะไหล่และอุปกรณ์:', style: TextStyle(fontSize: 12, color: AppColors.textMuted)),
+            Text('฿${currencyFormatter.format(widget.order.partsTotal)}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+          ],
+        ),
+      ],
     );
   }
 }

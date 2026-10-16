@@ -6,6 +6,9 @@ import 'package:my_app/models/accountant_model.dart';
 import 'package:my_app/utils/app_api.dart';
 import 'package:my_app/widgets/accountant/accountant_receipt_dialog.dart';
 import 'package:my_app/widgets/accountant/revenue_trend_chart_widget.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 enum ReportDateFilterType {
   today,
@@ -42,6 +45,9 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
 
   List<RevenueTrendItemModel> _trends = [];
   List<RevenueTransactionItemModel> _transactions = [];
+
+  String _statusFilter = 'paid'; // 'paid' | 'pending'
+  bool _isExportingPdf = false;
 
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
@@ -134,7 +140,7 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
       final groupBy = daysDiff > 60 ? 'month' : 'day';
 
       final response = await AppAPI.get(
-        '/accountant/revenue_report?startDate=$startStr&endDate=$endStr&groupBy=$groupBy',
+        '/accountant/revenue_report?startDate=$startStr&endDate=$endStr&groupBy=$groupBy&status=$_statusFilter',
       );
 
       if (!mounted) return;
@@ -234,6 +240,25 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0.5,
+        actions: [
+          IconButton(
+            tooltip: 'พิมพ์ / ส่งออก PDF',
+            icon: _isExportingPdf
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.primaryGreen,
+                    ),
+                  )
+                : const Icon(
+                    Icons.picture_as_pdf_outlined,
+                    color: AppColors.primaryGreen,
+                  ),
+            onPressed: (_isLoading || _isExportingPdf) ? null : _exportReportPdf,
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _fetchReportData,
@@ -543,11 +568,79 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
             ),
           ],
         ),
+        const SizedBox(height: 8),
+
+        // แถวสาม: ยอดรอชำระ / ลูกหนี้การค้ารอเก็บเงิน (Pending Receivables)
+        Card(
+          elevation: 1.5,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: BorderSide(color: Colors.amber.shade200, width: 0.8),
+          ),
+          color: const Color(0xFFFFFBEB),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: Colors.amber.shade100,
+                  child: const Icon(
+                    Icons.pending_actions_rounded,
+                    color: Color(0xFFD97706),
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'ยอดรอชำระ / ค้างรับ (Pending Receivables)',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF92400E),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '฿${currencyFormatter.format(_reportSummary.totalPendingAmount)}',
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFB45309),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.amber.shade300),
+                  ),
+                  child: Text(
+                    '${_reportSummary.pendingCount} งานค้าง',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFFB45309),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
 
-  // ส่วนที่ 3: ตารางรายการใบเสร็จรับเงิน
+  // ส่วนที่ 3: ตารางรายการใบเสร็จรับเงิน และแท็บสลับ ชำระแล้ว / รอชำระ
   Widget _buildTransactionListSection(
     List<RevenueTransactionItemModel> transactions,
     NumberFormat currencyFormatter,
@@ -555,6 +648,120 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // แท็บสลับ: รายการชำระแล้ว (Paid) vs รายการรอชำระ (Pending)
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          padding: const EdgeInsets.all(3),
+          child: Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: () {
+                    if (_statusFilter != 'paid') {
+                      setState(() {
+                        _statusFilter = 'paid';
+                      });
+                      _fetchReportData();
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: _statusFilter == 'paid' ? Colors.white : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: _statusFilter == 'paid'
+                          ? [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 4,
+                                offset: const Offset(0, 1),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.check_circle_outline_rounded,
+                            size: 16,
+                            color: _statusFilter == 'paid' ? AppColors.primaryGreen : AppColors.textMuted,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'ชำระแล้ว (${_reportSummary.paidCount})',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: _statusFilter == 'paid' ? AppColors.primaryGreen : AppColors.textMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: InkWell(
+                  onTap: () {
+                    if (_statusFilter != 'pending') {
+                      setState(() {
+                        _statusFilter = 'pending';
+                      });
+                      _fetchReportData();
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: _statusFilter == 'pending' ? Colors.white : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: _statusFilter == 'pending'
+                          ? [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 4,
+                                offset: const Offset(0, 1),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.pending_actions_rounded,
+                            size: 16,
+                            color: _statusFilter == 'pending' ? const Color(0xFFD97706) : AppColors.textMuted,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'รอชำระ (${_reportSummary.pendingCount})',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: _statusFilter == 'pending' ? const Color(0xFFD97706) : AppColors.textMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -563,18 +770,20 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryGreen.withValues(alpha: 0.1),
+                    color: (_statusFilter == 'pending' ? Colors.amber : AppColors.primaryGreen).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(
-                    Icons.receipt_long_rounded,
-                    color: AppColors.primaryGreen,
+                  child: Icon(
+                    _statusFilter == 'pending' ? Icons.pending_actions_rounded : Icons.receipt_long_rounded,
+                    color: _statusFilter == 'pending' ? const Color(0xFFD97706) : AppColors.primaryGreen,
                     size: 18,
                   ),
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'รายการใบเสร็จ (${transactions.length} รายการ)',
+                  _statusFilter == 'pending'
+                      ? 'รายการงานรอชำระ (${transactions.length} รายการ)'
+                      : 'รายการใบเสร็จ (${transactions.length} รายการ)',
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
@@ -582,6 +791,18 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                   ),
                 ),
               ],
+            ),
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primaryGreen,
+                side: const BorderSide(color: AppColors.primaryGreen, width: 0.8),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                visualDensity: VisualDensity.compact,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: (_isLoading || _isExportingPdf) ? null : _exportReportPdf,
+              icon: const Icon(Icons.print_outlined, size: 14),
+              label: const Text('พิมพ์รายงาน', style: TextStyle(fontSize: 11)),
             ),
           ],
         ),
@@ -697,6 +918,7 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
       }
     }
 
+    final isPending = item.paymentStatusId == 1;
     final isTransfer = item.paymentMethodId == 2;
 
     return Card(
@@ -754,24 +976,32 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                   decoration: BoxDecoration(
-                    color: isTransfer ? AppColors.infoBg : AppColors.successBg,
+                    color: isPending
+                        ? AppColors.warningBg
+                        : (isTransfer ? AppColors.infoBg : AppColors.successBg),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        isTransfer ? Icons.account_balance_rounded : Icons.payments_rounded,
+                        isPending
+                            ? Icons.pending_actions_rounded
+                            : (isTransfer ? Icons.account_balance_rounded : Icons.payments_rounded),
                         size: 11,
-                        color: isTransfer ? AppColors.infoText : AppColors.successText,
+                        color: isPending
+                            ? AppColors.warningText
+                            : (isTransfer ? AppColors.infoText : AppColors.successText),
                       ),
                       const SizedBox(width: 3),
                       Text(
-                        item.paymentMethodName,
+                        isPending ? 'รอชำระ' : item.paymentMethodName,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
-                          color: isTransfer ? AppColors.infoText : AppColors.successText,
+                          color: isPending
+                              ? AppColors.warningText
+                              : (isTransfer ? AppColors.infoText : AppColors.successText),
                         ),
                       ),
                     ],
@@ -787,10 +1017,10 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                     ),
                     Text(
                       '฿${currencyFormatter.format(item.totalAmount)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.primaryGreen,
+                        color: isPending ? const Color(0xFFB45309) : AppColors.primaryGreen,
                       ),
                     ),
                   ],
@@ -798,8 +1028,8 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
 
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primaryGreen,
-                    side: const BorderSide(color: AppColors.primaryGreen),
+                    foregroundColor: isPending ? const Color(0xFFB45309) : AppColors.primaryGreen,
+                    side: BorderSide(color: isPending ? Colors.amber.shade400 : AppColors.primaryGreen),
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     visualDensity: VisualDensity.compact,
                     shape: RoundedRectangleBorder(
@@ -814,8 +1044,8 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                       ),
                     );
                   },
-                  icon: const Icon(Icons.receipt_long, size: 14),
-                  label: const Text('ใบเสร็จ', style: TextStyle(fontSize: 12)),
+                  icon: Icon(isPending ? Icons.description_outlined : Icons.receipt_long, size: 14),
+                  label: Text(isPending ? 'ดูบิล' : 'ใบเสร็จ', style: const TextStyle(fontSize: 12)),
                 ),
               ],
             ),
@@ -858,5 +1088,263 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
         ),
       ),
     );
+  }
+
+  // ส่งออกรายงานสรุปรายรับและบิลเป็นเอกสาร PDF ผ่าน printing package
+  Future<void> _exportReportPdf() async {
+    if (_isExportingPdf) return;
+    setState(() {
+      _isExportingPdf = true;
+    });
+
+    try {
+      final pdf = pw.Document();
+      final thaiRegular = await PdfGoogleFonts.kanitRegular();
+      final thaiBold = await PdfGoogleFonts.kanitBold();
+
+      final currency = NumberFormat('#,##0.00');
+      final dateTitle = _formatDateRangeTitle();
+      final printTime = DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now());
+
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(24),
+          theme: pw.ThemeData.withFont(base: thaiRegular, bold: thaiBold),
+          header: (pw.Context context) {
+            return pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text(
+                          'อู่ซ่อมรถยนต์เทคนิคยนต์',
+                          style: pw.TextStyle(
+                            fontSize: 16,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColors.green900,
+                          ),
+                        ),
+                        pw.Text(
+                          'รายงานสรุปรายรับและการเงิน (Financial Revenue Report)',
+                          style: pw.TextStyle(
+                            fontSize: 12,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColors.grey800,
+                          ),
+                        ),
+                      ],
+                    ),
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.end,
+                      children: [
+                        pw.Text(
+                          'ช่วงเวลา: $dateTitle',
+                          style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+                        ),
+                        pw.Text(
+                          'วันที่พิมพ์: $printTime น.',
+                          style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                pw.SizedBox(height: 4),
+                pw.Divider(thickness: 1, color: PdfColors.grey400),
+                pw.SizedBox(height: 8),
+              ],
+            );
+          },
+          footer: (pw.Context context) {
+            return pw.Container(
+              alignment: pw.Alignment.centerRight,
+              margin: const pw.EdgeInsets.only(top: 10),
+              child: pw.Text(
+                'หน้า ${context.pageNumber} จาก ${context.pagesCount}',
+                style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              ),
+            );
+          },
+          build: (pw.Context context) {
+            return [
+              // 1. ตารางสรุปภาพรวมทางการเงิน
+              pw.Container(
+                padding: const pw.EdgeInsets.all(10),
+                decoration: pw.BoxDecoration(
+                  color: PdfColors.grey100,
+                  borderRadius: pw.BorderRadius.circular(6),
+                  border: pw.Border.all(color: PdfColors.grey300),
+                ),
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text(
+                      'สรุปภาพรวมทางการเงิน',
+                      style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
+                    ),
+                    pw.SizedBox(height: 6),
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text(
+                          'รายรับรวมสุทธิ (ชำระแล้ว): ฿${currency.format(_reportSummary.totalPaidAmount)} (${_reportSummary.paidCount} บิล)',
+                          style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+                        ),
+                        pw.Text(
+                          'ยอดค้างชำระ / รอเก็บเงิน: ฿${currency.format(_reportSummary.totalPendingAmount)} (${_reportSummary.pendingCount} งาน)',
+                          style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.amber900),
+                        ),
+                      ],
+                    ),
+                    pw.SizedBox(height: 4),
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text(
+                          'ค่าแรง: ฿${currency.format(_reportSummary.totalLaborAmount)}  |  ค่าอะไหล่: ฿${currency.format(_reportSummary.totalPartsAmount)}',
+                          style: const pw.TextStyle(fontSize: 9),
+                        ),
+                        pw.Text(
+                          'เงินสด: ฿${currency.format(_reportSummary.cashTotalAmount)} (${_reportSummary.cashCount})  |  เงินโอน: ฿${currency.format(_reportSummary.transferTotalAmount)} (${_reportSummary.transferCount})',
+                          style: const pw.TextStyle(fontSize: 9),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              pw.SizedBox(height: 14),
+
+              // 2. หัวข้อตารางรายการ
+              pw.Text(
+                _statusFilter == 'pending'
+                    ? 'รายการงานรอชำระ / ค้างรับ (${_transactions.length} รายการ)'
+                    : 'รายละเอียดบิลที่ชำระแล้ว (${_transactions.length} รายการ)',
+                style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
+              ),
+              pw.SizedBox(height: 6),
+
+              // 3. ตารางรายการบิล
+              if (_transactions.isEmpty)
+                pw.Container(
+                  padding: const pw.EdgeInsets.all(16),
+                  alignment: pw.Alignment.center,
+                  child: pw.Text('ไม่มีรายการในช่วงเวลาที่เลือก', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+                )
+              else
+                pw.TableHelper.fromTextArray(
+                  headers: [
+                    'ลำดับ',
+                    'วันที่',
+                    'งาน#',
+                    'ทะเบียนรถ (รุ่น)',
+                    'ลูกค้า',
+                    'ช่องทาง/สถานะ',
+                    'ค่าแรง (฿)',
+                    'อะไหล่ (฿)',
+                    'รวม (฿)',
+                  ],
+                  data: [
+                    for (int i = 0; i < _transactions.length; i++)
+                      [
+                        '${i + 1}',
+                        _formatDateOnly(_transactions[i].paidAt),
+                        '#${_transactions[i].orderId}',
+                        '${_transactions[i].licensePlate}\n(${_transactions[i].carTitle})',
+                        _transactions[i].customerName,
+                        _transactions[i].paymentStatusId == 1
+                            ? 'รอชำระ'
+                            : _transactions[i].paymentMethodName,
+                        currency.format(_transactions[i].laborTotal),
+                        currency.format(_transactions[i].partsTotal),
+                        currency.format(_transactions[i].totalAmount),
+                      ],
+                  ],
+                  headerStyle: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+                  headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
+                  cellStyle: const pw.TextStyle(fontSize: 8),
+                  cellAlignment: pw.Alignment.centerLeft,
+                  cellAlignments: {
+                    0: pw.Alignment.center,
+                    1: pw.Alignment.center,
+                    2: pw.Alignment.center,
+                    5: pw.Alignment.center,
+                    6: pw.Alignment.centerRight,
+                    7: pw.Alignment.centerRight,
+                    8: pw.Alignment.centerRight,
+                  },
+                  columnWidths: {
+                    0: const pw.FixedColumnWidth(26),
+                    1: const pw.FixedColumnWidth(55),
+                    2: const pw.FixedColumnWidth(35),
+                    3: const pw.FlexColumnWidth(2),
+                    4: const pw.FlexColumnWidth(2),
+                    5: const pw.FixedColumnWidth(50),
+                    6: const pw.FixedColumnWidth(50),
+                    7: const pw.FixedColumnWidth(50),
+                    8: const pw.FixedColumnWidth(55),
+                  },
+                ),
+              pw.SizedBox(height: 24),
+
+              // 4. ลายเซ็นผู้จัดทำและผู้อนุมัติ
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Column(
+                    children: [
+                      pw.Container(width: 140, child: pw.Divider(color: PdfColors.grey500)),
+                      pw.Text('ลงชื่อ ....................................................', style: const pw.TextStyle(fontSize: 9)),
+                      pw.SizedBox(height: 2),
+                      pw.Text('พนักงานบัญชีและการเงิน', style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700)),
+                    ],
+                  ),
+                  pw.Column(
+                    children: [
+                      pw.Container(width: 140, child: pw.Divider(color: PdfColors.grey500)),
+                      pw.Text('ลงชื่อ ....................................................', style: const pw.TextStyle(fontSize: 9)),
+                      pw.SizedBox(height: 2),
+                      pw.Text('ผู้จัดการ / เจ้าของอู่', style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700)),
+                    ],
+                  ),
+                ],
+              ),
+            ];
+          },
+        ),
+      );
+
+      final fileName = 'รายงานรายได้_${DateFormat('yyyyMMdd').format(_startDate)}_${DateFormat('yyyyMMdd').format(_endDate)}.pdf';
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => pdf.save(),
+        name: fileName,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('เกิดข้อผิดพลาดในการสร้าง PDF: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isExportingPdf = false;
+        });
+      }
+    }
+  }
+
+  String _formatDateOnly(String dateStr) {
+    if (dateStr.isEmpty) return '-';
+    try {
+      final dt = DateTime.parse(dateStr).toLocal();
+      return '${dt.day}/${dt.month}/${dt.year + 543}';
+    } catch (_) {
+      return dateStr;
+    }
   }
 }

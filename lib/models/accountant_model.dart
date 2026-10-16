@@ -206,6 +206,8 @@ class RevenueReportSummaryModel {
   final int cashCount;
   final double transferTotalAmount;
   final int transferCount;
+  final double totalPendingAmount;
+  final int pendingCount;
 
   RevenueReportSummaryModel({
     required this.totalPaidAmount,
@@ -216,6 +218,8 @@ class RevenueReportSummaryModel {
     required this.cashCount,
     required this.transferTotalAmount,
     required this.transferCount,
+    this.totalPendingAmount = 0.0,
+    this.pendingCount = 0,
   });
 
   factory RevenueReportSummaryModel.fromJson(Map<String, dynamic> json) {
@@ -228,6 +232,8 @@ class RevenueReportSummaryModel {
       cashCount: (json['cash_count'] ?? 0) as int,
       transferTotalAmount: ((json['transfer_total_amount'] ?? 0) as num).toDouble(),
       transferCount: (json['transfer_count'] ?? 0) as int,
+      totalPendingAmount: ((json['total_pending_amount'] ?? 0) as num).toDouble(),
+      pendingCount: (json['pending_count'] ?? 0) as int,
     );
   }
 }
@@ -273,6 +279,8 @@ class RevenueTransactionItemModel {
   final String modelName;
   final String customerName;
   final String customerPhone;
+  final int paymentStatusId;
+  final String paymentStatusName;
 
   RevenueTransactionItemModel({
     required this.invoiceId,
@@ -289,6 +297,8 @@ class RevenueTransactionItemModel {
     required this.modelName,
     required this.customerName,
     required this.customerPhone,
+    this.paymentStatusId = 2,
+    this.paymentStatusName = 'ชำระแล้ว',
   });
 
   String get carTitle => '$brandName $modelName'.trim().isNotEmpty ? '$brandName $modelName'.trim() : 'รถยนต์ลูกค้า';
@@ -309,6 +319,8 @@ class RevenueTransactionItemModel {
       modelName: json['model_name'] ?? '',
       customerName: json['customer_name'] ?? '-',
       customerPhone: json['customer_phone'] ?? '-',
+      paymentStatusId: json['payment_status_id'] ?? 2,
+      paymentStatusName: json['payment_status_name'] ?? 'ชำระแล้ว',
     );
   }
 
@@ -317,8 +329,8 @@ class RevenueTransactionItemModel {
       orderId: orderId,
       symptom: '',
       createdAt: paidAt,
-      orderStatusId: 4,
-      orderStatusName: 'ส่งมอบรถคืนเรียบร้อย',
+      orderStatusId: paymentStatusId == 2 ? 4 : 3,
+      orderStatusName: paymentStatusId == 2 ? 'ส่งมอบรถคืนเรียบร้อย' : 'ซ่อมเสร็จสิ้น (รอชำระ)',
       priorityName: 'ปกติ',
       vehicleId: 0,
       licensePlate: licensePlate,
@@ -334,8 +346,8 @@ class RevenueTransactionItemModel {
       laborTotal: laborTotal,
       partsTotal: partsTotal,
       totalAmount: totalAmount,
-      paymentStatusId: 2,
-      paymentStatusName: 'ชำระแล้ว',
+      paymentStatusId: paymentStatusId,
+      paymentStatusName: paymentStatusName,
       paymentMethodId: paymentMethodId,
       paymentMethodName: paymentMethodName,
       paidAt: paidAt,
