@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_app/screens/accountant/shop_qr_screen.dart';
 import 'package:my_app/screens/auth/login_screen.dart';
+import 'package:my_app/screens/shared/payroll/technician_payroll_screen.dart';
 
 class AccountantProfileScreen extends StatefulWidget {
   const AccountantProfileScreen({super.key});
@@ -162,6 +163,19 @@ class _AccountantProfileScreenState extends State<AccountantProfileScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Column(
             children: [
+              _buildMenuItem(
+                icon: Icons.payments_outlined,
+                title: 'จ่ายเงินเดือนช่าง',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const TechnicianPayrollScreen(title: 'จ่ายเงินเดือนช่าง'),
+                    ),
+                  );
+                },
+              ),
+              const Divider(height: 1, indent: 16, endIndent: 16),
               _buildMenuItem(
                 icon: Icons.qr_code_2_outlined,
                 title: 'จัดการ QR Code ร้านค้า',
