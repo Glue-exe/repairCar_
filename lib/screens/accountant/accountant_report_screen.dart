@@ -76,7 +76,6 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
         end = DateTime(now.year, now.month + 1, 0);
         break;
       case ReportDateFilterType.custom:
-        // Will be set by date range picker
         return;
     }
 
@@ -131,13 +130,14 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
       final startStr = DateFormat('yyyy-MM-dd').format(_startDate);
       final endStr = DateFormat('yyyy-MM-dd').format(_endDate);
 
-      // ถ้าช่วงเวลามากกว่า 60 วัน ให้ group by month ไม่งั้น group by day
       final daysDiff = _endDate.difference(_startDate).inDays;
       final groupBy = daysDiff > 60 ? 'month' : 'day';
 
       final response = await AppAPI.get(
         '/accountant/revenue_report?startDate=$startStr&endDate=$endStr&groupBy=$groupBy',
       );
+
+      if (!mounted) return;
 
       if (response.statusCode == 200) {
         final j = jsonDecode(response.body);
@@ -164,10 +164,12 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      setState(() {
-        _errorMessage = 'เกิดข้อผิดพลาดในการโหลดข้อมูล: $e';
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'เกิดข้อผิดพลาดในการโหลดข้อมูล: $e';
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -219,25 +221,26 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
     final filteredTransactions = _filterTransactions();
 
     return Scaffold(
-      backgroundColor: Colors.teal.shade50,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('รายงานรายได้'),
-        centerTitle: true,
-        backgroundColor: Colors.teal.shade50,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: AppColors.primaryGreen),
-            tooltip: 'รีเฟรชข้อมูล',
-            onPressed: _fetchReportData,
+        title: const Text(
+          'รายงานรายได้',
+          style: TextStyle(
+            color: AppColors.textDark,
+            fontSize: AppFontSizes.appBar,
+            fontWeight: FontWeight.bold,
           ),
-        ],
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0.5,
       ),
       body: RefreshIndicator(
         onRefresh: _fetchReportData,
+        color: AppColors.primaryGreen,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -281,7 +284,10 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
   Widget _buildDateFilterSection() {
     return Card(
       elevation: 1.5,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: const BorderSide(color: AppColors.border, width: 0.8),
+      ),
       color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(12.0),
@@ -293,7 +299,7 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                 const Icon(Icons.date_range_rounded, color: AppColors.primaryGreen, size: 20),
                 const SizedBox(width: 8),
                 const Text(
-                  'เลือกช่วงเวลาแสดงรายงาน',
+                  'ช่วงเวลาแสดงรายงาน',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -304,16 +310,15 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: Colors.teal.shade50,
+                    color: AppColors.primaryGreen.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.teal.shade200, width: 0.8),
                   ),
                   child: Text(
                     _formatDateRangeTitle(),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.teal.shade800,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primaryGreen,
                     ),
                   ),
                 ),
@@ -394,20 +399,23 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
       children: [
         // แถวบน: รายได้รวมสุทธิ
         Card(
-          elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          elevation: 1.5,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: const BorderSide(color: AppColors.border, width: 0.8),
+          ),
           color: Colors.white,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
               children: [
                 CircleAvatar(
-                  radius: 26,
-                  backgroundColor: AppColors.primaryGreen.withValues(alpha: 0.15),
+                  radius: 24,
+                  backgroundColor: AppColors.primaryGreen.withValues(alpha: 0.12),
                   child: const Icon(
                     Icons.account_balance_wallet_rounded,
                     color: AppColors.primaryGreen,
-                    size: 28,
+                    size: 26,
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -417,7 +425,7 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                     children: [
                       const Text(
                         'รายได้จริงที่ชำระแล้ว (Net Revenue)',
-                        style: TextStyle(fontSize: 13, color: AppColors.textMuted),
+                        style: TextStyle(fontSize: 12, color: AppColors.textMuted),
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -432,17 +440,17 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: Colors.green.shade50,
-                    borderRadius: BorderRadius.circular(12),
+                    color: AppColors.successBg,
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
                     '${_reportSummary.paidCount} บิล',
-                    style: TextStyle(
-                      fontSize: 14,
+                    style: const TextStyle(
+                      fontSize: 13,
                       fontWeight: FontWeight.bold,
-                      color: Colors.green.shade800,
+                      color: AppColors.successText,
                     ),
                   ),
                 ),
@@ -452,14 +460,16 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
         ),
         const SizedBox(height: 8),
 
-        // แถวล่าง: แบ่งเป็น 2 กล่อง (ค่าแรง/ค่าอะไหล่ และ เงินสด/เงินโอน)
+        // แถวล่าง: 2 กล่อง (ค่าแรง/อะไหล่ และ เงินสด/โอน)
         Row(
           children: [
-            // กล่องค่าแรง vs อะไหล่
             Expanded(
               child: Card(
                 elevation: 1.5,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  side: const BorderSide(color: AppColors.border, width: 0.8),
+                ),
                 color: Colors.white,
                 child: Padding(
                   padding: const EdgeInsets.all(12),
@@ -472,7 +482,7 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                           SizedBox(width: 4),
                           Text(
                             'แยกประเภทรายได้',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textDark),
                           ),
                         ],
                       ),
@@ -493,11 +503,13 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
             ),
             const SizedBox(width: 8),
 
-            // กล่องเงินสด vs โอนเงิน
             Expanded(
               child: Card(
                 elevation: 1.5,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  side: const BorderSide(color: AppColors.border, width: 0.8),
+                ),
                 color: Colors.white,
                 child: Padding(
                   padding: const EdgeInsets.all(12),
@@ -510,18 +522,18 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                           SizedBox(width: 4),
                           Text(
                             'ช่องทางชำระเงิน',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textDark),
                           ),
                         ],
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '💵 สด: ฿${currencyFormatter.format(_reportSummary.cashTotalAmount)} (${_reportSummary.cashCount})',
+                        'เงินสด: ฿${currencyFormatter.format(_reportSummary.cashTotalAmount)} (${_reportSummary.cashCount})',
                         style: const TextStyle(fontSize: 12, color: AppColors.textDark),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '📱 โอน: ฿${currencyFormatter.format(_reportSummary.transferTotalAmount)} (${_reportSummary.transferCount})',
+                        'โอนเงิน: ฿${currencyFormatter.format(_reportSummary.transferTotalAmount)} (${_reportSummary.transferCount})',
                         style: const TextStyle(fontSize: 12, color: AppColors.textDark),
                       ),
                     ],
@@ -535,7 +547,7 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
     );
   }
 
-  // ส่วนที่ 3: ตารางรายการใบเสร็จรับเงิน (Detailed Transaction List)
+  // ส่วนที่ 3: ตารางรายการใบเสร็จรับเงิน
   Widget _buildTransactionListSection(
     List<RevenueTransactionItemModel> transactions,
     NumberFormat currencyFormatter,
@@ -543,7 +555,6 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // หัวข้อ + ช่องค้นหา
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -552,20 +563,20 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: Colors.teal.shade50,
+                    color: AppColors.primaryGreen.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
                     Icons.receipt_long_rounded,
                     color: AppColors.primaryGreen,
-                    size: 20,
+                    size: 18,
                   ),
                 ),
                 const SizedBox(width: 8),
                 Text(
                   'รายการใบเสร็จ (${transactions.length} รายการ)',
                   style: const TextStyle(
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textDark,
                   ),
@@ -584,14 +595,14 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
               _searchQuery = val;
             });
           },
-          style: const TextStyle(fontSize: 14),
+          style: const TextStyle(fontSize: 13, color: AppColors.textDark),
           decoration: InputDecoration(
             hintText: 'ค้นหาทะเบียนรถ, ลูกค้า หรือรหัสงาน...',
-            hintStyle: const TextStyle(fontSize: 13, color: AppColors.textMuted),
-            prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.primaryGreen),
+            hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+            prefixIcon: const Icon(Icons.search, size: 18, color: AppColors.primaryGreen),
             suffixIcon: _searchQuery.isNotEmpty
                 ? IconButton(
-                    icon: const Icon(Icons.clear, size: 18, color: Colors.grey),
+                    icon: const Icon(Icons.clear, size: 16, color: Colors.grey),
                     onPressed: () {
                       _searchController.clear();
                       setState(() {
@@ -603,17 +614,17 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
             filled: true,
             fillColor: Colors.white,
             isDense: true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.teal.shade200, width: 0.8),
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: AppColors.border, width: 0.8),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.teal.shade200, width: 0.8),
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: AppColors.border, width: 0.8),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
               borderSide: const BorderSide(color: AppColors.primaryGreen, width: 1.5),
             ),
           ),
@@ -624,7 +635,10 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
         if (transactions.isEmpty)
           Card(
             elevation: 1,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+              side: const BorderSide(color: AppColors.border, width: 0.8),
+            ),
             color: Colors.white,
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
@@ -633,7 +647,7 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                   children: [
                     Icon(
                       _searchQuery.isNotEmpty ? Icons.search_off_rounded : Icons.receipt_long_outlined,
-                      size: 44,
+                      size: 40,
                       color: Colors.grey.shade400,
                     ),
                     const SizedBox(height: 8),
@@ -641,7 +655,7 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                       _searchQuery.isNotEmpty
                           ? 'ไม่พบบิลที่ตรงกับ "$_searchQuery"'
                           : 'ไม่มีรายการใบเสร็จในช่วงเวลาที่เลือก',
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                      style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
                     ),
                   ],
                 ),
@@ -671,7 +685,13 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
     if (item.paidAt.isNotEmpty) {
       try {
         final dt = DateTime.parse(item.paidAt).toLocal();
-        formattedPaidTime = DateFormat('dd/MM/yyyy HH:mm น.').format(dt);
+        const thaiMonths = [
+          '', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
+          'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'
+        ];
+        final minuteStr = dt.minute.toString().padLeft(2, '0');
+        final hourStr = dt.hour.toString().padLeft(2, '0');
+        formattedPaidTime = '${dt.day} ${thaiMonths[dt.month]} ${dt.year + 543}, $hourStr:$minuteStr น.';
       } catch (_) {
         formattedPaidTime = item.paidAt;
       }
@@ -681,14 +701,16 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
 
     return Card(
       elevation: 1.5,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: const BorderSide(color: AppColors.border, width: 0.8),
+      ),
       color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(14.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // แถวบน: ทะเบียนรถ + วันที่เวลาชำระ
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -711,13 +733,12 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
             ),
             const SizedBox(height: 4),
 
-            // ลูกค้า และ รหัสงาน
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   'ลูกค้า: ${item.customerName}',
-                  style: const TextStyle(fontSize: 12, color: Colors.black87),
+                  style: const TextStyle(fontSize: 12, color: AppColors.textDark),
                 ),
                 Text(
                   'งาน #${item.orderId}',
@@ -725,49 +746,38 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                 ),
               ],
             ),
-            const Divider(height: 14),
+            const Divider(height: 14, color: AppColors.divider),
 
-            // ช่องทางการชำระ + ยอดเงิน + ปุ่มดูใบเสร็จ
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Badge ช่องทางการชำระเงิน
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                   decoration: BoxDecoration(
-                    color: isTransfer ? Colors.blue.shade50 : Colors.amber.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: isTransfer ? Colors.blue.shade200 : Colors.amber.shade200,
-                      width: 0.8,
-                    ),
+                    color: isTransfer ? AppColors.infoBg : AppColors.successBg,
+                    borderRadius: BorderRadius.circular(6),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        isTransfer ? Icons.qr_code_2_rounded : Icons.payments_rounded,
-                        size: 14,
-                        color: isTransfer ? Colors.blue.shade800 : Colors.amber.shade900,
+                        isTransfer ? Icons.account_balance_rounded : Icons.payments_rounded,
+                        size: 11,
+                        color: isTransfer ? AppColors.infoText : AppColors.successText,
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 3),
                       Text(
                         item.paymentMethodName,
                         style: TextStyle(
                           fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: isTransfer ? Colors.blue.shade800 : Colors.amber.shade900,
+                          fontWeight: FontWeight.bold,
+                          color: isTransfer ? AppColors.infoText : AppColors.successText,
                         ),
                       ),
-                      if (isTransfer && item.invoiceImageUrl != null) ...[
-                        const SizedBox(width: 4),
-                        const Icon(Icons.attachment_rounded, size: 12, color: Colors.blue),
-                      ],
                     ],
                   ),
                 ),
 
-                // ยอดเงินสุทธิ
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -786,7 +796,6 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                   ],
                 ),
 
-                // ปุ่มดูใบเสร็จ
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.primaryGreen,
@@ -819,18 +828,18 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
   Widget _buildErrorCard() {
     return Card(
       elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Center(
           child: Column(
             children: [
-              const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 48),
+              const Icon(Icons.cloud_off_rounded, color: AppColors.danger, size: 44),
               const SizedBox(height: 10),
               Text(
                 _errorMessage,
-                style: const TextStyle(color: Colors.red, fontSize: 14),
+                style: const TextStyle(color: AppColors.textDark, fontSize: 14),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
@@ -838,6 +847,7 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryGreen,
                   foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
                 onPressed: _fetchReportData,
                 icon: const Icon(Icons.refresh, size: 18),

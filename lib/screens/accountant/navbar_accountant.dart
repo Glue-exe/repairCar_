@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_app/config/app_color.dart';
 import 'package:my_app/screens/accountant/accountant_dashboard_screen.dart';
 import 'package:my_app/screens/accountant/accountant_payment_screen.dart';
 import 'package:my_app/screens/accountant/accountant_report_screen.dart';
@@ -45,21 +46,31 @@ class _NavbarAccountantState extends State<NavbarAccountant> {
         currentIndex: _selectedIndex,
         onTap: _navigateBottomBar,
         type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
+        selectedItemColor: AppColors.primaryGreen,
+        unselectedItemColor: AppColors.textMuted,
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 12),
+        elevation: 8,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
             label: 'หน้าหลัก',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.payments),
+            icon: Icon(Icons.payments_outlined),
+            activeIcon: Icon(Icons.payments),
             label: 'ชำระเงิน',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart),
+            icon: Icon(Icons.bar_chart_outlined),
+            activeIcon: Icon(Icons.bar_chart),
             label: 'รายงาน',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
             label: 'โปรไฟล์',
           ),
         ],

@@ -202,12 +202,19 @@ class _ShopQrScreenState extends State<ShopQrScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.teal.shade50,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('จัดการ QR Code ร้านค้า'),
-        backgroundColor: Colors.teal.shade50,
+        title: const Text(
+          'จัดการ QR Code ร้านค้า',
+          style: TextStyle(
+            color: AppColors.textDark,
+            fontSize: AppFontSizes.appBar,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: Colors.white,
         centerTitle: true,
-        elevation: 0,
+        elevation: 0.5,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.textDark),
           onPressed: () => Navigator.pop(context, _currentQrImage),
