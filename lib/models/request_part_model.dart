@@ -14,6 +14,12 @@ class RequestPartModel {
   bool canCancel;
   String? cancelledAt;
   String? cancelledByName;
+  String? receivedAt;
+  int? receivedByAccountId;
+  String? receivedByName;
+  String? receiveSlipImage;
+  String? receiveNote;
+  int? receivedQuantity;
 
   RequestPartModel({
     required this.id,
@@ -31,6 +37,12 @@ class RequestPartModel {
     required this.canCancel,
     this.cancelledAt,
     this.cancelledByName,
+    this.receivedAt,
+    this.receivedByAccountId,
+    this.receivedByName,
+    this.receiveSlipImage,
+    this.receiveNote,
+    this.receivedQuantity,
   });
 
   factory RequestPartModel.fromJson(Map<String, dynamic> json) {
@@ -47,9 +59,15 @@ class RequestPartModel {
       partPrice: double.tryParse(json['part_price']?.toString() ?? '') ?? 0,
       partBrand: json['part_brand'] as String? ?? '',
       quantity: json['quantity'] as int,
-      canCancel: json['can_cancel'] as bool,
+      canCancel: json['can_cancel'] as bool? ?? false,
       cancelledAt: json['cancelled_at'] as String?,
       cancelledByName: json['cancelled_by_name'] as String?,
+      receivedAt: json['received_at']?.toString(),
+      receivedByAccountId: json['received_by_account_id'] as int?,
+      receivedByName: json['received_by_name'] as String?,
+      receiveSlipImage: json['receive_slip_image'] as String?,
+      receiveNote: json['receive_note'] as String?,
+      receivedQuantity: json['received_quantity'] as int?,
     );
   }
 

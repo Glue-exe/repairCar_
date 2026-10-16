@@ -6,6 +6,7 @@ import 'package:my_app/screens/owner/profile/service/service_main_screen.dart';
 import 'package:my_app/screens/owner/profile/vehicle/vehicle_main_screen.dart';
 import 'package:my_app/screens/owner/profile/owner_view_screen.dart';
 import 'package:my_app/screens/owner/profile/salaryIncrease/salary_history_screen.dart';
+import 'package:my_app/screens/shared/payroll/technician_payroll_screen.dart';
 
 class OwnerProfileScreen extends StatefulWidget {
   const OwnerProfileScreen({super.key});
@@ -203,7 +204,13 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
               const Divider(height: 1, indent: 16, endIndent: 16),
               _buildMenuItem(
                 icon: Icons.payments_outlined,
-                title: 'เงินเดือนพนักงาน',
+                title: 'จ่ายเงินเดือนช่างประจำเดือน',
+                onTap: () => _navigateTo(const TechnicianPayrollScreen(title: 'เงินเดือนช่างประจำเดือน')),
+              ),
+              const Divider(height: 1, indent: 16, endIndent: 16),
+              _buildMenuItem(
+                icon: Icons.trending_up_rounded,
+                title: 'ประวัติปรับฐานเงินเดือน',
                 onTap: () => _navigateTo(const SalaryHistoryScreen()),
               ),
             ],

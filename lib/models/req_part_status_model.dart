@@ -20,4 +20,6 @@ class ReqPartStatusId {
   static const int approved = 2;
   static const int rejected = 3;
   static const int cancelled = 4;
+  static const int received = 5;
+  static const int partiallyReceived = 6;
 }
