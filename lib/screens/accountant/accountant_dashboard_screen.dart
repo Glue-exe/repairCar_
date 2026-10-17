@@ -314,7 +314,10 @@ class _AccountantDashboardScreenState extends State<AccountantDashboardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 8,
+                        runSpacing: 4,
                         children: [
                           Text(
                             order.licensePlate,
@@ -325,7 +328,6 @@ class _AccountantDashboardScreenState extends State<AccountantDashboardScreen> {
                               letterSpacing: 0.3,
                             ),
                           ),
-                          const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(

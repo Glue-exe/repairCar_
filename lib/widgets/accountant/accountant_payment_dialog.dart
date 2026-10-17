@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:my_app/config/app_color.dart';
 import 'package:my_app/config/app_config.dart';
 import 'package:my_app/models/accountant_model.dart';
+import 'package:my_app/models/invoice2_model.dart';
 import 'package:my_app/utils/app_api.dart';
 
 class AccountantPaymentDialog extends StatefulWidget {
@@ -24,9 +25,15 @@ class AccountantPaymentDialog extends StatefulWidget {
 
 class _AccountantPaymentDialogState extends State<AccountantPaymentDialog> {
   final ImagePicker _picker = ImagePicker();
+  static final NumberFormat _currency = NumberFormat('#,##0.00');
+
   int _selectedMethodId = 1; // 1 = เงินสด, 2 = โอนเงิน
   bool _isSubmitting = false;
   String _errorMessage = '';
+
+  // รายการเส้นเงินและบิล
+  Invoice2Model? _invoice;
+  bool _isLoadingInvoice = true;
 
   // จัดการ QR Code ร้านค้า และสลิปหลักฐานการโอน
   String? _shopQrImage;
@@ -45,14 +52,45 @@ class _AccountantPaymentDialogState extends State<AccountantPaymentDialog> {
       'name': 'โอนเงิน / PromptPay',
       'icon': Icons.account_balance_rounded,
       'color': Colors.blue,
-    }
+    },
   ];
 
   @override
   void initState() {
     super.initState();
+    _loadInvoice();
     _fetchShopQr();
     _fetchPaymentMethods();
+  }
+
+  Future<void> _loadInvoice() async {
+    setState(() {
+      _isLoadingInvoice = true;
+    });
+
+    try {
+      final res = await AppAPI.get('/invoice2/${widget.order.orderId}');
+      if (res.statusCode == 200) {
+        final j = jsonDecode(res.body);
+        if (j['isError'] == false && j['data'] != null) {
+          if (mounted) {
+            setState(() {
+              _invoice = Invoice2Model.fromJson(j['data'] as Map<String, dynamic>);
+              _isLoadingInvoice = false;
+            });
+            return;
+          }
+        }
+      }
+    } catch (e, st) {
+      debugPrint('Error loading invoice in payment dialog: $e\n$st');
+    }
+
+    if (mounted) {
+      setState(() {
+        _isLoadingInvoice = false;
+      });
+    }
   }
 
   Future<void> _fetchPaymentMethods() async {
@@ -66,11 +104,10 @@ class _AccountantPaymentDialogState extends State<AccountantPaymentDialog> {
             setState(() {
               _paymentMethods = list.map((item) {
                 final id = item['id'] as int;
-                final name = item['name'] as String;
                 final isTransfer = id == 2;
                 return {
                   'id': id,
-                  'name': name,
+                  'name': isTransfer ? 'โอนเงิน / PromptPay' : 'เงินสด (Cash)',
                   'icon': isTransfer ? Icons.account_balance_rounded : Icons.payments_rounded,
                   'color': isTransfer ? Colors.blue : Colors.green,
                 };
@@ -117,7 +154,6 @@ class _AccountantPaymentDialogState extends State<AccountantPaymentDialog> {
     }
   }
 
-  // BottomSheet สำหรับเลือกรูปภาพสลิปจากกล้องหรือคลังภาพ ตาม workshop PDF
   void _showImageSourcePicker() {
     showModalBottomSheet(
       context: context,
@@ -208,7 +244,6 @@ class _AccountantPaymentDialogState extends State<AccountantPaymentDialog> {
     }
   }
 
-  // เงื่อนไข: ถ้าเป็นการโอนเงิน (_selectedMethodId == 2) ต้องมีภาพสลิปเท่านั้น จึงจะกดยืนยันได้
   bool get _canSubmit {
     if (_isSubmitting) return false;
     if (_selectedMethodId == 2 && _slipImageFile == null) return false;
@@ -231,14 +266,12 @@ class _AccountantPaymentDialogState extends State<AccountantPaymentDialog> {
 
       dynamic response;
       if (_selectedMethodId == 2 && _slipImageFile != null) {
-        // ชำระด้วยการโอนเงิน -> ใช้ Multipart ส่งรูปสลิปหลักฐาน
         response = await AppAPI.postMultipart(
           '/accountant/pay',
           fields: fields,
           file: _slipImageFile,
         );
       } else {
-        // ชำระด้วยเงินสด -> ใช้ Post ปกติ
         response = await AppAPI.post('/accountant/pay', {
           'order_id': widget.order.orderId,
           'payment_method_id': _selectedMethodId,
@@ -281,12 +314,14 @@ class _AccountantPaymentDialogState extends State<AccountantPaymentDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormatter = NumberFormat('#,##0.00');
+    final effectiveTotal = _invoice?.total ?? widget.order.totalAmount;
+    final effectiveLaborTotal = _invoice?.laborTotal ?? widget.order.laborTotal;
+    final effectivePartsTotal = _invoice?.partsTotal ?? widget.order.partsTotal;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 460),
+        constraints: const BoxConstraints(maxWidth: 480),
         padding: const EdgeInsets.all(20.0),
         child: SingleChildScrollView(
           child: Column(
@@ -350,45 +385,47 @@ class _AccountantPaymentDialogState extends State<AccountantPaymentDialog> {
                 child: Column(
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.directions_car, size: 18, color: AppColors.primaryGreen),
-                            const SizedBox(width: 6),
-                            Text(
-                              widget.order.licensePlate,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: AppColors.textDark,
-                              ),
+                        const Icon(Icons.directions_car, size: 18, color: AppColors.primaryGreen),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            widget.order.licensePlate,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: AppColors.textDark,
                             ),
-                          ],
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                        Text(
-                          widget.order.carTitle,
-                          style: const TextStyle(
-                            color: AppColors.textDark,
-                            fontSize: 13,
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            widget.order.carTitle,
+                            style: const TextStyle(
+                              color: AppColors.textDark,
+                              fontSize: 13,
+                            ),
+                            textAlign: TextAlign.end,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 6),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.person, size: 16, color: Colors.grey),
-                            const SizedBox(width: 6),
-                            Text(
-                              widget.order.customerFullName,
-                              style: const TextStyle(fontSize: 13, color: AppColors.textMuted),
-                            ),
-                          ],
+                        const Icon(Icons.person, size: 16, color: Colors.grey),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            widget.order.customerFullName,
+                            style: const TextStyle(fontSize: 13, color: AppColors.textMuted),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         Text(
                           widget.order.customerPhone,
                           style: const TextStyle(fontSize: 13, color: AppColors.textMuted),
@@ -400,59 +437,78 @@ class _AccountantPaymentDialogState extends State<AccountantPaymentDialog> {
               ),
               const SizedBox(height: 14),
 
-              // สรุปยอดเงิน
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.green.shade50.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.green.shade200),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('ค่าแรงช่าง:', style: TextStyle(fontSize: 14, color: Colors.black87)),
-                        Text('฿${currencyFormatter.format(widget.order.laborTotal)}', style: const TextStyle(fontSize: 14)),
-                      ],
+              // รายการค่าบริการและอะไหล่ (Itemized Table)
+              Row(
+                children: [
+                  const Icon(Icons.receipt_long_rounded, size: 18, color: AppColors.primaryGreen),
+                  const SizedBox(width: 6),
+                  const Text(
+                    'รายการ',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textDark,
                     ),
-                    const SizedBox(height: 6),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('ค่าอะไหล่:', style: TextStyle(fontSize: 14, color: Colors.black87)),
-                        Text('฿${currencyFormatter.format(widget.order.partsTotal)}', style: const TextStyle(fontSize: 14)),
-                      ],
+                  ),
+                  const Spacer(),
+                  if (_invoice != null && _invoice!.id > 0)
+                    Text(
+                      'เลขที่บิล #${_invoice!.id}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textMuted,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                    const Divider(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'ยอดรวมสุทธิ:',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textDark,
-                          ),
-                        ),
-                        Text(
-                          '฿${currencyFormatter.format(widget.order.totalAmount)}',
-                          style: TextStyle(
-                            fontSize: 19,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green.shade800,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                ],
               ),
+              const SizedBox(height: 8),
+
+              if (_isLoadingInvoice)
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.border, width: 0.6),
+                  ),
+                  child: const Column(
+                    children: [
+                      SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.primaryGreen,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'กำลังโหลดรายการงานซ่อมและอะไหล่...',
+                        style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+                      ),
+                    ],
+                  ),
+                )
+              else if (_invoice != null && _invoice!.lines.isNotEmpty) ...[
+                _buildLineTable(_invoice!),
+                const SizedBox(height: 10),
+                _totalRow('ค่าแรงรวม', _invoice!.laborTotal),
+                _totalRow('ค่าอะไหล่รวม', _invoice!.partsTotal),
+                const Divider(height: 16, thickness: 0.8),
+                _totalRow('ยอดรวมทั้งสิ้น', _invoice!.total, emphasize: true),
+              ] else ...[
+                _buildFallbackSummaryTable(effectiveLaborTotal, effectivePartsTotal),
+                const SizedBox(height: 10),
+                _totalRow('ค่าแรงรวม', effectiveLaborTotal),
+                _totalRow('ค่าอะไหล่รวม', effectivePartsTotal),
+                const Divider(height: 16, thickness: 0.8),
+                _totalRow('ยอดรวมทั้งสิ้น', effectiveTotal, emphasize: true),
+              ],
               const SizedBox(height: 16),
 
-              // เลือกวิธีชำระเงิน
+              // เลือกวิธีชำระเงิน (จัดเรียงเป็นแนวตั้ง)
               const Text(
                 'เลือกช่องทางการชำระเงิน:',
                 style: TextStyle(
@@ -584,7 +640,7 @@ class _AccountantPaymentDialogState extends State<AccountantPaymentDialog> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'ยอดที่ต้องชำระ: ฿${currencyFormatter.format(widget.order.totalAmount)}',
+                        'ยอดที่ต้องชำระ: ฿${_currency.format(effectiveTotal)}',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
@@ -602,19 +658,24 @@ class _AccountantPaymentDialogState extends State<AccountantPaymentDialog> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: const [
-                        Text(
-                          'แนบหลักฐานการโอนเงิน (สลิป)',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textDark,
+                    Expanded(
+                      child: Row(
+                        children: const [
+                          Flexible(
+                            child: Text(
+                              'แนบหลักฐานการโอนเงิน (สลิป)',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textDark,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                        SizedBox(width: 4),
-                        Text('*', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                      ],
+                          SizedBox(width: 4),
+                          Text('*', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
                     ),
                     if (_slipImageFile != null)
                       TextButton.icon(
@@ -791,6 +852,262 @@ class _AccountantPaymentDialogState extends State<AccountantPaymentDialog> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // --- Helper Methods สำหรับแสดงตารางรายการค่าแรงและอะไหล่ ---
+
+  List<int?> _subTaskOrder(Invoice2Model invoice) {
+    final seen = <int?>{};
+    final order = <int?>[];
+    for (final line in invoice.lines) {
+      if (!seen.contains(line.subTaskId)) {
+        seen.add(line.subTaskId);
+        order.add(line.subTaskId);
+      }
+    }
+    return order;
+  }
+
+  List<Invoice2LineModel> _laborLinesOf(Invoice2Model invoice, int? subTaskId) {
+    return invoice.lines
+        .where((line) => line.isLabor && line.subTaskId == subTaskId)
+        .toList();
+  }
+
+  List<Invoice2LineModel> _partLinesOf(Invoice2Model invoice, int? subTaskId) {
+    return invoice.lines
+        .where((line) => !line.isLabor && line.subTaskId == subTaskId)
+        .toList();
+  }
+
+  String _partLabel(Invoice2LineModel line) {
+    final brand = line.brand;
+    if (brand != null && brand.trim().isNotEmpty) {
+      return '${line.name} ($brand)';
+    }
+    return line.name;
+  }
+
+  Widget _buildLineTable(Invoice2Model invoice) {
+    final rows = <TableRow>[_buildTableHeader()];
+    int index = 1;
+
+    final subTaskIds = _subTaskOrder(invoice);
+
+    if (subTaskIds.isEmpty && invoice.lines.isNotEmpty) {
+      for (final line in invoice.lines) {
+        if (line.isLabor) {
+          rows.add(
+            TableRow(
+              children: [
+                _buildCell('$index', align: TextAlign.center, bold: true),
+                _buildCell('ค่าแรง: ${line.name}', bold: true),
+                _buildCell('-', align: TextAlign.center),
+                _buildCell('-', align: TextAlign.right),
+                _buildCell(
+                  _currency.format(line.total),
+                  align: TextAlign.right,
+                  bold: true,
+                ),
+              ],
+            ),
+          );
+          index++;
+        } else {
+          rows.add(
+            TableRow(
+              children: [
+                _buildCell('', align: TextAlign.center),
+                _buildCell('   • ${_partLabel(line)}'),
+                _buildCell('${line.quantity}', align: TextAlign.center),
+                _buildCell(
+                  _currency.format(line.unitPrice),
+                  align: TextAlign.right,
+                ),
+                _buildCell(_currency.format(line.total), align: TextAlign.right),
+              ],
+            ),
+          );
+        }
+      }
+    } else {
+      for (final subTaskId in subTaskIds) {
+        final laborLines = _laborLinesOf(invoice, subTaskId);
+        final partLines = _partLinesOf(invoice, subTaskId);
+
+        if (laborLines.isNotEmpty) {
+          final title = laborLines.first.name;
+          final laborTotal = laborLines.fold<double>(0, (sum, l) => sum + l.total);
+
+          rows.add(
+            TableRow(
+              children: [
+                _buildCell('$index', align: TextAlign.center, bold: true),
+                _buildCell('ค่าแรง: $title', bold: true),
+                _buildCell('-', align: TextAlign.center),
+                _buildCell('-', align: TextAlign.right),
+                _buildCell(
+                  _currency.format(laborTotal),
+                  align: TextAlign.right,
+                  bold: true,
+                ),
+              ],
+            ),
+          );
+          index++;
+        }
+
+        for (final part in partLines) {
+          rows.add(
+            TableRow(
+              children: [
+                _buildCell(laborLines.isEmpty ? '$index' : '', align: TextAlign.center),
+                _buildCell(laborLines.isEmpty ? _partLabel(part) : '   • ${_partLabel(part)}'),
+                _buildCell('${part.quantity}', align: TextAlign.center),
+                _buildCell(
+                  _currency.format(part.unitPrice),
+                  align: TextAlign.right,
+                ),
+                _buildCell(_currency.format(part.total), align: TextAlign.right),
+              ],
+            ),
+          );
+          if (laborLines.isEmpty) index++;
+        }
+      }
+    }
+
+    return Table(
+      border: TableBorder.all(color: AppColors.border, width: 0.8),
+      columnWidths: const {
+        0: FixedColumnWidth(28),
+        1: FlexColumnWidth(),
+        2: FixedColumnWidth(34),
+        3: FixedColumnWidth(64),
+        4: FixedColumnWidth(70),
+      },
+      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+      children: rows,
+    );
+  }
+
+  Widget _buildFallbackSummaryTable(double laborTotal, double partsTotal) {
+    final rows = <TableRow>[_buildTableHeader()];
+    int idx = 1;
+    if (laborTotal > 0) {
+      rows.add(
+        TableRow(
+          children: [
+            _buildCell('$idx', align: TextAlign.center, bold: true),
+            _buildCell('ค่าแรงงานบริการ', bold: true),
+            _buildCell('-', align: TextAlign.center),
+            _buildCell('-', align: TextAlign.right),
+            _buildCell(_currency.format(laborTotal), align: TextAlign.right, bold: true),
+          ],
+        ),
+      );
+      idx++;
+    }
+    if (partsTotal > 0) {
+      rows.add(
+        TableRow(
+          children: [
+            _buildCell('$idx', align: TextAlign.center, bold: true),
+            _buildCell('ค่าอะไหล่และอุปกรณ์', bold: true),
+            _buildCell('-', align: TextAlign.center),
+            _buildCell('-', align: TextAlign.right),
+            _buildCell(_currency.format(partsTotal), align: TextAlign.right, bold: true),
+          ],
+        ),
+      );
+    }
+    return Table(
+      border: TableBorder.all(color: AppColors.border, width: 0.8),
+      columnWidths: const {
+        0: FixedColumnWidth(28),
+        1: FlexColumnWidth(),
+        2: FixedColumnWidth(34),
+        3: FixedColumnWidth(64),
+        4: FixedColumnWidth(70),
+      },
+      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+      children: rows,
+    );
+  }
+
+  TableRow _buildTableHeader() {
+    return TableRow(
+      decoration: const BoxDecoration(color: AppColors.inputBackground),
+      children: [
+        _buildHeaderCell('ลำดับ', TextAlign.center),
+        _buildHeaderCell('รายการ', TextAlign.left),
+        _buildHeaderCell('จำนวน', TextAlign.center),
+        _buildHeaderCell('ราคา/หน่วย', TextAlign.right),
+        _buildHeaderCell('จำนวนเงิน', TextAlign.right),
+      ],
+    );
+  }
+
+  Widget _buildHeaderCell(String text, TextAlign align) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+      child: Text(
+        text,
+        textAlign: align,
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: AppColors.textDark,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCell(
+    String text, {
+    TextAlign align = TextAlign.left,
+    bool bold = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+      child: Text(
+        text,
+        textAlign: align,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+          color: AppColors.textDark,
+        ),
+      ),
+    );
+  }
+
+  Widget _totalRow(String label, double value, {bool emphasize = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: emphasize ? 16 : 13,
+                fontWeight: emphasize ? FontWeight.bold : FontWeight.normal,
+                color: AppColors.textDark,
+              ),
+            ),
+          ),
+          Text(
+            '฿${_currency.format(value)}',
+            style: TextStyle(
+              fontSize: emphasize ? 18 : 13,
+              fontWeight: emphasize ? FontWeight.bold : FontWeight.normal,
+              color: emphasize ? AppColors.primaryGreen : AppColors.textDark,
+            ),
+          ),
+        ],
       ),
     );
   }

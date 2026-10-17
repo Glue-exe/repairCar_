@@ -10,12 +10,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
-enum ReportDateFilterType {
-  today,
-  last7Days,
-  thisMonth,
-  custom,
-}
+enum ReportDateFilterType { today, last7Days, thisMonth, custom }
 
 class AccountantReportScreen extends StatefulWidget {
   const AccountantReportScreen({super.key});
@@ -107,9 +102,9 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(context).colorScheme.copyWith(
-                  primary: AppColors.primaryGreen,
-                  onPrimary: Colors.white,
-                ),
+              primary: AppColors.primaryGreen,
+              onPrimary: Colors.white,
+            ),
           ),
           child: child!,
         );
@@ -158,7 +153,9 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
           return;
         } else {
           setState(() {
-            _errorMessage = res.errorMessage.isNotEmpty ? res.errorMessage : 'ไม่สามารถโหลดข้อมูลรายงานได้';
+            _errorMessage = res.errorMessage.isNotEmpty
+                ? res.errorMessage
+                : 'ไม่สามารถโหลดข้อมูลรายงานได้';
             _isLoading = false;
           });
           return;
@@ -181,8 +178,19 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
 
   String _formatDateRangeTitle() {
     const thaiMonths = [
-      '', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
-      'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'
+      '',
+      'ม.ค.',
+      'ก.พ.',
+      'มี.ค.',
+      'เม.ย.',
+      'พ.ค.',
+      'มิ.ย.',
+      'ก.ค.',
+      'ส.ค.',
+      'ก.ย.',
+      'ต.ค.',
+      'พ.ย.',
+      'ธ.ค.',
     ];
 
     String formatThai(DateTime dt) {
@@ -249,14 +257,13 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                     height: 18,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: AppColors.primaryGreen,
+                      color: AppColors.info,
                     ),
                   )
-                : const Icon(
-                    Icons.picture_as_pdf_outlined,
-                    color: AppColors.primaryGreen,
-                  ),
-            onPressed: (_isLoading || _isExportingPdf) ? null : _exportReportPdf,
+                : const Icon(Icons.print, color: AppColors.info),
+            onPressed: (_isLoading || _isExportingPdf)
+                ? null
+                : _exportReportPdf,
           ),
         ],
       ),
@@ -277,7 +284,9 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 40.0),
                   child: Center(
-                    child: CircularProgressIndicator(color: AppColors.primaryGreen),
+                    child: CircularProgressIndicator(
+                      color: AppColors.primaryGreen,
+                    ),
                   ),
                 )
               else if (_errorMessage.isNotEmpty)
@@ -295,7 +304,10 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                 const SizedBox(height: 16),
 
                 // 3. ตารางรายการใบเสร็จรับเงิน (Detailed Transaction List)
-                _buildTransactionListSection(filteredTransactions, currencyFormatter),
+                _buildTransactionListSection(
+                  filteredTransactions,
+                  currencyFormatter,
+                ),
                 const SizedBox(height: 24),
               ],
             ],
@@ -321,7 +333,11 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
           children: [
             Row(
               children: [
-                const Icon(Icons.date_range_rounded, color: AppColors.primaryGreen, size: 20),
+                const Icon(
+                  Icons.date_range_rounded,
+                  color: AppColors.primaryGreen,
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 const Text(
                   'ช่วงเวลาแสดงรายงาน',
@@ -333,7 +349,10 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                 ),
                 const Spacer(),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.primaryGreen.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
@@ -356,7 +375,10 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                 children: [
                   _buildFilterChip('วันนี้', ReportDateFilterType.today),
                   const SizedBox(width: 6),
-                  _buildFilterChip('7 วันล่าสุด', ReportDateFilterType.last7Days),
+                  _buildFilterChip(
+                    '7 วันล่าสุด',
+                    ReportDateFilterType.last7Days,
+                  ),
                   const SizedBox(width: 6),
                   _buildFilterChip('เดือนนี้', ReportDateFilterType.thisMonth),
                   const SizedBox(width: 6),
@@ -376,7 +398,8 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                           ? Colors.white
                           : AppColors.textDark,
                     ),
-                    backgroundColor: _selectedFilterType == ReportDateFilterType.custom
+                    backgroundColor:
+                        _selectedFilterType == ReportDateFilterType.custom
                         ? AppColors.primaryGreen
                         : Colors.grey.shade100,
                     side: BorderSide(
@@ -436,7 +459,9 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
               children: [
                 CircleAvatar(
                   radius: 24,
-                  backgroundColor: AppColors.primaryGreen.withValues(alpha: 0.12),
+                  backgroundColor: AppColors.primaryGreen.withValues(
+                    alpha: 0.12,
+                  ),
                   child: const Icon(
                     Icons.account_balance_wallet_rounded,
                     color: AppColors.primaryGreen,
@@ -450,7 +475,10 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                     children: [
                       const Text(
                         'รายได้จริงที่ชำระแล้ว (Net Revenue)',
-                        style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textMuted,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -465,7 +493,10 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.successBg,
                     borderRadius: BorderRadius.circular(10),
@@ -503,23 +534,37 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                     children: [
                       const Row(
                         children: [
-                          Icon(Icons.pie_chart_outline_rounded, size: 16, color: Colors.blue),
+                          Icon(
+                            Icons.pie_chart_outline_rounded,
+                            size: 16,
+                            color: Colors.blue,
+                          ),
                           SizedBox(width: 4),
                           Text(
                             'แยกประเภทรายได้',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textDark,
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'ค่าแรง: ฿${currencyFormatter.format(_reportSummary.totalLaborAmount)}',
-                        style: const TextStyle(fontSize: 12, color: AppColors.textDark),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textDark,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         'ค่าอะไหล่: ฿${currencyFormatter.format(_reportSummary.totalPartsAmount)}',
-                        style: const TextStyle(fontSize: 12, color: AppColors.textDark),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textDark,
+                        ),
                       ),
                     ],
                   ),
@@ -543,23 +588,37 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                     children: [
                       const Row(
                         children: [
-                          Icon(Icons.payments_outlined, size: 16, color: Colors.amber),
+                          Icon(
+                            Icons.payments_outlined,
+                            size: 16,
+                            color: Colors.amber,
+                          ),
                           SizedBox(width: 4),
                           Text(
                             'ช่องทางชำระเงิน',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textDark,
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'เงินสด: ฿${currencyFormatter.format(_reportSummary.cashTotalAmount)} (${_reportSummary.cashCount})',
-                        style: const TextStyle(fontSize: 12, color: AppColors.textDark),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textDark,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         'โอนเงิน: ฿${currencyFormatter.format(_reportSummary.transferTotalAmount)} (${_reportSummary.transferCount})',
-                        style: const TextStyle(fontSize: 12, color: AppColors.textDark),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textDark,
+                        ),
                       ),
                     ],
                   ),
@@ -567,74 +626,6 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
               ),
             ),
           ],
-        ),
-        const SizedBox(height: 8),
-
-        // แถวสาม: ยอดรอชำระ / ลูกหนี้การค้ารอเก็บเงิน (Pending Receivables)
-        Card(
-          elevation: 1.5,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-            side: BorderSide(color: Colors.amber.shade200, width: 0.8),
-          ),
-          color: const Color(0xFFFFFBEB),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 20,
-                  backgroundColor: Colors.amber.shade100,
-                  child: const Icon(
-                    Icons.pending_actions_rounded,
-                    color: Color(0xFFD97706),
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'ยอดรอชำระ / ค้างรับ (Pending Receivables)',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF92400E),
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '฿${currencyFormatter.format(_reportSummary.totalPendingAmount)}',
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFFB45309),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.amber.shade300),
-                  ),
-                  child: Text(
-                    '${_reportSummary.pendingCount} งานค้าง',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFFB45309),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
         ),
       ],
     );
@@ -671,7 +662,9 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
-                      color: _statusFilter == 'paid' ? Colors.white : Colors.transparent,
+                      color: _statusFilter == 'paid'
+                          ? Colors.white
+                          : Colors.transparent,
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: _statusFilter == 'paid'
                           ? [
@@ -690,7 +683,9 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                           Icon(
                             Icons.check_circle_outline_rounded,
                             size: 16,
-                            color: _statusFilter == 'paid' ? AppColors.primaryGreen : AppColors.textMuted,
+                            color: _statusFilter == 'paid'
+                                ? AppColors.primaryGreen
+                                : AppColors.textMuted,
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -698,7 +693,9 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: _statusFilter == 'paid' ? AppColors.primaryGreen : AppColors.textMuted,
+                              color: _statusFilter == 'paid'
+                                  ? AppColors.primaryGreen
+                                  : AppColors.textMuted,
                             ),
                           ),
                         ],
@@ -721,7 +718,9 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
-                      color: _statusFilter == 'pending' ? Colors.white : Colors.transparent,
+                      color: _statusFilter == 'pending'
+                          ? Colors.white
+                          : Colors.transparent,
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: _statusFilter == 'pending'
                           ? [
@@ -740,7 +739,9 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                           Icon(
                             Icons.pending_actions_rounded,
                             size: 16,
-                            color: _statusFilter == 'pending' ? const Color(0xFFD97706) : AppColors.textMuted,
+                            color: _statusFilter == 'pending'
+                                ? const Color(0xFFD97706)
+                                : AppColors.textMuted,
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -748,7 +749,9 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: _statusFilter == 'pending' ? const Color(0xFFD97706) : AppColors.textMuted,
+                              color: _statusFilter == 'pending'
+                                  ? const Color(0xFFD97706)
+                                  : AppColors.textMuted,
                             ),
                           ),
                         ],
@@ -770,12 +773,20 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: (_statusFilter == 'pending' ? Colors.amber : AppColors.primaryGreen).withValues(alpha: 0.1),
+                    color:
+                        (_statusFilter == 'pending'
+                                ? Colors.amber
+                                : AppColors.primaryGreen)
+                            .withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
-                    _statusFilter == 'pending' ? Icons.pending_actions_rounded : Icons.receipt_long_rounded,
-                    color: _statusFilter == 'pending' ? const Color(0xFFD97706) : AppColors.primaryGreen,
+                    _statusFilter == 'pending'
+                        ? Icons.pending_actions_rounded
+                        : Icons.receipt_long_rounded,
+                    color: _statusFilter == 'pending'
+                        ? const Color(0xFFD97706)
+                        : AppColors.primaryGreen,
                     size: 18,
                   ),
                 ),
@@ -795,12 +806,22 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.primaryGreen,
-                side: const BorderSide(color: AppColors.primaryGreen, width: 0.8),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                side: const BorderSide(
+                  color: AppColors.primaryGreen,
+                  width: 0.8,
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 visualDensity: VisualDensity.compact,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
-              onPressed: (_isLoading || _isExportingPdf) ? null : _exportReportPdf,
+              onPressed: (_isLoading || _isExportingPdf)
+                  ? null
+                  : _exportReportPdf,
               icon: const Icon(Icons.print_outlined, size: 14),
               label: const Text('พิมพ์รายงาน', style: TextStyle(fontSize: 11)),
             ),
@@ -819,8 +840,15 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
           style: const TextStyle(fontSize: 13, color: AppColors.textDark),
           decoration: InputDecoration(
             hintText: 'ค้นหาทะเบียนรถ, ลูกค้า หรือรหัสงาน...',
-            hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
-            prefixIcon: const Icon(Icons.search, size: 18, color: AppColors.primaryGreen),
+            hintStyle: const TextStyle(
+              fontSize: 12,
+              color: AppColors.textMuted,
+            ),
+            prefixIcon: const Icon(
+              Icons.search,
+              size: 18,
+              color: AppColors.primaryGreen,
+            ),
             suffixIcon: _searchQuery.isNotEmpty
                 ? IconButton(
                     icon: const Icon(Icons.clear, size: 16, color: Colors.grey),
@@ -835,7 +863,10 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
             filled: true,
             fillColor: Colors.white,
             isDense: true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 8,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: const BorderSide(color: AppColors.border, width: 0.8),
@@ -846,7 +877,10 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: AppColors.primaryGreen, width: 1.5),
+              borderSide: const BorderSide(
+                color: AppColors.primaryGreen,
+                width: 1.5,
+              ),
             ),
           ),
         ),
@@ -867,7 +901,9 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                 child: Column(
                   children: [
                     Icon(
-                      _searchQuery.isNotEmpty ? Icons.search_off_rounded : Icons.receipt_long_outlined,
+                      _searchQuery.isNotEmpty
+                          ? Icons.search_off_rounded
+                          : Icons.receipt_long_outlined,
                       size: 40,
                       color: Colors.grey.shade400,
                     ),
@@ -876,7 +912,10 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                       _searchQuery.isNotEmpty
                           ? 'ไม่พบบิลที่ตรงกับ "$_searchQuery"'
                           : 'ไม่มีรายการใบเสร็จในช่วงเวลาที่เลือก',
-                      style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                      style: const TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),
@@ -907,12 +946,24 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
       try {
         final dt = DateTime.parse(item.paidAt).toLocal();
         const thaiMonths = [
-          '', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
-          'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'
+          '',
+          'ม.ค.',
+          'ก.พ.',
+          'มี.ค.',
+          'เม.ย.',
+          'พ.ค.',
+          'มิ.ย.',
+          'ก.ค.',
+          'ส.ค.',
+          'ก.ย.',
+          'ต.ค.',
+          'พ.ย.',
+          'ธ.ค.',
         ];
         final minuteStr = dt.minute.toString().padLeft(2, '0');
         final hourStr = dt.hour.toString().padLeft(2, '0');
-        formattedPaidTime = '${dt.day} ${thaiMonths[dt.month]} ${dt.year + 543}, $hourStr:$minuteStr น.';
+        formattedPaidTime =
+            '${dt.day} ${thaiMonths[dt.month]} ${dt.year + 543}, $hourStr:$minuteStr น.';
       } catch (_) {
         formattedPaidTime = item.paidAt;
       }
@@ -949,7 +1000,10 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                 ),
                 Text(
                   formattedPaidTime,
-                  style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textMuted,
+                  ),
                 ),
               ],
             ),
@@ -960,11 +1014,17 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
               children: [
                 Text(
                   'ลูกค้า: ${item.customerName}',
-                  style: const TextStyle(fontSize: 12, color: AppColors.textDark),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textDark,
+                  ),
                 ),
                 Text(
                   'งาน #${item.orderId}',
-                  style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textMuted,
+                  ),
                 ),
               ],
             ),
@@ -974,7 +1034,10 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: isPending
                         ? AppColors.warningBg
@@ -987,11 +1050,15 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                       Icon(
                         isPending
                             ? Icons.pending_actions_rounded
-                            : (isTransfer ? Icons.account_balance_rounded : Icons.payments_rounded),
+                            : (isTransfer
+                                  ? Icons.account_balance_rounded
+                                  : Icons.payments_rounded),
                         size: 11,
                         color: isPending
                             ? AppColors.warningText
-                            : (isTransfer ? AppColors.infoText : AppColors.successText),
+                            : (isTransfer
+                                  ? AppColors.infoText
+                                  : AppColors.successText),
                       ),
                       const SizedBox(width: 3),
                       Text(
@@ -1001,7 +1068,9 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                           fontWeight: FontWeight.bold,
                           color: isPending
                               ? AppColors.warningText
-                              : (isTransfer ? AppColors.infoText : AppColors.successText),
+                              : (isTransfer
+                                    ? AppColors.infoText
+                                    : AppColors.successText),
                         ),
                       ),
                     ],
@@ -1013,14 +1082,19 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                   children: [
                     Text(
                       'ค่าแรง ฿${currencyFormatter.format(item.laborTotal)} | อะไหล่ ฿${currencyFormatter.format(item.partsTotal)}',
-                      style: const TextStyle(fontSize: 10, color: AppColors.textMuted),
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: AppColors.textMuted,
+                      ),
                     ),
                     Text(
                       '฿${currencyFormatter.format(item.totalAmount)}',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: isPending ? const Color(0xFFB45309) : AppColors.primaryGreen,
+                        color: isPending
+                            ? const Color(0xFFB45309)
+                            : AppColors.primaryGreen,
                       ),
                     ),
                   ],
@@ -1028,9 +1102,18 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
 
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: isPending ? const Color(0xFFB45309) : AppColors.primaryGreen,
-                    side: BorderSide(color: isPending ? Colors.amber.shade400 : AppColors.primaryGreen),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    foregroundColor: isPending
+                        ? const Color(0xFFB45309)
+                        : AppColors.primaryGreen,
+                    side: BorderSide(
+                      color: isPending
+                          ? Colors.amber.shade400
+                          : AppColors.primaryGreen,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     visualDensity: VisualDensity.compact,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -1044,8 +1127,14 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                       ),
                     );
                   },
-                  icon: Icon(isPending ? Icons.description_outlined : Icons.receipt_long, size: 14),
-                  label: Text(isPending ? 'ดูบิล' : 'ใบเสร็จ', style: const TextStyle(fontSize: 12)),
+                  icon: Icon(
+                    isPending ? Icons.description_outlined : Icons.receipt_long,
+                    size: 14,
+                  ),
+                  label: Text(
+                    isPending ? 'ดูบิล' : 'ใบเสร็จ',
+                    style: const TextStyle(fontSize: 12),
+                  ),
                 ),
               ],
             ),
@@ -1065,7 +1154,11 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
         child: Center(
           child: Column(
             children: [
-              const Icon(Icons.cloud_off_rounded, color: AppColors.danger, size: 44),
+              const Icon(
+                Icons.cloud_off_rounded,
+                color: AppColors.danger,
+                size: 44,
+              ),
               const SizedBox(height: 10),
               Text(
                 _errorMessage,
@@ -1077,7 +1170,9 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryGreen,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 onPressed: _fetchReportData,
                 icon: const Icon(Icons.refresh, size: 18),
@@ -1144,11 +1239,17 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                       children: [
                         pw.Text(
                           'ช่วงเวลา: $dateTitle',
-                          style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+                          style: pw.TextStyle(
+                            fontSize: 10,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
                         ),
                         pw.Text(
                           'วันที่พิมพ์: $printTime น.',
-                          style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
+                          style: const pw.TextStyle(
+                            fontSize: 9,
+                            color: PdfColors.grey700,
+                          ),
                         ),
                       ],
                     ),
@@ -1166,7 +1267,10 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
               margin: const pw.EdgeInsets.only(top: 10),
               child: pw.Text(
                 'หน้า ${context.pageNumber} จาก ${context.pagesCount}',
-                style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+                style: const pw.TextStyle(
+                  fontSize: 9,
+                  color: PdfColors.grey600,
+                ),
               ),
             );
           },
@@ -1185,7 +1289,10 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                   children: [
                     pw.Text(
                       'สรุปภาพรวมทางการเงิน',
-                      style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
+                      style: pw.TextStyle(
+                        fontSize: 11,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
                     ),
                     pw.SizedBox(height: 6),
                     pw.Row(
@@ -1193,11 +1300,18 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                       children: [
                         pw.Text(
                           'รายรับรวมสุทธิ (ชำระแล้ว): ฿${currency.format(_reportSummary.totalPaidAmount)} (${_reportSummary.paidCount} บิล)',
-                          style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+                          style: pw.TextStyle(
+                            fontSize: 10,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
                         ),
                         pw.Text(
                           'ยอดค้างชำระ / รอเก็บเงิน: ฿${currency.format(_reportSummary.totalPendingAmount)} (${_reportSummary.pendingCount} งาน)',
-                          style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.amber900),
+                          style: pw.TextStyle(
+                            fontSize: 10,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColors.amber900,
+                          ),
                         ),
                       ],
                     ),
@@ -1225,7 +1339,10 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                 _statusFilter == 'pending'
                     ? 'รายการงานรอชำระ / ค้างรับ (${_transactions.length} รายการ)'
                     : 'รายละเอียดบิลที่ชำระแล้ว (${_transactions.length} รายการ)',
-                style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
+                style: pw.TextStyle(
+                  fontSize: 11,
+                  fontWeight: pw.FontWeight.bold,
+                ),
               ),
               pw.SizedBox(height: 6),
 
@@ -1234,7 +1351,13 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                 pw.Container(
                   padding: const pw.EdgeInsets.all(16),
                   alignment: pw.Alignment.center,
-                  child: pw.Text('ไม่มีรายการในช่วงเวลาที่เลือก', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+                  child: pw.Text(
+                    'ไม่มีรายการในช่วงเวลาที่เลือก',
+                    style: const pw.TextStyle(
+                      fontSize: 10,
+                      color: PdfColors.grey600,
+                    ),
+                  ),
                 )
               else
                 pw.TableHelper.fromTextArray(
@@ -1265,8 +1388,13 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                         currency.format(_transactions[i].totalAmount),
                       ],
                   ],
-                  headerStyle: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
-                  headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
+                  headerStyle: pw.TextStyle(
+                    fontSize: 9,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                  headerDecoration: const pw.BoxDecoration(
+                    color: PdfColors.grey300,
+                  ),
                   cellStyle: const pw.TextStyle(fontSize: 8),
                   cellAlignment: pw.Alignment.centerLeft,
                   cellAlignments: {
@@ -1298,18 +1426,42 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
                 children: [
                   pw.Column(
                     children: [
-                      pw.Container(width: 140, child: pw.Divider(color: PdfColors.grey500)),
-                      pw.Text('ลงชื่อ ....................................................', style: const pw.TextStyle(fontSize: 9)),
+                      pw.Container(
+                        width: 140,
+                        child: pw.Divider(color: PdfColors.grey500),
+                      ),
+                      pw.Text(
+                        'ลงชื่อ ....................................................',
+                        style: const pw.TextStyle(fontSize: 9),
+                      ),
                       pw.SizedBox(height: 2),
-                      pw.Text('พนักงานบัญชีและการเงิน', style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700)),
+                      pw.Text(
+                        'พนักงานบัญชีและการเงิน',
+                        style: const pw.TextStyle(
+                          fontSize: 9,
+                          color: PdfColors.grey700,
+                        ),
+                      ),
                     ],
                   ),
                   pw.Column(
                     children: [
-                      pw.Container(width: 140, child: pw.Divider(color: PdfColors.grey500)),
-                      pw.Text('ลงชื่อ ....................................................', style: const pw.TextStyle(fontSize: 9)),
+                      pw.Container(
+                        width: 140,
+                        child: pw.Divider(color: PdfColors.grey500),
+                      ),
+                      pw.Text(
+                        'ลงชื่อ ....................................................',
+                        style: const pw.TextStyle(fontSize: 9),
+                      ),
                       pw.SizedBox(height: 2),
-                      pw.Text('ผู้จัดการ / เจ้าของอู่', style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700)),
+                      pw.Text(
+                        'ผู้จัดการ / เจ้าของอู่',
+                        style: const pw.TextStyle(
+                          fontSize: 9,
+                          color: PdfColors.grey700,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -1319,7 +1471,8 @@ class _AccountantReportScreenState extends State<AccountantReportScreen> {
         ),
       );
 
-      final fileName = 'รายงานรายได้_${DateFormat('yyyyMMdd').format(_startDate)}_${DateFormat('yyyyMMdd').format(_endDate)}.pdf';
+      final fileName =
+          'รายงานรายได้_${DateFormat('yyyyMMdd').format(_startDate)}_${DateFormat('yyyyMMdd').format(_endDate)}.pdf';
       await Printing.layoutPdf(
         onLayout: (PdfPageFormat format) async => pdf.save(),
         name: fileName,
