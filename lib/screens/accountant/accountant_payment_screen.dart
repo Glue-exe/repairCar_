@@ -365,7 +365,10 @@ class _AccountantPaymentScreenState extends State<AccountantPaymentScreen> with 
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
+                            Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 8,
+                              runSpacing: 4,
                               children: [
                                 Text(
                                   order.licensePlate,
@@ -376,7 +379,6 @@ class _AccountantPaymentScreenState extends State<AccountantPaymentScreen> with 
                                     letterSpacing: 0.3,
                                   ),
                                 ),
-                                const SizedBox(width: 8),
 
                                 // ถ้าเป็นแท็บรอชำระ แสดงสถานะซ่อม / ถ้าชำระแล้ว แสดงช่องทางจ่ายเงิน
                                 if (!isPaidTab)
@@ -517,33 +519,38 @@ class _AccountantPaymentScreenState extends State<AccountantPaymentScreen> with 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'ค่าแรง ฿${currencyFormatter.format(order.laborTotal)} · ค่าอะไหล่ ฿${currencyFormatter.format(order.partsTotal)}',
-                            style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
-                          ),
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              const Text(
-                                'ยอดสุทธิ: ',
-                                style: TextStyle(fontSize: 13, color: AppColors.textDark),
-                              ),
-                              Text(
-                                '฿${currencyFormatter.format(order.totalAmount)}',
-                                style: TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.bold,
-                                  color: isPaidTab ? AppColors.success : Colors.amber.shade900,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'ค่าแรง ฿${currencyFormatter.format(order.laborTotal)} · ค่าอะไหล่ ฿${currencyFormatter.format(order.partsTotal)}',
+                              style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
+                                const Text(
+                                  'ยอดสุทธิ: ',
+                                  style: TextStyle(fontSize: 13, color: AppColors.textDark),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                                Text(
+                                  '฿${currencyFormatter.format(order.totalAmount)}',
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                    color: isPaidTab ? AppColors.success : Colors.amber.shade900,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                      if (!isPaidTab)
+                      if (!isPaidTab) ...[
+                        const SizedBox(width: 8),
                         ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primaryGreen,
@@ -568,8 +575,9 @@ class _AccountantPaymentScreenState extends State<AccountantPaymentScreen> with 
                             'รับชำระเงิน',
                             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                           ),
-                        )
-                      else
+                        ),
+                      ] else ...[
+                        const SizedBox(width: 8),
                         OutlinedButton.icon(
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppColors.primaryGreen,
@@ -591,6 +599,7 @@ class _AccountantPaymentScreenState extends State<AccountantPaymentScreen> with 
                             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                           ),
                         ),
+                      ],
                     ],
                   ),
                 ],

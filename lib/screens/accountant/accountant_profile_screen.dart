@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:my_app/screens/accountant/shop_qr_screen.dart';
+import 'package:my_app/screens/accountant/qrimg_screen.dart';
 import 'package:my_app/screens/auth/login_screen.dart';
 import 'package:my_app/screens/shared/payroll/technician_payroll_screen.dart';
 
@@ -183,7 +183,7 @@ class _AccountantProfileScreenState extends State<AccountantProfileScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const ShopQrScreen(),
+                      builder: (context) => const QrimgScreen(),
                     ),
                   );
                 },

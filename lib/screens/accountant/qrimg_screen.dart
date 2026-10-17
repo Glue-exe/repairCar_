@@ -6,14 +6,14 @@ import 'package:my_app/config/app_color.dart';
 import 'package:my_app/config/app_config.dart';
 import 'package:my_app/utils/app_api.dart';
 
-class ShopQrScreen extends StatefulWidget {
-  const ShopQrScreen({super.key});
+class QrimgScreen extends StatefulWidget {
+  const QrimgScreen({super.key});
 
   @override
-  State<ShopQrScreen> createState() => _ShopQrScreenState();
+  State<QrimgScreen> createState() => _QrimgScreenState();
 }
 
-class _ShopQrScreenState extends State<ShopQrScreen> {
+class _QrimgScreenState extends State<QrimgScreen> {
   final ImagePicker _picker = ImagePicker();
   String? _currentQrImage;
   XFile? _selectedImageFile;
@@ -24,36 +24,42 @@ class _ShopQrScreenState extends State<ShopQrScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchShopQr();
+    _fetchQrimg();
   }
 
-  Future<void> _fetchShopQr() async {
+  Future<void> _fetchQrimg() async {
     setState(() {
       _isLoading = true;
       _errorMessage = '';
     });
 
     try {
-      final response = await AppAPI.get('/accountant/shop_qr');
+      final response = await AppAPI.get('/accountant/qr_img');
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
         if (json['isError'] == false && json['data'] != null) {
-          setState(() {
-            _currentQrImage = json['data']['qr_image'];
-            _isLoading = false;
-          });
-          return;
+          if (mounted) {
+            setState(() {
+              _currentQrImage = json['data']['qr_image'] ?? json['data']['qr_img'];
+              _isLoading = false;
+            });
+            return;
+          }
         }
       }
-      setState(() {
-        _isLoading = false;
-        _currentQrImage = 'shop_qr_default.png';
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _currentQrImage = '';
+        });
+      }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = 'โหลด QR Code ไม่สำเร็จ: $e';
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'โหลด QR Code ไม่สำเร็จ: $e';
+        });
+      }
     }
   }
 
@@ -147,7 +153,7 @@ class _ShopQrScreenState extends State<ShopQrScreen> {
     }
   }
 
-  Future<void> _uploadShopQr() async {
+  Future<void> _uploadQrimg() async {
     if (_selectedImageFile == null) return;
 
     setState(() {
@@ -157,19 +163,29 @@ class _ShopQrScreenState extends State<ShopQrScreen> {
 
     try {
       final response = await AppAPI.postMultipart(
-        '/accountant/shop_qr',
+        '/accountant/qr_img',
         file: _selectedImageFile,
       );
 
+      if (response.statusCode != 200) {
+        if (mounted) {
+          setState(() {
+            _errorMessage = 'เซิร์ฟเวอร์ตอบกลับรหัสข้อผิดพลาด: HTTP ${response.statusCode}';
+            _isUploading = false;
+          });
+        }
+        return;
+      }
+
       final json = jsonDecode(response.body);
       if (json['isError'] == false) {
-        setState(() {
-          _currentQrImage = json['data']['qr_image'];
-          _selectedImageFile = null;
-          _isUploading = false;
-        });
-
         if (mounted) {
+          setState(() {
+            _currentQrImage = json['data']['qr_image'] ?? json['data']['qr_img'];
+            _selectedImageFile = null;
+            _isUploading = false;
+          });
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Row(
@@ -186,16 +202,20 @@ class _ShopQrScreenState extends State<ShopQrScreen> {
           );
         }
       } else {
+        if (mounted) {
+          setState(() {
+            _errorMessage = json['errorMessage'] ?? 'บันทึกรูปภาพไม่สำเร็จ';
+            _isUploading = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         setState(() {
-          _errorMessage = json['errorMessage'] ?? 'บันทึกรูปภาพไม่สำเร็จ';
+          _errorMessage = 'การเชื่อมต่อผิดพลาด: $e';
           _isUploading = false;
         });
       }
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'การเชื่อมต่อผิดพลาด: $e';
-        _isUploading = false;
-      });
     }
   }
 
@@ -466,7 +486,7 @@ class _ShopQrScreenState extends State<ShopQrScreen> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           elevation: 2,
                         ),
-                        onPressed: _isUploading ? null : _uploadShopQr,
+                        onPressed: _isUploading ? null : _uploadQrimg,
                         icon: _isUploading
                             ? const SizedBox(
                                 width: 20,
