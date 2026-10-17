@@ -17,11 +17,16 @@ class PartApprovalScreen extends StatefulWidget {
 class _PartApprovalScreenState extends State<PartApprovalScreen> {
   int _status = ReqPartStatusId.pending;
 
-  // แท็บสถานะดึงจาก /req_part_status ทั้งหมด (สถานะใหม่โผล่อัตโนมัติ)
-  List<ReqPartStatusModel> _statuses = [];
+  // แท็บสถานะการอนุมัติ แสดงเฉพาะ 4 สถานะหลัก (1: รออนุมัติ, 2: อนุมัติแล้ว, 3: ปฏิเสธ, 4: ยกเลิก)
+  List<ReqPartStatusModel> _statuses = [
+    ReqPartStatusModel(id: ReqPartStatusId.pending, name: 'รออนุมัติ'),
+    ReqPartStatusModel(id: ReqPartStatusId.approved, name: 'อนุมัติแล้ว'),
+    ReqPartStatusModel(id: ReqPartStatusId.rejected, name: 'ปฏิเสธ'),
+    ReqPartStatusModel(id: ReqPartStatusId.cancelled, name: 'ยกเลิก'),
+  ];
   List<Map<String, dynamic>> _rows = [];
   bool _loading = true;
-  bool _loadingStatuses = true;
+  bool _loadingStatuses = false;
   bool _statusError = false;
 
   @override
@@ -44,10 +49,10 @@ class _PartApprovalScreenState extends State<PartApprovalScreen> {
       if (!mounted) return;
 
       if (json['isError'] == false && json['data'] != null) {
-        // ใช้ทุกสถานะจากตาราง req_part_status (server เรียงตาม rps_id ให้แล้ว)
-        // → สถานะใหม่โผล่เป็นแท็บอัตโนมัติ ไม่ต้องแก้โค้ด
+        //แสดง 4 สถานะการอนุมัติ (1: รออนุมัติ, 2: อนุมัติแล้ว, 3: ปฏิเสธ, 4: ยกเลิก)
         final all = (json['data'] as List)
             .map((e) => ReqPartStatusModel.fromJson(e))
+            .where((s) => s.id <= 4)
             .toList();
 
         setState(() {
@@ -183,12 +188,14 @@ class _PartApprovalScreenState extends State<PartApprovalScreen> {
         ],
       );
     }
+    // กรองแสดงเฉพาะ 4 สถานะการอนุมัติ (1: รออนุมัติ, 2: อนุมัติแล้ว, 3: ปฏิเสธ, 4: ยกเลิก) เสมอ
+    final displayStatuses = _statuses.where((s) => s.id <= 4).toList();
 
     return Row(
       children: [
-        for (int i = 0; i < _statuses.length; i++) ...[
+        for (int i = 0; i < displayStatuses.length; i++) ...[
           if (i > 0) const SizedBox(width: 6),
-          _statusButton(_statuses[i].id, _statuses[i].name),
+          _statusButton(displayStatuses[i].id, displayStatuses[i].name),
         ],
       ],
     );
