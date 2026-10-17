@@ -125,13 +125,13 @@ class _AccountantPaymentDialogState extends State<AccountantPaymentDialog> {
     });
 
     try {
-      final response = await AppAPI.get('/accountant/shop_qr');
+      final response = await AppAPI.get('/accountant/qr_img');
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
         if (json['isError'] == false && json['data'] != null) {
           if (mounted) {
             setState(() {
-              _shopQrImage = json['data']['qr_image'];
+              _shopQrImage = json['data']['qr_img'] ?? json['data']['qr_image'];
               _isLoadingQr = false;
             });
             return;
